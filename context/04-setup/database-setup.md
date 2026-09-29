@@ -86,7 +86,7 @@ Perintah di atas akan membuat tabel:
 ## 5. Eksekusi Database Seeder
 
 Seeder otomatis mengisi data awal yang esensial agar aplikasi siap digunakan:
-1. **Daftar Saham IDX**: Saham likuid (LQ45/IDX30) seperti BBCA, BBRI, BMRI, BBNI, TLKM, ASII, UNVR, ICBP, ADRO, GOTO, AMMN.
+1. **Daftar Saham IDX**: 80 saham likuid konstituen Indeks IDX80 (termasuk konstituen LQ45 dan IDX30 seperti BBCA, BBRI, BMRI, BBNI, TLKM, ASII, UNVR, ICBP, ADRO, GOTO, AMMN, dsb.).
 2. **Kurikulum Belajar 6 Level**: 15+ artikel edukasi lengkap (Level 1 Intro hingga Level 6 Strategi).
 3. **Bank Soal Kuis**: Pertanyaan evaluasi pemahaman pilihan ganda per topik materi.
 

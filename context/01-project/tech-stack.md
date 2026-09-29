@@ -87,7 +87,7 @@
 ## 8. Third Party Services & External APIs
 
 - **Market Data Provider**:
-  - Kandidat: Sectors.app / Twelve Data / Finnhub.
-  - Menyediakan data: Real-time/delayed quotes, historical daily OHLCV prices, fundamental financial statements (Income Statement, Balance Sheet, Cash Flow), dan indeks bursa (IHSG, LQ45).
+  - Kandidat: Yahoo Finance (`yahoo-finance2`) / Sectors.app / Twelve Data.
+  - Menyediakan data: Real-time/delayed quotes, historical daily OHLCV prices, fundamental financial statements (Income Statement, Balance Sheet, Cash Flow), dan indeks bursa (IHSG, Indeks IDX80, LQ45, IDX30).
 - **News Provider**:
-  - Portal berita pasar modal terpercaya / News API / RSS Feeds terkurasi untuk topik emiten IDX dan makroekonomi.
+  - Portal berita pasar modal terpercaya / Yahoo Finance News / News API / RSS Feeds terkurasi untuk topik emiten IDX dan makroekonomi.

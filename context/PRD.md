@@ -68,7 +68,7 @@ Membangun platform web berbasis AI yang mengintegrasikan data pasar saham IDX, f
 1. **Authentication & User Management** (`auth.md`): Registrasi, login berbasis JWT, enkripsi password dengan bcrypt, serta pengelolaan profil pengguna.
 2. **Central Dashboard** (`dashboard.md`): Ringkasan portofolio, visualisasi alokasi aset/sektor, widget watchlist, snapshot IHSG & top movers, ringkasan berita terkini, dan akses cepat fitur utama.
 3. **Global Market & Sentiment** (`market-sentiment.md`): Pemantauan pergerakan indeks IHSG, top gainers/losers, agregasi berita pasar modal, dan AI Macro Assistant untuk sentimen pasar harian.
-4. **Stock Screener** (`stock-screener.md`): Penyaringan emiten berdasarkan sektor, industri, market cap, indikator valuasi (PE, PBV), profitabilitas (ROE, ROA), solvabilitas (DER), yield dividen, dan indeks IDX (LQ45, IDX30, IDX80).
+4. **Stock Screener** (`stock-screener.md`): Penyaringan emiten berdasarkan sektor, industri, market cap, indikator valuasi (PE, PBV), profitabilitas (ROE, ROA), solvabilitas (DER), yield dividen, dan indeks IDX (katalog terkurasi utama: Indeks IDX80, LQ45, IDX30).
 5. **Stock Detail Analysis** (`stock-detail.md`): Halaman analisis komprehensif emiten mencakup profil perusahaan, harga real-time, chart candlestick interaktif (TradingView Lightweight Charts), kartu metrik 4 pilar fundamental, berita terkait, serta AI Stock Analysis Assistant.
 6. **Stock Comparison** (`stock-comparison.md`): Komparasi komparatif multi-emiten (2–4 saham) secara side-by-side lintas metrik valuasi, profitabilitas, leverage, pertumbuhan, visual perbandingan batang/garis, dan AI Comparison Co-pilot.
 7. **Watchlist Management** (`watchlist.md`): Manajemen daftar pantau saham personal per user dengan pembaruan metrik harga berkala dan navigasi cepat ke detail/komparasi.
@@ -113,7 +113,7 @@ Membangun platform web berbasis AI yang mengintegrasikan data pasar saham IDX, f
 - Integrasi data pasar saham Bursa Efek Indonesia (IDX) mencakup quote harga dan chart historis candlestick.
 - Pengambilan dan kalkulasi rasio keuangan fundamental: Valuation (PE, PBV), Profitability (ROE, ROA, Net Margin), Growth (Revenue & Net Income Growth), Leverage (DER), dan Dividen.
 - Agregasi berita spesifik emiten dan berita makroekonomi pasar modal.
-- Fitur Stock Screener multi-kriteria dan filter indeks utama (LQ45, IDX30).
+- Fitur Stock Screener multi-kriteria dan filter indeks utama (katalog basis: Indeks IDX80, LQ45, IDX30) dengan dukungan on-demand search.
 - Fitur Stock Comparison side-by-side untuk 2 hingga 4 emiten secara serentak.
 - Modul Watchlist personal dan Portfolio Tracker berbasis transaksi lot dengan kalkulasi P/L (realized & unrealized).
 - Fitur simulasi Dollar-Cost Averaging (DCA) dengan mode lot realistis dan sisa kas akumulatif.

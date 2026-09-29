@@ -13,7 +13,7 @@ Daftar backlog disusun berdasarkan prioritas (P0, P1, P2, P3) dan pembagian fase
 | **TSK-003** | 🔴 P0 | Ready | Auth | Implementasi login dan penerbitan JSON Web Token (`POST /api/auth/login`) |
 | **TSK-004** | 🔴 P0 | Ready | Auth | Middleware verifikasi token JWT dan endpoint profile (`GET /api/auth/me`) |
 | **TSK-005** | 🔴 P0 | Ready | Database | Migrasi skema Prisma untuk tabel `users`, `stocks`, `watchlists`, dan `portfolio_transactions` |
-| **TSK-006** | 🔴 P0 | Ready | Stocks | Seeding daftar emiten saham IDX utama (LQ45/IDX30) ke tabel `stocks` |
+| **TSK-006** | 🔴 P0 | Ready | Stocks | Seeding 80 emiten konstituen Indeks IDX80 (termasuk LQ45/IDX30) ke tabel `stocks` |
 | **TSK-007** | 🔴 P0 | Ready | Stocks | Implementasi pencarian saham responsif berdasarkan ticker dan nama (`GET /api/stocks/search`) |
 | **TSK-008** | 🔴 P0 | Ready | Stocks | Integrasi quote harga real-time/delayed dan kalkulasi perubahan harian (`GET /api/stocks/:symbol/quote`) |
 | **TSK-009** | 🔴 P0 | Ready | Stocks | Endpoint historical candlestick data OHLCV (`GET /api/stocks/:symbol/history`) |

@@ -6,17 +6,17 @@ Modul Stock Screener menyediakan fitur penyaringan dan pencarian emiten saham Bu
 ---
 
 ## Objectives
-1. Memungkinkan pengguna menyaring ratusan saham IDX berdasarkan rentang rasio fundamental kuantitatif.
-2. Menyediakan preset filter untuk indeks populer bursa Indonesia (LQ45, IDX30, IDX80).
+1. Memungkinkan pengguna menyaring puluhan saham terlikuid IDX (katalog utama 80 konstituen Indeks IDX80) berdasarkan rentang rasio fundamental kuantitatif.
+2. Menyediakan preset filter untuk indeks populer bursa Indonesia (Indeks IDX80 sebagai basis utama, LQ45, dan IDX30).
 3. Menyajikan hasil penyaringan dalam bentuk tabel interaktif dengan fitur sorting, pagination, dan aksi cepat (*Add to Watchlist*, *Open Detail*, *Compare*).
 
 ---
 
 ## Stakeholders
 ### Investor Berpengalaman
-Menggunakan multi-filter rasio keuangan (misal: mencari saham sektor Perbankan dengan ROE > 15% dan PE < 15) untuk mempercepat proses pemilihan saham secara terarah (*stock picking*).
+Menggunakan multi-filter rasio keuangan (misal: mencari saham konstituen IDX80 sektor Perbankan dengan ROE > 15% dan PE < 15) untuk mempercepat proses pemilihan saham secara terarah (*stock picking*).
 ### Investor Pemula
-Menggunakan preset filter siap pakai (misal: "Indeks LQ45" atau "Saham Dividen Tinggi") untuk mengeksplorasi emiten berfundamental kuat tanpa harus mengatur rumus teknis dari awal.
+Menggunakan preset filter siap pakai (misal: "Indeks IDX80", "Indeks LQ45", atau "Saham Dividen Tinggi") untuk mengeksplorasi emiten berfundamental kuat tanpa harus mengatur rumus teknis dari awal.
 
 ---
 
@@ -30,7 +30,7 @@ Menggunakan preset filter siap pakai (misal: "Indeks LQ45" atau "Saham Dividen T
   - Return on Assets (ROA min %).
   - Debt-to-Equity Ratio (DER max).
   - Dividend Yield (min %).
-- **FR-SCR-002**: Sistem harus menyediakan tombol filter cepat (*Index Presets*): "LQ45", "IDX30", dan "IDX80".
+- **FR-SCR-002**: Sistem harus menyediakan tombol filter cepat (*Index Presets*): "IDX80" (basis utama), "LQ45", dan "IDX30".
 - **FR-SCR-003**: Sistem harus menampilkan hasil penyaringan dalam tabel data dengan kolom: Simbol Ticker, Nama Perusahaan, Sektor, Harga Terkini, Perubahan Harian (%), Market Cap, PE, PBV, ROE, DER, Dividend Yield.
 - **FR-SCR-004**: Tabel hasil harus mendukung pengurutan kolom (*column sorting*) asc/desc pada setiap metrik numerik.
 - **FR-SCR-005**: Setiap baris tabel harus menyediakan aksi cepat: tombol "Lihat Detail", "Tambah ke Watchlist", dan checkbox seleksi untuk fitur "Bandingkan Saham" (langsung dialihkan ke `/compare`).
@@ -49,7 +49,7 @@ Menggunakan preset filter siap pakai (misal: "Indeks LQ45" atau "Saham Dividen T
 ```text
 User Access /screener
           │
-          ├── Memilih Preset (misal: "LQ45" atau "ROE > 15%")
+          ├── Memilih Preset (misal: "IDX80", "LQ45" atau "ROE > 15%")
           └── ATAU Mengatur Slider / Input Filter Parameter
           │
           ▼
@@ -146,7 +146,7 @@ Modul ini memanfaatkan:
 ## Frontend Design
 - **Pages**: `StockScreenerPage.jsx` (`/screener`).
 - **Components**:
-  - `ScreenerFilterPanel.jsx`: Panel sidebar/accordion berisi slider rentang metrik, dropdown sektor, dan preset tombol (LQ45, Undervalued, High Growth).
+  - `ScreenerFilterPanel.jsx`: Panel sidebar/accordion berisi slider rentang metrik, dropdown sektor, dan preset tombol (IDX80, LQ45, Undervalued, High Growth).
   - `ScreenerTable.jsx`: Tabel responsif dengan sticky header, penanda sorting kolom, dan format angka Rupiah/persentase.
   - `ComparisonFloatingBar.jsx`: Bar melayang di bawah layar yang muncul saat pengguna mencentang 2–4 saham dengan tombol "Bandingkan Sekarang".
   - `PaginationControls.jsx`: Navigasi halaman tabel (Previous, Page Numbers, Next).

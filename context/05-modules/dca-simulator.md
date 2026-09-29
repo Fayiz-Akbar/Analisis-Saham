@@ -176,7 +176,7 @@ Frontend Merender Hasil Simulasi:
 - **Skenario A (Budget Rendah)**: Budget Rp100.000/bulan untuk saham harga Rp8.000/lembar (Rp800.000/lot) -> Bulan 1–7 beli 0 lot (dana terakumulasi Rp700.000). Pada bulan ke-8 (dana Rp800.000), sistem berhasil membeli 1 lot dan sisa kas menjadi Rp0.
 - **Skenario B (Budget Moderat)**: Budget Rp1.000.000/bulan -> Memastikan sisa dana selalu bergulir dan tercatat di laporan akhir.
 ### Integration Test
-- Menjalankan endpoint simulasi untuk emiten LQ45 dengan rentang waktu 6, 12, dan 24 bulan.
+- Menjalankan endpoint simulasi untuk emiten konstituen IDX80 / LQ45 dengan rentang waktu 6, 12, dan 24 bulan.
 
 ---
 

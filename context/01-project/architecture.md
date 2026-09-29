@@ -203,8 +203,8 @@ Kirim Respon ke Frontend (Tampil di Chat Bubble / Card Analisis)
    - Pendekatan: Injeksi konteks terstruktur (*context-grounding*) dengan pembatasan halusinasi ketat.
 
 2. **Market Data Providers**:
-   - Kandidat: Sectors.app / Twelve Data / Finnhub.
-   - Data yang diambil: Real-time price quote, historical OHLCV candlestick data, data fundamental emiten IDX, dan indeks bursa (IHSG, LQ45, IDX30).
+   - Provider: Yahoo Finance (`yahoo-finance2`) didukung caching PostgreSQL JSONB.
+   - Data yang diambil: Real-time price quote, historical OHLCV candlestick data, data fundamental emiten IDX, dan indeks bursa (IHSG, Indeks IDX80, LQ45, IDX30).
 
 3. **News Providers / RSS Feeds**:
    - Sumber: Portal berita pasar modal terpercaya (seperti Kontan, Bisnis.com, CNBC Indonesia, atau feed terintegrasi provider).

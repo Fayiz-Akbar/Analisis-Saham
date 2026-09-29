@@ -125,7 +125,7 @@ Mengadopsi bentuk kapsul dinamis (*rounded pill & soft modern curves*):
 - **Negative Badge**:
   - Light: Latar `#FEF2F2`, Teks `#DC2626`, Border `#FECACA`
   - Dark: Latar `#2D0B0B`, Teks `#F87171`, Border `#4C1212`
-- **Sector / Index Preset Tag** (LQ45, IDX30):
+- **Sector / Index Preset Tag** (IDX80, LQ45, IDX30):
   - Light: Latar `#F8F8F8`, Teks `#0D0D0D`, Border `#E5E5E5`, `hover:border-[#74AE2D]`
   - Dark: Latar `#1F1F1F`, Teks `#FFFFFF`, Border `#2E2E2E`, `hover:border-[#74AE2D]`
 

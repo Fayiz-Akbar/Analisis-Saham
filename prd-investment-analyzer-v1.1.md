@@ -10,7 +10,7 @@ Status: Final Draft — Updated
 Platform: Web Application
 Target Pengguna: Investor Ritel (Investor Pemula dan Investor Berpengalaman dalam Analisis Saham)
 Fokus: Analisis Fundamental Komprehensif, Edukasi Investasi, dan Efisiensi Riset Berbasis Data & AI
-Instrumen Utama: Saham Bursa Efek Indonesia (IDX)
+Instrumen Utama: Saham Bursa Efek Indonesia (IDX) — Basis Katalog Terkurasi: Konstituen Indeks IDX80 (80 Emiten Terlikuid & Berfundamental Solid di BEI) dengan Dukungan Pencarian On-Demand untuk Seluruh Emiten IDX
 
 ⸻
 
@@ -192,8 +192,7 @@ Sistem mencakup:
 * investment learning;
 * AI financial assistant;
 * AI investment tutor;
-* market data;
-* historical data;
+* market data & historical data (dengan katalog basis konstituen Indeks IDX80 dan pencarian on-demand emiten IDX);
 * fundamental data;
 * company news;
 * caching;
@@ -736,13 +735,12 @@ Market Cap > ...
 
 Sistem menampilkan saham yang sesuai berdasarkan data yang tersedia.
 
-Index List
+Index List & Cakupan Saham
 
-Jika tersedia:
-
-* LQ45;
-* IDX30;
-* IDX80.
+Basis Utama Terkurasi:
+* Indeks IDX80 (80 saham konstituen terlikuid dan berkapitalisasi pasar representatif di BEI sebagai basis katalog utama, seeder database, dan screener);
+* Preset Indeks Tambahan: LQ45 (45 saham paling likuid) dan IDX30 (30 saham berbobot terbesar);
+* Pencarian On-Demand: Sistem tetap mendukung pencarian dan analisis untuk seluruh emiten IDX lainnya di luar IDX80 secara dinamis via Yahoo Finance API (`${symbol}.JK`).
 
 ⸻
 
@@ -1422,6 +1420,9 @@ exchange
 created_at
 updated_at
 
+Catatan Seeding:
+Tabel Stocks di-seed awal dengan 80 emiten konstituen Indeks IDX80 (seperti BBCA, BBRI, BMRI, BBNI, TLKM, ASII, UNVR, ICBP, ADRO, GOTO, AMMN, dsb.) beserta klasifikasi sektor dan industrinya. Emiten baru di luar IDX80 akan otomatis di-insert saat dicari pertama kali oleh pengguna (on-demand upsert).
+
 ⸻
 
 Watchlists
@@ -1481,6 +1482,8 @@ title
 description
 source
 url
+sentiment VARCHAR(20) -- POSITIVE, NEUTRAL, NEGATIVE
+sentiment_score FLOAT   -- -1.0 s.d. +1.0
 published_at
 cached_at
 
