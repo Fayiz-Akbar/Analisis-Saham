@@ -113,7 +113,8 @@ Daftar Error Code Standar:
 | `GET` | `/api/stocks/:symbol/quote` | Quote harga terkini dan perubahan harian | Public | - | - | `200 OK` |
 | `GET` | `/api/stocks/:symbol/history` | Data historis candlestick (OHLCV) | Public | - | `timeframe, from, to` | `200 OK` |
 | `GET` | `/api/stocks/:symbol/fundamentals` | Rasio fundamental 4 pilar lengkap | Public | - | `period` | `200 OK` |
-| `GET` | `/api/stocks/:symbol/news` | Berita terkini terkait emiten spesifik | Public | - | `limit` | `200 OK` |
+| `GET` | `/api/stocks/:symbol/news` | Berita terkini terkait emiten + label sentimen | Public | - | `limit` | `200 OK` |
+| `GET` | `/api/stocks/market-sentiment` | Data kondisi pasar IDX, bursa global, komoditas & makro | Public | - | - | `200 OK` |
 | `POST` | `/api/stocks/compare` | Komparasi berdampingan 2–4 saham | Public / Bearer | `{ symbols: ["BBCA", "BBRI"] }` | - | `200 OK` |
 | `GET` | `/api/watchlist` | Mengambil daftar saham pantauan user | Bearer JWT | - | - | `200 OK` |
 | `POST` | `/api/watchlist` | Menambahkan saham ke daftar pantau | Bearer JWT | `{ symbol: "TLKM" }` | - | `201 Created` |
@@ -177,7 +178,63 @@ Daftar Error Code Standar:
 }
 ```
 
-### 5.2 Empty Response (`GET /api/watchlist` user baru)
+### 5.2 News with Sentiment Response (`GET /api/stocks/BBCA/news`)
+```json
+{
+  "success": true,
+  "message": "Daftar berita emiten berhasil diambil",
+  "data": [
+    {
+      "id": "e4f5a6b7-c8d9-0123-ef45-67890abcdef1",
+      "title": "BBCA Bukukan Pertumbuhan Kredit 14,5% Didorong Segmen Korporasi",
+      "source": "Kontan",
+      "url": "https://keuangan.kontan.co.id/news/bbca-kredit-tumbuh",
+      "published_at": "2026-09-28T10:00:00Z",
+      "sentiment": "POSITIVE",
+      "sentiment_score": 0.82
+    },
+    {
+      "id": "f5a6b7c8-d9e0-1234-f567-890abcdef123",
+      "title": "Analisis Pasar: Potensi Valuasi Sektor Keuangan Pasca Rapat Dewan Gubernur BI",
+      "source": "Bisnis.com",
+      "url": "https://market.bisnis.com/read/valuasi-sektor-keuangan",
+      "published_at": "2026-09-27T16:30:00Z",
+      "sentiment": "NEUTRAL",
+      "sentiment_score": 0.08
+    }
+  ]
+}
+```
+
+### 5.3 Global Market & Commodities Response (`GET /api/stocks/market-sentiment`)
+```json
+{
+  "success": true,
+  "message": "Data pasar domestik, bursa global, dan komoditas berhasil diambil",
+  "data": {
+    "ihsg": {
+      "value": 7720.45,
+      "change": 45.20,
+      "change_percent": 0.59
+    },
+    "global_indices": [
+      { "symbol": "^GSPC", "name": "S&P 500", "value": 5620.10, "change_percent": 0.42 },
+      { "symbol": "^DJI", "name": "Dow Jones", "value": 41500.50, "change_percent": 0.25 },
+      { "symbol": "^N225", "name": "Nikkei 225", "value": 38700.00, "change_percent": -0.15 },
+      { "symbol": "^HSI", "name": "Hang Seng", "value": 17420.00, "change_percent": 0.80 }
+    ],
+    "commodities": [
+      { "name": "Minyak Mentah (WTI)", "price": 72.50, "unit": "USD/barrel", "change_percent": 1.20 },
+      { "name": "Emas (Gold)", "price": 2580.00, "unit": "USD/t.oz", "change_percent": 0.35 },
+      { "name": "Batubara (Newcastle)", "price": 142.00, "unit": "USD/ton", "change_percent": -0.80 },
+      { "name": "Nikel (LME)", "price": 16400.00, "unit": "USD/ton", "change_percent": 2.10 },
+      { "name": "Minyak Sawit (CPO)", "price": 3950.00, "unit": "MYR/ton", "change_percent": 0.95 }
+    ]
+  }
+}
+```
+
+### 5.4 Empty Response (`GET /api/watchlist` user baru)
 ```json
 {
   "success": true,

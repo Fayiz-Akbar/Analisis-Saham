@@ -32,7 +32,7 @@ Menganalisis kinerja historis emiten, memeriksa tren pertumbuhan laba dan pendap
   - **Pertumbuhan (Growth)**: Pertumbuhan Pendapatan Tahunan (*Revenue Growth*), Pertumbuhan Laba Bersih (*Net Income Growth*).
   - **Solvabilitas / Leverage**: Debt-to-Equity Ratio (DER).
   - **Kinerja Absolut**: Pendapatan Bersih (Revenue), Laba Bersih (Net Income), Earning Per Share (EPS), Kapitalisasi Pasar (Market Cap), dan Dividen Yield.
-- **FR-DTL-005**: Sistem harus menampilkan daftar 3–5 berita terkini yang secara spesifik menyebutkan simbol emiten terkait.
+- **FR-DTL-005**: Sistem harus menampilkan daftar 3–5 berita terkini yang secara spesifik menyebutkan simbol emiten terkait, dilengkapi **label klasifikasi sentimen visual (`[Positif]`, `[Netral]`, atau `[Negatif]`)**, skor polaritas, sumber berita, dan waktu publikasi (sesuai KF-06 & KF-07 di skripsi).
 - **FR-DTL-006**: Sistem harus menyediakan komponen chat/dialog **AI Stock Analysis Assistant** yang memungkinkan pengguna mengajukan pertanyaan analitis mengenai emiten tersebut.
 - **FR-DTL-007**: Sistem harus menyediakan tombol aksi: "Tambah ke Watchlist", "Tambah ke Portofolio" (membuka modal input transaksi), dan "Bandingkan" (mengalihkan ke halaman komparasi dengan emiten terkait terpilih).
 
@@ -43,6 +43,7 @@ Menganalisis kinerja historis emiten, memeriksa tren pertumbuhan laba dan pendap
 - **BR-DTL-002**: Jika simbol emiten tidak ditemukan di database atau API provider, sistem harus mengembalikan halaman 404 Stock Not Found yang ramah dengan saran pencarian.
 - **BR-DTL-003**: Respon AI Assistant pada halaman detail saham wajib dibatasi konteksnya hanya pada: (1) Data quote emiten, (2) Rasio dan angka keuangan emiten, dan (3) Berita emiten terkini yang terdaftar di sistem. Dilarang mengutip angka di luar context.
 - **BR-DTL-004**: Data quote dan berita di-cache dengan TTL dinamis (Quote 1–3 menit, Fundamental 7 hari, Berita 30 menit).
+- **BR-DTL-005**: Klasifikasi sentimen berita emiten ditentukan secara otomatis oleh model evaluasi/Gemini saat berita di-cache ke tabel `news_cache`.
 
 ---
 
@@ -55,7 +56,7 @@ Parallel Fetch Data ke Backend:
  ├── GET /api/stocks/BBCA (Profile & Quote)
  ├── GET /api/stocks/BBCA/history?timeframe=1Y (Candlestick Data)
  ├── GET /api/stocks/BBCA/fundamentals (4 Pillars Ratios)
- └── GET /api/stocks/BBCA/news (Specific News Feed)
+ └── GET /api/stocks/BBCA/news (Specific News Feed with Sentiment Badges)
            │
            ▼
 Render UI Halaman Detail:
@@ -63,7 +64,7 @@ Render UI Halaman Detail:
  ├── [Main Left]: Interactive Candlestick Chart (Lightweight Charts)
  ├── [Main Right]: 4-Pillar Fundamental Metric Cards & Highlights
  ├── [Section 2]: AI Stock Analysis Assistant (Chat / Insight Summary)
- └── [Bottom]: Relevant Company News List
+ └── [Bottom]: Relevant Company News List (Tiap artikel memiliki Badge [Positif]/[Netral]/[Negatif])
            │
            ▼
 User Asks Question to AI: "Bagaimana kondisi rasio profitabilitas BBCA?"
@@ -80,7 +81,7 @@ ContextBuilder menyusun JSON Faktual BBCA ──> Gemini API ──> Render Resp
 ## Database Design
 - Mengambil data dari tabel `stocks` (`symbol`, `company_name`, `sector`, `industry`).
 - Memeriksa status `watchlists` untuk menandai apakah saham sudah dipantau user (`is_in_watchlist: true/false`).
-- Mengambil data cache dari `api_cache` dan `news_cache`.
+- Mengambil data cache dari `api_cache` dan `news_cache` (termasuk kolom `sentiment` dan `sentiment_score`).
 
 ---
 
@@ -88,7 +89,7 @@ ContextBuilder menyusun JSON Faktual BBCA ──> Gemini API ──> Render Resp
 - **Services**:
   - `MarketDataService.js`: `getStockProfile(symbol)`, `getStockQuote(symbol)`, `getHistoricalCandles(symbol, timeframe)`.
   - `FundamentalService.js`: `getStockFundamentals(symbol)`.
-  - `NewsService.js`: `getStockNews(symbol)`.
+  - `NewsService.js`: `getStockNews(symbol)` (mengembalikan list berita beserta status sentimen).
   - `AIService.js` + `ContextBuilder.js`: `generateStockAnalysis(symbol, question)`.
 
 ---
@@ -101,8 +102,38 @@ ContextBuilder menyusun JSON Faktual BBCA ──> Gemini API ──> Render Resp
 | `GET` | `/api/stocks/:symbol` | Data profil & quote emiten | Public | Path: `symbol` | `200 OK` |
 | `GET` | `/api/stocks/:symbol/history` | Data candlestick historis | Public | Query: `timeframe` | `200 OK` |
 | `GET` | `/api/stocks/:symbol/fundamentals` | Rasio 4 pilar lengkap | Public | Path: `symbol` | `200 OK` |
-| `GET` | `/api/stocks/:symbol/news` | Berita terkait emiten | Public | Query: `limit` | `200 OK` |
+| `GET` | `/api/stocks/:symbol/news` | Berita terkait emiten + label sentimen | Public | Query: `limit` | `200 OK` |
 | `POST` | `/api/ai/stock-analysis` | Analisis AI grounded emiten | Bearer JWT | `{ symbol, question }` | `200 OK` |
+
+### Sample JSON Response (`GET /api/stocks/:symbol/news`)
+```json
+{
+  "success": true,
+  "message": "Daftar berita emiten berhasil diambil",
+  "data": [
+    {
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "title": "BBCA Bukukan Laba Bersih Konsolidasian Rp 26,9 Triliun di Semester I 2024",
+      "description": "PT Bank Central Asia Tbk (BBCA) mencatatkan pertumbuhan laba bersih sebesar 11,1% secara tahunan ditopang oleh ekspansi kredit yang berkualitas.",
+      "source": "Kontan",
+      "url": "https://keuangan.kontan.co.id/news/bbca-laba-bersih-tumbuh",
+      "published_at": "2026-09-28T08:30:00Z",
+      "sentiment": "POSITIVE",
+      "sentiment_score": 0.85
+    },
+    {
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "title": "BI Tahan Suku Bunga Acuan 6,25%, Ini Dampaknya bagi Likuiditas Perbankan",
+      "description": "Keputusan Bank Indonesia menahan BI-Rate berdampak netral terhadap margin bunga bersih perbankan nasional.",
+      "source": "Bisnis.com",
+      "url": "https://finansial.bisnis.com/read/bi-rate-perbankan",
+      "published_at": "2026-09-27T14:15:00Z",
+      "sentiment": "NEUTRAL",
+      "sentiment_score": 0.05
+    }
+  ]
+}
+```
 
 ### Sample JSON Response (`POST /api/ai/stock-analysis`)
 ```json
@@ -126,8 +157,17 @@ ContextBuilder menyusun JSON Faktual BBCA ──> Gemini API ──> Render Resp
   - `StockHeader.jsx`: Simbol ticker besar, nama perusahaan, badge sektor, harga live, tombol aksi Watchlist & Portfolio Modal.
   - `CandlestickChart.jsx`: Pembungkus TradingView Lightweight Charts dengan selector rentang waktu (1W, 1M, 1Y).
   - `FundamentalCard.jsx`: Kartu rasio interaktif dengan label, nilai numerik, dan status evaluasi (misal: "ROE Tinggi", "DER Rendah").
+  - `CompanyNewsSection.jsx`: Daftar berita emiten dengan badge visual sentimen `[Positif]`, `[Netral]`, atau `[Negatif]`.
   - `AiAnalysisAssistantWidget.jsx`: Kotak asisten AI dengan prompt saran cepat (*quick prompt chips*) dan area obrolan teks.
   - `AddTransactionModal.jsx`: Modal pop-up untuk mencatat pembelian saham langsung ke portofolio.
+
+---
+
+## UI / UX Requirements
+- **Badge Sentimen Berita**:
+  - `POSITIVE`: Latar hijau lembut (`bg-emerald-50 text-emerald-700 border-emerald-200`) dengan label **"Positif"**.
+  - `NEUTRAL`: Latar abu-abu netral (`bg-slate-100 text-slate-700 border-slate-200`) dengan label **"Netral"**.
+  - `NEGATIVE`: Latar merah lembut (`bg-rose-50 text-rose-700 border-rose-200`) dengan label **"Negatif"**.
 
 ---
 
@@ -135,6 +175,7 @@ ContextBuilder menyusun JSON Faktual BBCA ──> Gemini API ──> Render Resp
 ### Unit Test
 - Validasi parsing timeframe grafik candlestick menjadi rentang timestamp UNIX yang benar.
 - Pengujian formatting mata uang Rupiah dan rasio desimal.
+- Validasi pembubuhan badge klasifikasi sentimen pada berita emiten.
 ### Integration Test
 - Pengambilan endpoint detail saham untuk ticker valid (misal: `BBCA`) dan ticker tidak terdaftar (mengembalikan 404).
 - Uji konsistensi data faktual respon AI terhadap payload data yang dikirimkan.
@@ -143,4 +184,5 @@ ContextBuilder menyusun JSON Faktual BBCA ──> Gemini API ──> Render Resp
 
 ## AI Agent Instructions
 - **Frontend Agent**: Pastikan instance grafik `TradingView Lightweight Charts` dibersihkan (*clean up on unmount*) menggunakan `chart.remove()` di dalam hook `useEffect` untuk menghindari kebocoran memori browser (*memory leak*).
-- **AI Agent**: Selalu sertakan konteks data fundamental dan quote saat memanggil Gemini API untuk modul ini. Dilarang mengizinkan AI menjawab tanpa payload konteks yang valid.
+- **AI Agent**: Selalu sertakan konteks data fundamental, quote, dan berita berlabel sentimen saat memanggil Gemini API untuk modul ini. Dilarang mengizinkan AI menjawab tanpa payload konteks yang valid.
+

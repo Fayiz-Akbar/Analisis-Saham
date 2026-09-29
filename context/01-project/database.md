@@ -81,6 +81,8 @@ erDiagram
         text description
         string source
         string url
+        string sentiment
+        decimal sentiment_score
         timestamp published_at
         timestamp cached_at
     }
@@ -181,13 +183,15 @@ Tabel caching data eksternal (quote harga, historical OHLCV, rasio fundamental).
 - **Index**: Composite index `(provider, data_type, symbol)`.
 
 ### 3.6 `news_cache`
-Tabel caching ringkasan berita pasar modal dan emiten terkini.
+Tabel caching ringkasan berita pasar modal dan emiten terkini dengan klasifikasi sentimen otomatis.
 - `id`: UUID, Primary Key.
 - `symbol`: VARCHAR(10), Nullable, Foreign Key merujuk ke `stocks(symbol)` ON DELETE SET NULL.
 - `title`: VARCHAR(300), Not Null.
 - `description`: TEXT, Nullable.
 - `source`: VARCHAR(100), Not Null.
 - `url`: TEXT, Not Null.
+- `sentiment`: VARCHAR(20), Nullable, Check constraint in ('POSITIVE', 'NEUTRAL', 'NEGATIVE').
+- `sentiment_score`: DECIMAL(4, 2), Nullable (skor polaritas -1.00 s.d +1.00).
 - `published_at`: TIMESTAMP WITH TIME ZONE, Not Null.
 - `cached_at`: TIMESTAMP WITH TIME ZONE, default `now()`.
 
