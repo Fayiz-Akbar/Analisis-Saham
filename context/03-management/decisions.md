@@ -127,3 +127,57 @@ Modul *Investment Health* menghitung skor edukatif 0–100 berdasarkan diversifi
 ### Impact
 - Mematuhi batasan hukum dan regulasi pasar modal (PRD Section 1 & 6.2).
 - Meningkatkan literasi manajemen risiko pengguna tanpa melanggar batasan etika AI.
+
+---
+
+## D007: SwiftBook Neo-Fintech Design System with Dual-Theme Inversion
+
+**Date**: 2026-09-29  
+**Status**: Approved / Accepted  
+
+### Context
+Aplikasi analisis finansial konvensional seringkali terlihat kaku, padat, dan membosankan, atau hanya menyediakan satu mode tampilan yang menyilaukan mata investor saat menganalisis pasar di malam hari.
+
+### Decision
+Mengadopsi sistem desain modern *SwiftBook neo-fintech* dengan dukungan penuh **Dual-Theme (Light & Dark Mode)** yang menerapkan pembalikan kontras (*contrast inversion*) presisi:
+- Palet Warna: Aksen utama Fresh Lime `#74AE2D`, wadah AI Soft Sage `#D6E3C0`, aksen moderat Warm Peach `#F2D6A4`, Dark Canvas `#0D0D0D`, Dark Surface `#161616`, Light Canvas `#F8F8F8`, dan Light Surface `#FFFFFF`.
+- Geometri Komponen: Menggunakan bentuk kapsul penuh (*full pill* `rounded-full`) untuk seluruh tombol aksi, search bar, filter preset tags, dan status badges, serta kartu sudut membulat `rounded-2xl`.
+- Tekstur Visual: Menggunakan pola garis diagonal halus (*diagonal stripes pattern*) pada kartu aksen hero banner mode gelap.
+
+### Impact
+- Menghadirkan antarmuka bertaraf institusional yang estetis, modern, dan sangat nyaman bagi investor pemula maupun berpengalaman.
+
+---
+
+## D008: Curated Stock Catalog Scope to Indeks IDX80 with On-Demand Fallback
+
+**Date**: 2026-09-29  
+**Status**: Approved / Accepted  
+
+### Context
+Terdapat lebih dari 900 emiten tercatat di Bursa Efek Indonesia (BEI/IDX). Mengambil dan menyimpan seluruh data emiten secara berkala akan membebani database dan kuota API eksternal secara tidak efisien, mengingat sebagian besar emiten tidak memiliki likuiditas harian yang memadai. Sebaliknya, hanya membatasi pada LQ45 (45 saham) dirasa terlalu sempit untuk fitur stock screener.
+
+### Decision
+Menetapkan **Indeks IDX80** (80 emiten terlikuid dan berfundamental representatif di BEI, termasuk konstituen LQ45 dan IDX30) sebagai basis katalog terkurasi utama untuk *database seeder*, *stock screener*, dan *dashboard*. Untuk emiten IDX lainnya di luar IDX80, sistem mendukung pencarian *on-demand* dinamis ke Yahoo Finance (`${symbol}.JK`) dengan mekanisme *on-demand upsert* ke database lokal.
+
+### Impact
+- Menjamin efisiensi penyimpanan database dan utilisasi kuota API.
+- Menyediakan katalog saham berfundamental solid bagi pengguna sekaligus mempertahankan fleksibilitas riset tak terbatas untuk seluruh saham IDX.
+
+---
+
+## D009: Integration of Strategic Global Indices, Commodities, and News Sentiment Classification
+
+**Date**: 2026-09-29  
+**Status**: Approved / Accepted  
+
+### Context
+Pergerakan saham di BEI sangat dipengaruhi oleh sentimen bursa global (Wall Street, Asia) serta harga komoditas ekspor strategis Indonesia (Minyak, Emas, Batubara, Nikel, CPO). Selain itu, daftar berita emiten tanpa klasifikasi sentimen memaksa pengguna membaca seluruh artikel panjang secara manual.
+
+### Decision
+1. Menambahkan pemantauan bursa global (S&P 500, Dow Jones, Nasdaq, Nikkei 225, Hang Seng) dan harga komoditas strategis pada modul `market-sentiment`.
+2. Menstandarisasikan klasifikasi label sentimen berita (`[Positif]`, `[Netral]`, `[Negatif]`) beserta skor polaritas numerik (`-1.0` s.d. `+1.0`) pada tabel `news_cache` dan komponen tampilan berita Stock Detail.
+
+### Impact
+- Memberikan konteks makroekonomi yang komprehensif bagi riset fundamental saham.
+- Mempercepat pengguna dalam menyaring berita berdampak positif atau negatif terhadap emiten yang dipantau.

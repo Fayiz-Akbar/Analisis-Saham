@@ -27,7 +27,7 @@ Palet warna utama diekstrak secara akurat dari panduan desain dengan skema inver
                                       ▼  INVERSI
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           DARK MODE (INVERTED)                              │
-│  Canvas: #0D0D0D  │  Surface: #171717  │  Text: #FFFFFF  │  Accent: #74AE2D │
+│  Canvas: #0D0D0D  │  Surface: #161616  │  Text: #FFFFFF  │  Accent: #74AE2D │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -36,7 +36,7 @@ Palet warna utama diekstrak secara akurat dari panduan desain dengan skema inver
 | Token Desain | Peran Komponen | Light Mode (Hex) | Dark Mode (Hex) | Catatan / Efek Inversi |
 |---|---|---|---|---|
 | `--color-canvas` | Latar Belakang Aplikasi (`body`) | **`#F8F8F8`** | **`#0D0D0D`** | Dibalik: dari off-white terang menjadi obsidian jet black. |
-| `--color-surface` | Kartu Kontainer (*Cards, Modals*) | **`#FFFFFF`** | **`#171717`** | Kartu di dark mode menggunakan abu gelap pekat dengan kontras halus. |
+| `--color-surface` | Kartu Kontainer (*Cards, Modals*) | **`#FFFFFF`** | **`#161616`** | Kartu di dark mode menggunakan charcoal `#161616` pekat dengan kontras halus. |
 | `--color-surface-hover` | Baris Tabel & Card Hover | **`#F5F5F5`** | **`#212121`** | State hover untuk baris tabel screener / daftar saham. |
 | `--color-border` | Garis Tepi Pemisah (*Dividers*) | **`#E5E5E5`** | **`#262626`** | Border tipis untuk memisahkan kartu tanpa mendominasi visual. |
 | `--color-text-primary` | Teks Utama, Judul & Ticker | **`#0D0D0D`** | **`#FFFFFF`** | Dibalik: dari hitam pekat menjadi putih bersih dengan keterbacaan 100%. |
@@ -44,6 +44,8 @@ Palet warna utama diekstrak secara akurat dari panduan desain dengan skema inver
 | `--color-text-muted` | Label Rasio, Tanggal, & Footer | **`#737373`** | **`#737373`** | Keterangan kecil yang netral. |
 | `--color-primary` | Brand CTA & Aksen Utama | **`#74AE2D`** | **`#74AE2D`** | Tetap konsisten hijau limau (tampak sangat menonjol di dark mode). |
 | `--color-primary-hover` | Hover Tombol Utama | **`#629624`** | **`#86C636`** | Sedikit lebih cerah saat di-hover pada mode gelap. |
+| `--color-sage` | Container Aksen Lembut & Highlight | **`#D6E3C0`** | **`#1F2E14`** | Hijau sage pastel untuk wadah kartu AI, sorotan metrik unggulan, atau pill aktif. |
+| `--color-peach` | Warm Accent / Moderate / Fair Value | **`#F2D6A4`** | **`#36240D`** | Warna peach/gold lembut untuk peringatan terukur, valuasi wajar, dan komoditas. |
 | `--color-tint` | Badge Latar Lembut & Chips | **`#F2F6CD`** | **`#1C2A0F`** | Di dark mode menjadi hijau gelap elegan dengan border halus. |
 | `--color-tint-text` | Teks di Dalam Badge Tint | **`#365314`** | **`#BEF264`** | Teks hijau limau terang agar mudah dibaca di latar gelap. |
 
@@ -55,11 +57,12 @@ Warna semantik finansial diatur agar tetap terbaca konsisten di kedua mode:
 
 | Status Finansial | Light Mode Text / Icon | Light Mode Bg | Dark Mode Text / Icon | Dark Mode Bg | Makna pada Saham |
 |---|---|---|---|---|---|
-| **Bullish / Gain (`+`)** | `#74AE2D` | `#F2F6CD` | `#84CC16` | `#1A2E05` | Kenaikan harga harian, Net Income positif, ROE tinggi, Candle Hijau |
+| **Bullish / Gain (`+`)** | `#74AE2D` | `#F2F6CD` / `#D6E3C0` | `#84CC16` | `#1A2E05` | Kenaikan harga harian, Net Income positif, ROE tinggi, Candle Hijau |
 | **Bearish / Loss (`-`)** | `#DC2626` | `#FEF2F2` | `#F87171` | `#2D0B0B` | Penurunan harga harian, kerugian emiten, Candle Merah |
 | **Neutral (`0%`)** | `#737373` | `#F5F5F5` | `#A3A3A3` | `#1F1F1F` | Harga stagnan, evaluasi rata-rata industri |
+| **Fair Value / Moderate Risk** | `#78350F` | **`#F2D6A4`** | `#FDE68A` | **`#36240D`** | Valuasi wajar, skor diversifikasi moderat (31-60), indikator komoditas |
 | **Warning / Alert** | `#D97706` | `#FFFBEB` | `#FBBF24` | `#2D1D04` | Rasio utang (DER) tinggi, volatilitas tinggi, disclaimer risiko |
-| **AI Intelligence Accent** | `#74AE2D` | `#F2F6CD` | `#74AE2D` | `#17230E` | Penanda analisis otomatis grounded data faktual |
+| **AI Intelligence Accent** | `#1F2E14` | **`#D6E3C0`** | `#D6E3C0` | `#17230E` | Wadah sintesis AI grounded, badge fitur co-pilot cerdas |
 
 ---
 
@@ -113,7 +116,7 @@ Mengadopsi bentuk kapsul dinamis (*rounded pill & soft modern curves*):
   - Hover: `#629624` (Light) / `#86C636` (Dark)
 - **Secondary Pill Button (Outlined)**:
   - Light Mode: Background `#FFFFFF`, Border `1.5px solid #0D0D0D`, Teks `#0D0D0D`, Hover `#F8F8F8`
-  - Dark Mode: Background `#171717`, Border `1.5px solid #FFFFFF`, Teks `#FFFFFF`, Hover `#262626`
+  - Dark Mode: Background `#161616`, Border `1.5px solid #FFFFFF`, Teks `#FFFFFF`, Hover `#262626`
 - **Theme Toggle Switch (Light/Dark)**:
   - Tombol kapsul kecil dengan ikon Sun/Moon (Lucide Icons).
   - Mengubah class `.dark` pada elemen `<html>` dan menyimpan preferensi ke `localStorage`.
@@ -125,13 +128,25 @@ Mengadopsi bentuk kapsul dinamis (*rounded pill & soft modern curves*):
 - **Negative Badge**:
   - Light: Latar `#FEF2F2`, Teks `#DC2626`, Border `#FECACA`
   - Dark: Latar `#2D0B0B`, Teks `#F87171`, Border `#4C1212`
+- **Warm Peach / Sand Badge** (Fair Value, Moderate Risk, Macro Commodities):
+  - Light: Latar `#F2D6A4`, Teks `#78350F`, Border `#E5C287`
+  - Dark: Latar `#36240D`, Teks `#FDE68A`, Border `#543815`
+- **Sage Soft Container / Badge** (AI Grounded Highlight, Active Filter):
+  - Light: Latar `#D6E3C0`, Teks `#1F2E14`, Border `#BED2A3`
+  - Dark: Latar `#1F2E14`, Teks `#D6E3C0`, Border `#2E421E`
 - **Sector / Index Preset Tag** (IDX80, LQ45, IDX30):
   - Light: Latar `#F8F8F8`, Teks `#0D0D0D`, Border `#E5E5E5`, `hover:border-[#74AE2D]`
   - Dark: Latar `#1F1F1F`, Teks `#FFFFFF`, Border `#2E2E2E`, `hover:border-[#74AE2D]`
 
-### 5.3 Metric Cards (Kartu Rasio Fundamental 4 Pilar)
-- Latar: `#FFFFFF` (Light) / `#171717` (Dark)
-- Border: `1px solid #E5E5E5` (Light) / `1px solid #262626` (Dark)
+### 5.3 Metric Cards & Surface Containers
+- **Standard Card**:
+  - Latar: `#FFFFFF` (Light) / `#161616` (Dark)
+  - Border: `1px solid #E5E5E5` (Light) / `1px solid #262626` (Dark)
+  - Sudut: `rounded-2xl`
+- **Featured / AI Container Card**:
+  - Latar: `#D6E3C0` (Light) / `#1F2E14` (Dark) dengan teks `#1F2E14` / `#D6E3C0`
+- **Textured Accent Banner / Card**:
+  - Latar: `#161616` dengan pola diagonal stripes (`bg-diagonal-stripes`) untuk visual aksen modern pada hero banner / card header.
 - Label Rasio: Text `#737373` / `#A3A3A3`
 - Angka Nilai: Text `#0D0D0D` (Light) / `#FFFFFF` (Dark) `font-bold text-2xl`
 - Status Badge: Pill badge di pojok kartu dengan skema status semantik.
@@ -145,8 +160,8 @@ Mengadopsi bentuk kapsul dinamis (*rounded pill & soft modern curves*):
   - Light: Latar `#0D0D0D`, Teks `#FFFFFF`, `rounded-2xl rounded-tr-sm`
   - Dark: Latar `#262626`, Teks `#FFFFFF`, Border `#383838`, `rounded-2xl rounded-tr-sm`
 - **Chat Bubble AI**:
-  - Light: Latar `#FFFFFF`, Border `#E5E5E5`, Teks `#0D0D0D`
-  - Dark: Latar `#171717`, Border `#262626`, Teks `#E5E5E5`
+  - Light: Latar `#D6E3C0` (atau `#FFFFFF`), Border `#BED2A3` (atau `#E5E5E5`), Teks `#1F2E14` (atau `#0D0D0D`)
+  - Dark: Latar `#161616`, Border `#262626`, Teks `#E5E5E5`
 - **Disclaimer Card**: Box tipis dengan latar `#F8F8F8` (Light) / `#141414` (Dark), border kiri tebal `#74AE2D`.
 
 ---
@@ -159,7 +174,7 @@ Konfigurasi visual chart otomatis menyesuaikan mode:
 // Konfigurasi Tema TradingView Lightweight Charts (Light & Dark)
 export const getChartTheme = (isDark = false) => ({
   layout: {
-    background: { color: isDark ? '#171717' : '#FFFFFF' },
+    background: { color: isDark ? '#161616' : '#FFFFFF' },
     textColor: isDark ? '#A3A3A3' : '#737373',
     fontFamily: '"Plus Jakarta Sans", Inter, sans-serif',
   },
@@ -203,10 +218,14 @@ export default {
           primary: '#74AE2D',            // Lime Green Utama
           'primary-hover': '#629624',
           'primary-dark-hover': '#86C636',
-          dark: '#0D0D0D',               // Hitam Kontras Utama / Latar Dark Mode
+          dark: '#0D0D0D',               // Hitam Kontras Utama / Latar Dark Mode Canvas
           surface: '#FFFFFF',            // Kartu Light Mode
-          'surface-dark': '#171717',     // Kartu Dark Mode
+          'surface-dark': '#161616',     // Kartu Dark Mode (Charcoal Surface)
           canvas: '#F8F8F8',             // Latar Kanvas Light Mode
+          sage: '#D6E3C0',               // Soft Sage Green (Wadah/Container Aksen Lembut)
+          'sage-dark': '#1F2E14',        // Soft Sage Green Dark Container
+          peach: '#F2D6A4',              // Warm Peach / Golden Sand (Moderate Risk, Fair Value, Komoditas)
+          'peach-dark': '#36240D',       // Warm Peach Dark Container
           tint: '#F2F6CD',               // Aksen Latar Lembut Light
           'tint-dark': '#1A2E05',        // Aksen Latar Lembut Dark
         },
@@ -223,7 +242,15 @@ export default {
           'neutral-dark': '#A3A3A3',
           'neutral-bg': '#F5F5F5',
           'neutral-bg-dark': '#1F1F1F',
+          moderate: '#78350F',
+          'moderate-dark': '#FDE68A',
+          'moderate-bg': '#F2D6A4',
+          'moderate-bg-dark': '#36240D',
         }
+      },
+      backgroundImage: {
+        'diagonal-stripes': 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 255, 255, 0.08) 10px, rgba(255, 255, 255, 0.08) 20px)',
+        'diagonal-stripes-light': 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0, 0, 0, 0.05) 10px, rgba(0, 0, 0, 0.05) 20px)',
       },
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
@@ -269,6 +296,10 @@ export default {
   --color-text-muted: #737373;
   --color-primary: #74AE2D;
   --color-primary-hover: #629624;
+  --color-sage: #D6E3C0;
+  --color-sage-text: #1F2E14;
+  --color-peach: #F2D6A4;
+  --color-peach-text: #78350F;
   --color-tint: #F2F6CD;
   --color-tint-text: #365314;
 }
@@ -276,7 +307,7 @@ export default {
 .dark {
   /* DARK MODE (INVERTED) */
   --color-canvas: #0D0D0D;
-  --color-surface: #171717;
+  --color-surface: #161616;
   --color-surface-hover: #212121;
   --color-border: #262626;
   --color-text-primary: #FFFFFF;
@@ -284,6 +315,10 @@ export default {
   --color-text-muted: #A3A3A3;
   --color-primary: #74AE2D;
   --color-primary-hover: #86C636;
+  --color-sage: #1F2E14;
+  --color-sage-text: #D6E3C0;
+  --color-peach: #36240D;
+  --color-peach-text: #FDE68A;
   --color-tint: #1A2E05;
   --color-tint-text: #BEF264;
 }

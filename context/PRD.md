@@ -66,10 +66,10 @@ Membangun platform web berbasis AI yang mengintegrasikan data pasar saham IDX, f
 
 ## Modules Summary
 1. **Authentication & User Management** (`auth.md`): Registrasi, login berbasis JWT, enkripsi password dengan bcrypt, serta pengelolaan profil pengguna.
-2. **Central Dashboard** (`dashboard.md`): Ringkasan portofolio, visualisasi alokasi aset/sektor, widget watchlist, snapshot IHSG & top movers, ringkasan berita terkini, dan akses cepat fitur utama.
-3. **Global Market & Sentiment** (`market-sentiment.md`): Pemantauan pergerakan indeks IHSG, top gainers/losers, agregasi berita pasar modal, dan AI Macro Assistant untuk sentimen pasar harian.
+2. **Central Dashboard** (`dashboard.md`): Ringkasan portofolio, visualisasi alokasi aset/sektor, widget watchlist, snapshot IHSG, bursa global & komoditas, top movers, ringkasan berita pasar berlabel sentimen, dan akses cepat fitur utama.
+3. **Global Market & Sentiment** (`market-sentiment.md`): Pemantauan pergerakan indeks IHSG, indeks global (S&P 500, Nikkei 225, Hang Seng), komoditas strategis (Minyak, Emas, Batubara, Nikel, CPO), top gainers/losers, agregasi berita pasar berlabel sentimen, dan AI Macro Assistant untuk sentimen pasar harian.
 4. **Stock Screener** (`stock-screener.md`): Penyaringan emiten berdasarkan sektor, industri, market cap, indikator valuasi (PE, PBV), profitabilitas (ROE, ROA), solvabilitas (DER), yield dividen, dan indeks IDX (katalog terkurasi utama: Indeks IDX80, LQ45, IDX30).
-5. **Stock Detail Analysis** (`stock-detail.md`): Halaman analisis komprehensif emiten mencakup profil perusahaan, harga real-time, chart candlestick interaktif (TradingView Lightweight Charts), kartu metrik 4 pilar fundamental, berita terkait, serta AI Stock Analysis Assistant.
+5. **Stock Detail Analysis** (`stock-detail.md`): Halaman analisis komprehensif emiten mencakup profil perusahaan, harga real-time, chart candlestick interaktif (TradingView Lightweight Charts), kartu metrik 4 pilar fundamental, berita terkait berlabel sentimen (`[Positif]`/`[Netral]`/`[Negatif]`), serta AI Stock Analysis Assistant.
 6. **Stock Comparison** (`stock-comparison.md`): Komparasi komparatif multi-emiten (2–4 saham) secara side-by-side lintas metrik valuasi, profitabilitas, leverage, pertumbuhan, visual perbandingan batang/garis, dan AI Comparison Co-pilot.
 7. **Watchlist Management** (`watchlist.md`): Manajemen daftar pantau saham personal per user dengan pembaruan metrik harga berkala dan navigasi cepat ke detail/komparasi.
 8. **Portfolio Tracking & Transactions** (`portfolio.md`): Pencatatan transaksi BUY/SELL berbasis lot (1 lot = 100 lembar), kalkulasi weighted average price, perhitungan realized & unrealized P/L otomatis, serta breakdown alokasi sektor dan saham.
@@ -78,6 +78,7 @@ Membangun platform web berbasis AI yang mengintegrasikan data pasar saham IDX, f
 11. **Investment Learning & Quiz** (`investment-learning.md`): Pusat literasi investasi terstruktur 6 level (Level 1 Intro s.d. Level 6 Strategy), pembaca artikel materi, kuis interaktif per materi, serta pelacakan progres belajar.
 12. **AI Orchestration & Context Grounding Core** (`ai-assistant.md`): Layanan orkestrasi context builder, penyusunan prompt faktual, pembatasan skema respon terstruktur (JSON), kontrol halusinasi ketat, serta endpoint AI Financial Assistant dan AI Investment Tutor.
 13. **User Settings & Session** (`settings.md`): Pengaturan akun, ganti password, preferensi notifikasi, dan pengelolaan sesi autentikasi.
+14. **Design System & UI Theme** (`design.md`): Panduan sistem desain terpadu berbasis estetika SwiftBook neo-fintech dengan dukungan penuh Dual-Theme (Light & Dark Mode), palet warna `#74AE2D`, `#D6E3C0`, `#F2D6A4`, `#161616`, `#0D0D0D`, komponen pill button `rounded-full`, dan kartu `rounded-2xl`.
 
 ---
 

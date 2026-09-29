@@ -168,4 +168,4 @@ Disusun dataset berisi 50 pertanyaan pengujian terstandarisasi yang mencakup:
 
 ## AI Agent Instructions
 - **Backend Agent**: Simpan `GEMINI_API_KEY` hanya di `.env` server. Gunakan `responseMimeType: "application/json"` pada konfigurasi pemanggilan Gemini SDK untuk memastikan model selalu mengembalikan JSON terstruktur.
-- **Frontend Agent**: Tangani status loading dengan indikator *"AI sedang menyintesis data fundamental..."* dan berikan opsi retry jika kuota API mengalami limit sementara.
+- **Frontend Agent**: Tangani status loading dengan indikator *"AI sedang menyintesis data fundamental..."*, bungkus output respons dalam wadah beraksen hijau sage lembut (`#D6E3C0` di Light Mode / `#1F2E14` di Dark Mode) dengan bubble chat terstruktur, dan berikan opsi retry jika kuota API mengalami limit sementara.

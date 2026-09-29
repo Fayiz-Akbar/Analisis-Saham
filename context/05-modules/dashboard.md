@@ -25,9 +25,9 @@ Memonitor pergerakan pasar saham secara cepat saat pembukaan bursa, memantau alo
 - **FR-DASH-001**: Dashboard harus menampilkan kartu ringkasan portofolio: Total Portfolio Value, Total Invested, Net Profit/Loss (Rupiah), dan Total Return (%).
 - **FR-DASH-002**: Dashboard harus menampilkan diagram visual alokasi portofolio berdasarkan saham individual dan sektor industri.
 - **FR-DASH-003**: Dashboard harus menampilkan widget ringkasan Watchlist (maksimal 5 saham teratas) dengan harga terkini dan persentase perubahan harian.
-- **FR-DASH-004**: Dashboard harus menampilkan ringkasan Indeks Harga Saham Gabungan (IHSG) beserta daftar top gainers dan top losers hari ini.
-- **FR-DASH-005**: Dashboard harus menampilkan 3–5 berita pasar modal terkini dari tabel `news_cache`.
-- **FR-DASH-006**: Dashboard harus menyediakan deretan tombol navigasi cepat: Cari Saham, Bandingkan Saham, Tambah Transaksi, Simulasi DCA, dan Mulai Belajar.
+- **FR-DASH-004**: Dashboard harus menampilkan ringkasan Indeks Harga Saham Gabungan (IHSG), pergerakan bursa global (S&P 500, Nikkei 225), komoditas strategis (Minyak, Emas, Nikel, CPO), serta daftar top gainers dan top losers dari konstituen Indeks IDX80.
+- **FR-DASH-005**: Dashboard harus menampilkan 3–5 berita pasar modal terkini dari tabel `news_cache` yang dilengkapi label badge sentimen (`[Positif]`, `[Netral]`, `[Negatif]`).
+- **FR-DASH-006**: Dashboard harus menyediakan deretan tombol navigasi cepat berbentuk kapsul (*pill buttons* `rounded-full`): Cari Saham, Bandingkan Saham, Tambah Transaksi, Simulasi DCA, dan Mulai Belajar.
 - **FR-DASH-007**: Apabila pengguna baru belum memiliki transaksi portofolio, sistem harus merender *onboarding empty state* yang ramah dengan panduan langkah pertama.
 
 ---
@@ -130,8 +130,8 @@ Modul ini memanfaatkan data agregasi dari beberapa tabel:
 ---
 
 ## UI / UX Requirements
-- Desain *Clean Financial Aesthetic*: Latar belakang dark slate modern, kontras teks tinggi, aksen warna ungu/biru lembut, dan kartu bergradien halus.
-- Transisi data halus (*micro-animation*) saat memuat komponen grafik.
+- Desain *SwiftBook Neo-Fintech Aesthetic*: Dukungan penuh Dual-Theme (Light & Dark Mode) dengan pembalikan kontras terbalik: kanvas `#F8F8F8` (Light) / `#0D0D0D` (Dark), kartu `#FFFFFF` / `#161616` (`rounded-2xl`), tombol dan tag berbentuk kapsul (*pill buttons* `rounded-full`), aksen hijau limau segar `#74AE2D`, kontainer AI sage `#D6E3C0`, dan aksen warm peach `#F2D6A4`.
+- Transisi data halus (*micro-animation*) saat memuat komponen grafik dan pergantian tema gelap/terang.
 - Skeleton loader untuk setiap widget selama proses data fetching.
 
 ---

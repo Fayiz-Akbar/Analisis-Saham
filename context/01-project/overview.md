@@ -4,14 +4,17 @@
 Pasar modal Indonesia melalui Bursa Efek Indonesia (IDX) mengalami lonjakan signifikan partisipasi investor ritel dalam beberapa tahun terakhir. Namun, tingginya minat ini belum diimbangi dengan literasi keuangan yang memadai dan ketersediaan perangkat riset yang efisien. Data pasar modal tersebar di berbagai platform terpisah—mulai dari dokumen PDF laporan keuangan emiten, aplikasi ringkasan harga saham, portal berita ekonomi, hingga spreadsheet manual untuk komparasi kompetitor.
 
 **AI-Powered Fundamental Investment Analyzer** dikembangkan sebagai solusi terpadu berbasis web yang mengintegrasikan:
-- Data harga real-time dan candlestick historis emiten IDX.
-- Rasio dan metrik fundamental keuangan (Valuation, Profitability, Growth, Solvability/Leverage).
-- Filter saham otomatis (*Stock Screener*) dan komparasi multi-saham (*Stock Comparison*) berdampingan.
+- Data harga real-time dan candlestick historis emiten IDX berbasis katalog terkurasi konstituen **Indeks IDX80** (serta pencarian on-demand untuk seluruh emiten IDX).
+- Rasio dan metrik fundamental keuangan 4 pilar (Valuation, Profitability, Growth, Solvability/Leverage).
+- Agregasi berita emiten dan pasar modal dengan klasifikasi label sentimen otomatis (`[Positif]`, `[Netral]`, `[Negatif]`).
+- Indeks bursa global (S&P 500, Nikkei 225) dan harga komoditas strategis (Minyak, Emas, Batubara, Nikel, CPO).
+- Filter saham otomatis (*Stock Screener*) dengan preset indeks (IDX80, LQ45, IDX30) dan komparasi multi-saham (*Stock Comparison*) berdampingan.
 - Pencatatan portofolio transaksi dengan perhitungan keuntungan/kerugian (*Realized & Unrealized P/L*).
 - Simulasi Dollar-Cost Averaging (DCA) realistis berbasis satuan lot (1 lot = 100 lembar).
 - Pengukuran tingkat diversifikasi dan audit risiko konsentrasi (*Investment Health*).
 - Kurikulum edukasi investasi bertingkat (6 level) dilengkapi kuis interaktif.
 - Asisten analisis finansial dan tutor edukasi berbasis kecerdasan buatan (*Context-Grounded LLM* via Google Gemini API).
+- Sistem desain modern neo-fintech (SwiftBook style) dengan dukungan penuh Dual-Theme (Light & Dark Mode) berbasis token warna `#74AE2D`, `#D6E3C0`, `#F2D6A4`, `#161616`, dan `#0D0D0D`.
 
 Platform ini menempatkan diri sebagai **Educational & Analytical Investment Platform** yang melayani dua spektrum investor: membimbing investor pemula memahami konsep dasar serta memangkas waktu riset bagi investor ritel berpengalaman.
 
@@ -58,10 +61,10 @@ Learn  ──>  Search  ──>  Analyze  ──>  Compare  ──>  Simulate  �
 
 ### 4.1 In Scope
 - Autentikasi pengguna berbasis JWT dan manajemen profil.
-- Tampilan dashboard terpadu (ringkasan portofolio, snapshot pasar, berita, watchlist).
-- Pemantauan indeks IHSG, top gainers, top losers, dan ringkasan sentimen makro.
-- Penyaring saham (*Stock Screener*) berdasarkan sektor, industri, PE, PBV, ROE, ROA, DER, market cap, dan yield dividen.
-- Analisis detail saham (*Stock Detail*) dengan chart candlestick interaktif (TradingView Lightweight Charts), 4 pilar rasio keuangan, dan ringkasan berita.
+- Tampilan dashboard terpadu (ringkasan portofolio, snapshot pasar IHSG, bursa global & komoditas, berita berlabel sentimen, watchlist).
+- Pemantauan indeks IHSG, indeks global, komoditas strategis, top gainers, top losers, dan ringkasan sentimen makro.
+- Penyaring saham (*Stock Screener*) berbasis preset indeks (IDX80, LQ45, IDX30) dan filter sektor, industri, PE, PBV, ROE, ROA, DER, market cap, dan yield dividen.
+- Analisis detail saham (*Stock Detail*) dengan chart candlestick interaktif (TradingView Lightweight Charts), 4 pilar rasio keuangan, dan ringkasan berita berlabel sentimen (`[Positif]`/`[Netral]`/`[Negatif]`).
 - Komparasi berdampingan (*Stock Comparison*) untuk 2 hingga 4 saham.
 - Manajemen watchlist personal.
 - Pencatatan transaksi portofolio dengan kalkulasi harga beli rata-rata (*weighted average buy price*) dan P/L (realized & unrealized).

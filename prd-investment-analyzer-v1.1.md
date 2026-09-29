@@ -230,17 +230,22 @@ Digunakan untuk:
 * state management;
 * interactive dashboard.
 
-Tailwind CSS
+Tailwind CSS & Design System
 
 Digunakan untuk:
 
 * responsive layout;
-* cards;
-* tables;
-* forms;
-* navigation;
-* modal;
-* dashboard.
+* cards (`rounded-2xl`) & tables;
+* pill-shaped interactive components (`rounded-full` untuk buttons, search bar, chips, dan status badges);
+* Dual-Theme (Light Mode & Dark Mode) dengan kontras terbalik:
+  - Primary Accent: `#74AE2D` (Lime Green)
+  - Soft Sage Green: `#D6E3C0` (Wadah/Container AI & Highlight Card)
+  - Warm Peach / Gold: `#F2D6A4` (Moderate Risk, Valuasi Wajar, Komoditas)
+  - Dark Canvas: `#0D0D0D` | Dark Card Surface: `#161616`
+  - Light Canvas: `#F8F8F8` | Light Card Surface: `#FFFFFF`
+  - Soft Tint Badge: `#F2F6CD`
+  - Textured Accent: Diagonal stripes pattern untuk hero banner aksen modern;
+* navigation, modal, dan dynamic dashboard.
 
 TradingView Lightweight Charts
 
