@@ -56,7 +56,8 @@ context/
 |   |-- overview.md             # Latar belakang, tujuan, scope, dan research questions
 |   |-- architecture.md         # Arsitektur sistem, data flow, dan integrasi
 |   |-- database.md             # Desain database, ERD, dan konvensi skema
-|   `-- tech-stack.md           # Rincian teknologi frontend, backend, AI, dan database
+|   |-- tech-stack.md           # Rincian teknologi frontend, backend, AI, dan database
+|   `-- design.md               # Design system, palet warna (#74AE2D, #0D0D0D, #F2F6CD), tipografi, & UI tokens
 |
 |-- 02-development/             # Standar dan tata cara pengembangan
 |   |-- conventions.md          # Standar penamaan, struktur kode, dan git commit
