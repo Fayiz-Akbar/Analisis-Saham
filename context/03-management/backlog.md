@@ -58,3 +58,16 @@ Daftar backlog disusun berdasarkan prioritas (P0, P1, P2, P3) dan pembagian fase
 - **🟠 P1 (High - MVP Phase 3 & 4)**: Fitur analitik dan manajemen esensial (Cache, News, Screener, Stock Comparison, Watchlist, Portfolio Transactions, DCA Realistic Lot).
 - **🟡 P2 (Medium - MVP Phase 5 & 6)**: Fitur penunjang edukasi dan dashboard komprehensif (Dashboard terpadu, Market Sentiment, Investment Health Score, Kurikulum Belajar 6 Level, AI Tutor).
 - **🟢 P3 (Low / Academic Enhancement - MVP Phase 6 & 7)**: Fitur penyempurna interaktivitas dan evaluasi skripsi (Kuis, Tracking Progres, Pengujian Metrik Ilmiah Factual Consistency & Caching Benchmark).
+
+---
+
+## 3. Pemetaan Sprint Scrum Penelitian (Tabel 12 Draft Skripsi Fayiz)
+
+Sesuai rencana metodologi penelitian Scrum pada Bab 3.4.6 (Tabel 12) Naskah Skripsi, implementasi sub-sistem Fayiz dibagi menjadi 4 Sprint terfokus:
+
+| Sprint | Modul / Fitur (Tabel 12 Skripsi) | Task Terkait | Pekerjaan Utama |
+|---|---|---|---|
+| **Sprint 1** | **Dashboard, Stock Search, Stock Detail** | TSK-001 s.d. TSK-012, TSK-016, TSK-029 | Membangun struktur dasar aplikasi, pencarian emiten Indeks IDX80, pengambilan data quote harga, informasi profil perusahaan, candlestick chart historis TradingView, serta antarmuka Dashboard utama. |
+| **Sprint 2** | **Stock Screener, Stock Comparison** | TSK-018, TSK-019, TSK-020 | Mengembangkan fitur penyaringan saham berbasis indikator fundamental (PER, PBV, ROE, DER) dan fitur komparasi berdampingan (*side-by-side*) untuk 2 hingga 4 emiten secara serentak. |
+| **Sprint 3** | **Company News, Sentiment Analysis, Market & Sentiment** | TSK-017, TSK-030 | Mengintegrasikan Yahoo Finance / News API, menyajikan berita emiten berlabel sentimen (`[Positif]`, `[Netral]`, `[Negatif]`), serta dasbor kondisi pasar makro (IHSG, bursa global, komoditas acuan). |
+| **Sprint 4** | **AI Financial Assistant & Context Grounding** | TSK-013, TSK-014, TSK-015, TSK-021, TSK-040 | Mengembangkan Context Builder, integrasi Google Gemini API, guardrail anti-halusinasi (*fallback: "Data fakta tidak tersedia"*), antarmuka AI dengan toggle mode profil (Pemula vs Berpengalaman), dan pengujian evaluasi skripsi. |

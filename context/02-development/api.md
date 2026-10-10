@@ -129,7 +129,7 @@ Daftar Error Code Standar:
 | `GET` | `/api/learning/:id/quiz` | Mengambil pertanyaan kuis per materi | Public / Bearer | - | - | `200 OK` |
 | `POST` | `/api/learning/:id/progress` | Memperbarui status selesai membaca materi | Bearer JWT | `{ completed: true }` | - | `200 OK` |
 | `POST` | `/api/learning/:id/quiz/submit` | Mengirim jawaban kuis dan menerima skor | Bearer JWT | `{ answers: [{ quiz_id, answer }] }` | - | `200 OK` |
-| `POST` | `/api/ai/stock-analysis` | Analisis fundamental emiten berbasis AI | Bearer JWT | `{ symbol, question }` | - | `200 OK` |
+| `POST` | `/api/ai/stock-analysis` | Analisis fundamental emiten berbasis AI | Bearer JWT | `{ symbol, profile, question }` | - | `200 OK` |
 | `POST` | `/api/ai/stock-comparison` | Sintesis komparasi multi-saham berbasis AI | Bearer JWT | `{ symbols: ["BBCA", "BBRI"], focus }` | - | `200 OK` |
 | `POST` | `/api/ai/market-analysis` | Sintesis kondisi makro dan IHSG hari ini | Bearer JWT | `{ query }` | - | `200 OK` |
 | `POST` | `/api/ai/portfolio-analysis` | Evaluasi naratif risiko & alokasi portofolio | Bearer JWT | `{ question }` | - | `200 OK` |

@@ -35,8 +35,11 @@ Mengukur keandalan dan konsistensi faktual arsitektur *context-grounded LLM* pad
 - **FR-AI-002**: Sistem harus menyusun payload konteks data faktual (`Context Builder`) dari database dan cache lokal sebelum mengirim request ke Google Gemini API.
 - **FR-AI-003**: Sistem harus menyuntikkan instruksi sistem (*System Instructions*) anti-halusinasi pada setiap panggilan API Gemini.
 - **FR-AI-004**: Model AI harus mengembalikan respon dalam format JSON terstruktur dengan kolom: `summary`, `key_insights`, `metrics_used`, dan `disclaimer`.
-- **FR-AI-005**: Jika informasi yang ditanyakan pengguna tidak tersedia pada konteks data yang disuntikkan, AI wajib menjawab: *"Informasi tersebut tidak tersedia pada data yang digunakan sistem."*
+- **FR-AI-005**: Jika informasi yang ditanyakan pengguna tidak tersedia pada konteks data yang disuntikkan, AI wajib menjawab: *"Data fakta tidak tersedia pada data yang disediakan sistem."* (sesuai KF-14).
 - **FR-AI-006**: Seluruh respon AI wajib menyertakan teks *disclaimer* standar: *"Analisis ini dihasilkan oleh AI untuk tujuan edukasi dan bukan merupakan rekomendasi atau ajakan transaksi beli/jual saham."*
+- **FR-AI-007**: AI Financial Assistant harus mendukung penyesuaian profil analisis pengguna (`profile`: `"beginner"` atau `"experienced"`):
+  - Mode **Pemula (`beginner`)**: Penjelasan disajikan dengan analogi sederhana, bahasa ramah, dan mengedukasi arti indikator keuangan tanpa jargon berlebihan.
+  - Mode **Berpengalaman (`experienced`)**: Penjelasan disajikan secara analitis, tajam, padat, berfokus pada metrik kuantitatif, tren komparatif, dan implikasi fundamental emiten.
 
 ---
 
@@ -140,7 +143,7 @@ PEDOMAN KETAT:
 ### Endpoint List
 | Method | Path | Purpose | Authorization | Request Body | Response Status |
 |--------|------|---------|---------------|--------------|-----------------|
-| `POST` | `/api/ai/stock-analysis` | Analisis fundamental emiten | Bearer JWT | `{ symbol: "BBCA", question?: string }` | `200 OK` |
+| `POST` | `/api/ai/stock-analysis` | Analisis fundamental emiten | Bearer JWT | `{ symbol: "BBCA", profile?: "beginner" \| "experienced", question?: string }` | `200 OK` |
 | `POST` | `/api/ai/stock-comparison` | Analisis komparasi multi-saham | Bearer JWT | `{ symbols: ["BBCA", "BBRI"] }` | `200 OK` |
 | `POST` | `/api/ai/market-analysis` | Analisis sentimen pasar hari ini | Bearer JWT | `{ query?: string }` | `200 OK` |
 | `POST` | `/api/ai/portfolio-analysis`| Analisis risiko portofolio user | Bearer JWT | None | `200 OK` |

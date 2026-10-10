@@ -158,7 +158,7 @@ ContextBuilder menyusun JSON Faktual BBCA ──> Gemini API ──> Render Resp
   - `CandlestickChart.jsx`: Pembungkus TradingView Lightweight Charts dengan selector rentang waktu (1W, 1M, 1Y).
   - `FundamentalCard.jsx`: Kartu rasio interaktif dengan label, nilai numerik, dan status evaluasi (misal: "ROE Tinggi", "DER Rendah").
   - `CompanyNewsSection.jsx`: Daftar berita emiten dengan badge visual sentimen `[Positif]`, `[Netral]`, atau `[Negatif]`.
-  - `AiAnalysisAssistantWidget.jsx`: Kotak asisten AI dengan prompt saran cepat (*quick prompt chips*) dan area obrolan teks.
+  - `AiAnalysisAssistantWidget.jsx`: Kotak asisten AI dengan toggle pemilih profil analisis (Pemula vs Berpengalaman), prompt saran cepat (*quick prompt chips*), dan area obrolan teks grounded data faktual.
   - `AddTransactionModal.jsx`: Modal pop-up untuk mencatat pembelian saham langsung ke portofolio.
 
 ---
