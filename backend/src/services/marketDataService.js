@@ -19,9 +19,32 @@ export class MarketDataService {
   /**
    * Mengambil data chart OHLCV & quote terkini dari Yahoo Finance
    */
-  static async fetchYahooChart(symbol, range = "1y", interval = "1d") {
+  static async fetchYahooChart(symbol, range = "1y", interval) {
     const ticker = toYahooTicker(symbol);
-    const endpointKey = `chart_${ticker}_${range}_${interval}`;
+
+    // Otomatis tentukan interval optimal jika tidak dispesifikasikan
+    let queryRange = range;
+    let effectiveInterval = interval;
+
+    // Otomatis tentukan interval & buffer optimal agar saat digeser ke kiri, data masa lalu langsung tampil
+    if (!effectiveInterval) {
+      if (range === "1d") {
+        queryRange = "5d"; // Tarik 5 hari intraday 5m agar saat di-drag ke kiri, data hari sebelumnya langsung muncul
+        effectiveInterval = "5m";
+      } else if (range === "5d" || range === "7d") {
+        effectiveInterval = "5m";
+      } else if (range === "1mo") {
+        effectiveInterval = "1h";
+      } else if (range === "3mo" || range === "6mo" || range === "1y") {
+        effectiveInterval = "1d";
+      } else if (range === "5y" || range === "max") {
+        effectiveInterval = "1wk";
+      } else {
+        effectiveInterval = "1d";
+      }
+    }
+
+    const endpointKey = `chart_${ticker}_${range}_${effectiveInterval}`;
 
     // 1. Cek Caching di Database (api_cache)
     const cached = await prisma.apiCache.findUnique({
@@ -37,7 +60,7 @@ export class MarketDataService {
     }
 
     // 2. Fetch ke Yahoo Finance API query2
-    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${ticker}?interval=${interval}&range=${range}`;
+    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${ticker}?interval=${effectiveInterval}&range=${queryRange}`;
     const response = await fetch(url, {
       headers: { "User-Agent": USER_AGENT },
     });
@@ -58,27 +81,32 @@ export class MarketDataService {
     const quote = result.indicators?.quote?.[0] || {};
 
     // Format Candlestick deret waktu untuk TradingView Lightweight Charts
-    const candles = timestamps
-      .map((ts, index) => {
-        const dateStr = new Date(ts * 1000).toISOString().split("T")[0];
-        const open = quote.open?.[index];
-        const high = quote.high?.[index];
-        const low = quote.low?.[index];
-        const close = quote.close?.[index];
-        const volume = quote.volume?.[index] || 0;
+    // Gunakan stempel waktu universal (seconds) agar kompatibel di semua timeframe & penggabungan data
+    const candles = [];
+    let lastTime = null;
 
-        if (open == null || close == null) return null;
+    for (let index = 0; index < timestamps.length; index++) {
+      const ts = timestamps[index];
+      const open = quote.open?.[index];
+      const high = quote.high?.[index];
+      const low = quote.low?.[index];
+      const close = quote.close?.[index];
+      const volume = quote.volume?.[index] || 0;
 
-        return {
-          time: dateStr,
-          open: Number(open.toFixed(2)),
-          high: Number(high.toFixed(2)),
-          low: Number(low.toFixed(2)),
-          close: Number(close.toFixed(2)),
-          volume: Number(volume),
-        };
-      })
-      .filter(Boolean);
+      if (open == null || close == null || high == null || low == null) continue;
+
+      if (lastTime !== null && ts <= lastTime) continue;
+      lastTime = ts;
+
+      candles.push({
+        time: ts,
+        open: Number(open.toFixed(2)),
+        high: Number(high.toFixed(2)),
+        low: Number(low.toFixed(2)),
+        close: Number(close.toFixed(2)),
+        volume: Number(volume),
+      });
+    }
 
     // Hitung perubahan harga
     const currentPrice = meta.regularMarketPrice || candles[candles.length - 1]?.close || 0;

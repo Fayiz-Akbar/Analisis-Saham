@@ -120,12 +120,14 @@ async function main() {
   // 2. Seeding 80 Emiten Indeks IDX80
   console.log(`⏳ Seeding ${IDX80_STOCKS.length} Emiten Konstituen Indeks IDX80...`);
   for (const stock of IDX80_STOCKS) {
+    const logoUrl = stock.logoUrl || `https://assets.stockbit.com/logos/companies/${stock.symbol}.png`;
     await prisma.stock.upsert({
       where: { symbol: stock.symbol },
       update: {
         companyName: stock.companyName,
         sector: stock.sector,
         industry: stock.industry,
+        logoUrl: logoUrl,
         isIdx80: true,
       },
       create: {
@@ -133,6 +135,7 @@ async function main() {
         companyName: stock.companyName,
         sector: stock.sector,
         industry: stock.industry,
+        logoUrl: logoUrl,
         exchange: "IDX",
         isIdx80: true,
       },

@@ -12,7 +12,13 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+    origin: (origin, callback) => {
+      // Izinkan seluruh request dari localhost di port berapapun (5173, 5174, dll.)
+      if (!origin || /^http:\/\/localhost(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
+      callback(null, true);
+    },
     credentials: true,
   })
 );

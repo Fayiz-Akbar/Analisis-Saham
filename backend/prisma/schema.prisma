@@ -77,6 +77,7 @@ model Stock {
   companyName String   @map("company_name") @db.VarChar(255)
   sector      String   @db.VarChar(100)
   industry    String   @db.VarChar(100)
+  logoUrl     String?  @map("logo_url") @db.VarChar(500)
   exchange    String   @default("IDX") @db.VarChar(20)
   isIdx80     Boolean  @default(true) @map("is_idx80")
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)

@@ -1,27 +1,27 @@
 # Current Project State
 
 ## Current Sprint
-**Sprint 1: Foundation Setup & Stock Analysis Sub-system (Fayiz Scope)**
+**Sprint 2: Stock Screener & Stock Comparison (Fayiz Scope)**
 
 ## Current Task
-Integrasi Frontend Sprint 1: Step 1.7 (Search Bar Autocomplete Saham IDX80) & Step 1.8 (TradingView Candlestick Chart interaktif di halaman Stock Detail).
+Implementasi Stock Screener (4 pilar fundamental filter: PER, PBV, ROE, DER) dan Stock Comparison (2-4 emiten).
 
 ## Last Completed Task
-Selesai implementasi Step 1.4 (Autentikasi JWT & Bcrypt), Step 1.5 (MarketDataService Yahoo Finance dengan Caching PostgreSQL JSONB), dan Step 1.6 (Endpoint REST API Saham: Search, Quote, History OHLCV, Detail). Seluruh pengujian integrasi lolos 100% dengan akselerasi cache 100x lebih cepat (552ms -> 5.8ms).
+Selesai implementasi Frontend Sprint 1 (Search Bar, TradingView Chart, Dashboard Integration) dan memperbarui logo aplikasi menjadi desain flat vector profesional.
 
 ## Current Module
-Sub-system 1: Stock Analysis & AI (Fayiz) - Sprint 1
+Sub-system 1: Stock Analysis & AI (Fayiz) - Sprint 2
 
 ## Known Issues
-Tidak ada issue. Database PostgreSQL 17 aktif, 80 emiten terisi, backend endpoint teruji dan berjalan mulus.
+Tidak ada issue. Database PostgreSQL 17 aktif, 80 emiten terisi, backend endpoint teruji dan berjalan mulus, frontend Sprint 1 terintegrasi.
 
 ## Blockers
 Tidak ada blocker saat ini.
 
 ## Next Recommended Action
-1. Buat komponen Frontend Search Bar dengan autocomplete instan dari `/api/stocks/search`.
-2. Buat komponen Candlestick Chart interaktif berbasis TradingView Lightweight Charts di halaman Stock Detail (`/stocks/:symbol`).
-3. Hubungkan data harga quote dan pergerakan pasar ke antarmuka Dashboard.
+1. Buat endpoint Backend untuk Stock Screener memfilter data fundamental (PER, PBV, ROE, DER).
+2. Buat komponen Frontend Stock Screener.
+3. Buat komponen Frontend Stock Comparison.
 
 ## Related Modules
 - `01-project/` (overview, architecture, database, tech-stack)

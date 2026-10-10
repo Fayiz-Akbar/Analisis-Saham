@@ -127,7 +127,7 @@ export const getStockQuote = async (req, res) => {
 export const getStockHistory = async (req, res) => {
   try {
     const { symbol } = req.params;
-    const { range = "1y", interval = "1d" } = req.query;
+    const { range = "1y", interval } = req.query;
     const cleanSymbol = symbol.toUpperCase().replace(".JK", "");
 
     const marketData = await MarketDataService.fetchYahooChart(cleanSymbol, range, interval);
