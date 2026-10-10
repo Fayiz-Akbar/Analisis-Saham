@@ -130,7 +130,7 @@ Modul ini memanfaatkan data agregasi dari beberapa tabel:
 ---
 
 ## UI / UX Requirements
-- Desain *SwiftBook Neo-Fintech Aesthetic*: Dukungan penuh Dual-Theme (Light & Dark Mode) dengan pembalikan kontras terbalik: kanvas `#F8F8F8` (Light) / `#0D0D0D` (Dark), kartu `#FFFFFF` / `#161616` (`rounded-2xl`), tombol dan tag berbentuk kapsul (*pill buttons* `rounded-full`), aksen hijau limau segar `#74AE2D`, kontainer AI sage `#D6E3C0`, dan aksen warm peach `#F2D6A4`.
+- Desain *Clean Financial Modern Aesthetic*: Antarmuka terstruktur, kontras teks tinggi, layout berbasis kartu responsif, serta dukungan Light Mode & Dark Mode.
 - Transisi data halus (*micro-animation*) saat memuat komponen grafik dan pergantian tema gelap/terang.
 - Skeleton loader untuk setiap widget selama proses data fetching.
 

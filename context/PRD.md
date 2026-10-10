@@ -78,7 +78,6 @@ Membangun platform web berbasis AI yang mengintegrasikan data pasar saham IDX, f
 11. **Investment Learning & Quiz** (`investment-learning.md`): Pusat literasi investasi terstruktur 6 level (Level 1 Intro s.d. Level 6 Strategy), pembaca artikel materi, kuis interaktif per materi, serta pelacakan progres belajar.
 12. **AI Orchestration & Context Grounding Core** (`ai-assistant.md`): Layanan orkestrasi context builder, penyusunan prompt faktual, pembatasan skema respon terstruktur (JSON), kontrol halusinasi ketat, serta endpoint AI Financial Assistant dan AI Investment Tutor.
 13. **User Settings & Session** (`settings.md`): Pengaturan akun, ganti password, preferensi notifikasi, dan pengelolaan sesi autentikasi.
-14. **Design System & UI Theme** (`design.md`): Panduan sistem desain terpadu berbasis estetika SwiftBook neo-fintech dengan dukungan penuh Dual-Theme (Light & Dark Mode), palet warna `#74AE2D`, `#D6E3C0`, `#F2D6A4`, `#161616`, `#0D0D0D`, komponen pill button `rounded-full`, dan kartu `rounded-2xl`.
 
 ---
 

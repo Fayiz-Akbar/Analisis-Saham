@@ -4,8 +4,8 @@
 
 - **Core Library**: React 18+ (Single Page Application via Vite)
   - Memberikan reaktivitas tinggi, perenderan komponen terisolasi, dan ekosistem luas.
-- **Styling**: Tailwind CSS & SwiftBook Design System (`design.md`)
-  - Utility-first CSS framework untuk membangun antarmuka neo-fintech modern dengan bentuk kapsul penuh (*full pill* `rounded-full`), kartu `rounded-2xl`, serta dukungan Dual-Theme (Light & Dark Mode) berbasis token warna: Primary Lime `#74AE2D`, Sage `#D6E3C0`, Warm Peach `#F2D6A4`, Dark Canvas `#0D0D0D`, Dark Surface `#161616`, dan Light Surface `#FFFFFF`.
+- **Styling**: Tailwind CSS
+  - Utility-first CSS framework untuk membangun antarmuka modern, responsif, dan konsisten (cards, grid layout, tables, modal, form, serta dukungan Light Mode & Dark Mode).
 - **Financial Charting**: TradingView Lightweight Charts
   - Library grafik finansial berkinerja tinggi untuk merender grafik candlestick interaktif, bar volume, dan pergerakan harga historis tanpa membebani memori browser.
 - **Icons**: Lucide React

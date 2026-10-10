@@ -130,22 +130,21 @@ Modul *Investment Health* menghitung skor edukatif 0–100 berdasarkan diversifi
 
 ---
 
-## D007: SwiftBook Neo-Fintech Design System with Dual-Theme Inversion
+## D007: Modern Responsive UI with Dual-Theme (Light & Dark Mode) Support
 
 **Date**: 2026-09-29  
 **Status**: Approved / Accepted  
 
 ### Context
-Aplikasi analisis finansial konvensional seringkali terlihat kaku, padat, dan membosankan, atau hanya menyediakan satu mode tampilan yang menyilaukan mata investor saat menganalisis pasar di malam hari.
+Aplikasi analisis finansial konvensional seringkali terlihat kaku dan padat, atau hanya menyediakan satu mode tampilan yang menyilaukan mata investor saat menganalisis pasar di malam hari.
 
 ### Decision
-Mengadopsi sistem desain modern *SwiftBook neo-fintech* dengan dukungan penuh **Dual-Theme (Light & Dark Mode)** yang menerapkan pembalikan kontras (*contrast inversion*) presisi:
-- Palet Warna: Aksen utama Fresh Lime `#74AE2D`, wadah AI Soft Sage `#D6E3C0`, aksen moderat Warm Peach `#F2D6A4`, Dark Canvas `#0D0D0D`, Dark Surface `#161616`, Light Canvas `#F8F8F8`, dan Light Surface `#FFFFFF`.
-- Geometri Komponen: Menggunakan bentuk kapsul penuh (*full pill* `rounded-full`) untuk seluruh tombol aksi, search bar, filter preset tags, dan status badges, serta kartu sudut membulat `rounded-2xl`.
-- Tekstur Visual: Menggunakan pola garis diagonal halus (*diagonal stripes pattern*) pada kartu aksen hero banner mode gelap.
+Mengadopsi antarmuka modern responsif dengan dukungan penuh **Dual-Theme (Light Mode & Dark Mode)** berbasis Tailwind CSS:
+- Menyediakan layout berbasis kartu yang bersih, tipografi yang nyaman dibaca, serta grafik interaktif TradingView Lightweight Charts.
+- Palet warna spesifik bersifat fleksibel dan akan difinalisasi pada tahap styling antarmuka.
 
 ### Impact
-- Menghadirkan antarmuka bertaraf institusional yang estetis, modern, dan sangat nyaman bagi investor pemula maupun berpengalaman.
+- Menghadirkan antarmuka bertaraf institusional yang estetis, modern, dan nyaman bagi investor pemula maupun berpengalaman.
 
 ---
 

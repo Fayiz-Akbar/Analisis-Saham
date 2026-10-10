@@ -7,22 +7,14 @@ Format log mengikuti standar [Keep a Changelog](https://keepachangelog.com/id/1.
 ## [1.1.0] - 2026-09-29 20:00 WIB
 
 ### Added
-- **Design System & UI Theme**: Dibuat panduan resmi sistem desain antarmuka `design.md` & `01-project/design.md` bergaya neo-fintech SwiftBook dengan dukungan penuh Dual-Theme (Light & Dark Mode) dan pembalikan kontras terbalik.
-- **Palet Warna Swatch Baru**:
-  - Primary Lime: `#74AE2D`
-  - Soft Sage Green: `#D6E3C0` (wadah AI summary & highlight)
-  - Warm Peach / Gold: `#F2D6A4` (status badge Fair Value, Moderate Risk, dan Komoditas)
-  - Dark Canvas: `#0D0D0D` | Dark Card Surface: `#161616`
-  - Light Canvas: `#F8F8F8` | Light Card Surface: `#FFFFFF`
-  - Pola aksen garis diagonal (*diagonal stripes pattern*) untuk kartu hero banner.
+- **UI Architecture & Theming**: Fondasi antarmuka modern yang fleksibel berbasis Tailwind CSS dengan dukungan penuh Dual-Theme (Light & Dark Mode) responsif.
 - **Katalog Terkurasi Indeks IDX80**: Memperbarui cakupan data saham utama ke 80 emiten konstituen Indeks IDX80 (mencakup LQ45 dan IDX30) sebagai basis seeder, screener, dan dashboard dengan dukungan pencarian on-demand emiten IDX lainnya (`${symbol}.JK`).
-- **Sentimen Berita**: Penambahan kolom `sentiment` (`POSITIVE`, `NEUTRAL`, `NEGATIVE`) dan `sentiment_score` (`-1.0` s.d. `+1.0`) pada tabel `news_cache` serta visualisasi badge warna pada komponen daftar berita.
+- **Sentimen Berita**: Penambahan kolom `sentiment` (`POSITIVE`, `NEUTRAL`, `NEGATIVE`) dan `sentiment_score` (`-1.0` s.d. `+1.0`) pada tabel `news_cache` serta visualisasi status sentimen pada komponen daftar berita.
 - **Bursa Global & Komoditas**: Integrasi pemantauan indeks global (S&P 500, Dow Jones, Nasdaq, Nikkei 225, Hang Seng) dan komoditas strategis (Minyak WTI/Brent, Emas, Batubara, Nikel, CPO) pada modul `market-sentiment`.
-- **ADR Baru**: Pencatatan D007 (SwiftBook Design System), D008 (Katalog IDX80), dan D009 (Bursa Global & Sentimen).
+- **ADR Baru**: Pencatatan D007 (Modern Responsive UI with Dual-Theme Support), D008 (Katalog IDX80), dan D009 (Bursa Global & Sentimen).
 
 ### Changed
-- Standardisasi tombol aksi, search bar, filter tags, dan status badges menjadi bentuk kapsul penuh (*full pill* `rounded-full`).
-- Penyesuaian konfigurasi Tailwind CSS dan CSS custom properties (`:root` dan `.dark`) untuk menyelaraskan token desain.
+- Standardisasi komponen tata letak, cards, and modal components menggunakan Tailwind CSS yang fleksibel.
 
 ---
 

@@ -23,11 +23,11 @@ Mengaudit eksposur sektoral portofolio riil mereka untuk memastikan kepatuhan te
 
 ## Functional Requirements
 - **FR-RSK-001**: Sistem harus menghitung skor kesehatan portofolio pengguna saat ini (`GET /api/portfolio/health`).
-- **FR-RSK-002**: Skor kesehatan (0–100) harus diklasifikasikan ke dalam 4 kategori status dan badge pill:
-  - `0–30`: **High Risk** (Konsentrasi ekstrem pada 1 saham / 1 sektor; Badge Merah `#FEF2F2` / `#2D0B0B`).
-  - `31–60`: **Moderate Risk** (Diversifikasi terbatas; Badge Warm Peach `#F2D6A4` / `#36240D`).
-  - `61–80`: **Good Health** (Diversifikasi proporsional di beberapa sektor; Badge Lime `#F2F6CD` / `#1A2E05`).
-  - `81–100`: **Well Diversified** (Portofolio tersebar seimbang di beragam industri; Badge Sage `#D6E3C0` / `#1F2E14`).
+- **FR-RSK-002**: Skor kesehatan (0–100) harus diklasifikasikan ke dalam 4 kategori status:
+  - `0–30`: **High Risk** (Konsentrasi ekstrem pada 1 saham / 1 sektor).
+  - `31–60`: **Moderate Risk** (Diversifikasi terbatas, rentan terhadap guncangan sektor tertentu).
+  - `61–80`: **Good Health** (Diversifikasi proporsional di beberapa sektor).
+  - `81–100`: **Well Diversified** (Portofolio tersebar seimbang di beragam industri).
 - **FR-RSK-003**: Sistem harus mengidentifikasi dan memvisualisasikan faktor-faktor audit risiko:
   - Jumlah emiten aktif dalam portofolio (*Number of Stocks*).
   - Bobot emiten terbesar (*Max Single Stock Weight* %).
@@ -152,7 +152,7 @@ Modul ini memanfaatkan kalkulasi runtime dari tabel `portfolio_transactions` dan
   - `HealthScoreGauge.jsx`: Meteran radial interaktif penunjuk skor 0–100 dengan transisi warna halus (Merah -> Kuning -> Hijau).
   - `RiskFactorsGrid.jsx`: 3 kartu pilar faktor penentu skor.
   - `RiskFlagsCard.jsx`: Banner peringatan risiko dengan ikon warning.
-  - `AiPortfolioCoachCard.jsx`: Panel asisten AI berwadah aksen hijau sage lembut (`#D6E3C0` / `#1F2E14`) yang menjelaskan arti skor tersebut dalam konteks edukasi investasi.
+  - `AiPortfolioCoachCard.jsx`: Panel asisten AI yang menjelaskan arti skor tersebut dalam konteks edukasi investasi.
 
 ---
 

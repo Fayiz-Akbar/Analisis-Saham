@@ -13,8 +13,7 @@ Pasar modal Indonesia melalui Bursa Efek Indonesia (IDX) mengalami lonjakan sign
 - Simulasi Dollar-Cost Averaging (DCA) realistis berbasis satuan lot (1 lot = 100 lembar).
 - Pengukuran tingkat diversifikasi dan audit risiko konsentrasi (*Investment Health*).
 - Kurikulum edukasi investasi bertingkat (6 level) dilengkapi kuis interaktif.
-- Asisten analisis finansial dan tutor edukasi berbasis kecerdasan buatan (*Context-Grounded LLM* via Google Gemini API).
-- Sistem desain modern neo-fintech (SwiftBook style) dengan dukungan penuh Dual-Theme (Light & Dark Mode) berbasis token warna `#74AE2D`, `#D6E3C0`, `#F2D6A4`, `#161616`, dan `#0D0D0D`.
+- Antarmuka web responsif dan modern dengan dukungan tema Light Mode & Dark Mode.
 
 Platform ini menempatkan diri sebagai **Educational & Analytical Investment Platform** yang melayani dua spektrum investor: membimbing investor pemula memahami konsep dasar serta memangkas waktu riset bagi investor ritel berpengalaman.
 
