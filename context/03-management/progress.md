@@ -29,13 +29,19 @@ Overall Progress: **25%** (Seluruh Dokumen SSOT, PRD, dan Modul Teknis 100% Sele
 - [x] Penyusunan dokumen setup lokal: `04-setup/` (`local-development.md`, `environment-variables.md`, `database-setup.md`, `docker-setup.md`, `troubleshooting.md`).
 - [x] Penyusunan spesifikasi rinci 13 file modul di `05-modules/` termasuk sinkronisasi Indeks IDX80, sentimen, dan pasar global.
 - [x] Perancangan arsitektur antarmuka modern yang fleksibel berbasis Tailwind CSS dengan dukungan tema Light dan Dark mode responsif.
+- [x] Inisialisasi scaffold `backend/` (Node.js Express ES6+ + Prisma ORM) dan `frontend/` (React Vite + Tailwind CSS).
+- [x] Migrasi 14 model tabel relasional ke basis data PostgreSQL 17 (`investment_analyzer`).
+- [x] Seeding master data 80 emiten konstituen Indeks IDX80 BEI dan 2 akun pengguna demo.
+- [x] Implementasi modul Autentikasi lengkap (`/api/auth/register`, `/api/auth/login`, `/api/auth/me`) dengan JWT dan bcrypt.
+- [x] Implementasi `MarketDataService` integrasi Yahoo Finance API dengan akselerasi cache PostgreSQL JSONB.
+- [x] Implementasi endpoint REST API Saham (`/api/stocks/search`, `/api/stocks/:symbol/quote`, `/api/stocks/:symbol/history`).
 
 ---
 
 ## 3. In Progress / Next Up (Sprint 1 - Fayiz)
-- [ ] Inisialisasi scaffold `backend/` (Node.js Express + Prisma ORM + Seeder 80 emiten IDX80).
-- [ ] Inisialisasi scaffold `frontend/` (React Vite + Tailwind CSS + TradingView Lightweight Charts).
-- [ ] Implementasi endpoint quote harga dan candlestick chart harian.
+- [ ] Pembuatan komponen Frontend Search Bar dengan auto-complete instan.
+- [ ] Pembuatan komponen Candlestick Chart interaktif TradingView Lightweight Charts di halaman Stock Detail.
+- [ ] Penggabungan widget harga, IHSG, dan ringkasan pasar ke Dashboard utama.
 
 ---
 

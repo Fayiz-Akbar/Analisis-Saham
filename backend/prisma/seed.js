@@ -81,7 +81,10 @@ const IDX80_STOCKS = [
   { symbol: "UNTR", companyName: "United Tractors Tbk.", sector: "Industrials", industry: "Heavy Machinery & Mining Contracting" },
   { symbol: "UNVR", companyName: "Unilever Indonesia Tbk.", sector: "Consumer Non-Cyclicals", industry: "Personal & Household Products" },
   { symbol: "WIKA", companyName: "Wijaya Karya (Persero) Tbk.", sector: "Infrastructures", industry: "Construction" },
-  { symbol: "WSKT", companyName: "Waskita Karya (Persero) Tbk.", sector: "Infrastructures", industry: "Construction" }
+  { symbol: "WSKT", companyName: "Waskita Karya (Persero) Tbk.", sector: "Infrastructures", industry: "Construction" },
+  { symbol: "BREN", companyName: "Barito Renewables Energy Tbk.", sector: "Infrastructures", industry: "Renewable Energy" },
+  { symbol: "CUAN", companyName: "Petrindo Jaya Kreasi Tbk.", sector: "Energy", industry: "Coal Mining" },
+  { symbol: "ESSA", companyName: "Essa Industries Indonesia Tbk.", sector: "Basic Materials", industry: "Ammonia & LPG" }
 ];
 
 async function main() {

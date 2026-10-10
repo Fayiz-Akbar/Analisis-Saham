@@ -3,6 +3,9 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 
+import authRoutes from "./routes/authRoutes.js";
+import stockRoutes from "./routes/stockRoutes.js";
+
 const app = express();
 
 // Security and utility middleware
@@ -26,5 +29,9 @@ app.get("/api/health", (_req, res) => {
     version: "1.0.0",
   });
 });
+
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/stocks", stockRoutes);
 
 export default app;
