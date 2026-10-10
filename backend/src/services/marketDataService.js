@@ -23,28 +23,50 @@ export class MarketDataService {
     const ticker = toYahooTicker(symbol);
 
     // Otomatis tentukan interval optimal jika tidak dispesifikasikan
-    let queryRange = range;
-    let effectiveInterval = interval;
+    let queryRange = "max";
+    let queryInterval = "1d";
+    let aggregateFactor = 1;
+    let multiMonthMode = null;
 
-    // Otomatis tentukan interval & buffer optimal agar saat digeser ke kiri, data masa lalu langsung tampil
-    if (!effectiveInterval) {
-      if (range === "1d") {
-        queryRange = "5d"; // Tarik 5 hari intraday 5m agar saat di-drag ke kiri, data hari sebelumnya langsung muncul
-        effectiveInterval = "5m";
-      } else if (range === "5d" || range === "7d") {
-        effectiveInterval = "5m";
-      } else if (range === "1mo") {
-        effectiveInterval = "1h";
-      } else if (range === "3mo" || range === "6mo" || range === "1y") {
-        effectiveInterval = "1d";
-      } else if (range === "5y" || range === "max") {
-        effectiveInterval = "1wk";
-      } else {
-        effectiveInterval = "1d";
-      }
+    // Menentukan resolusi batang lilin (1 lilin = interval yang dipilih)
+    if (range === "1h" || interval === "1h") {
+      queryInterval = "1h";
+      queryRange = "2y";
+    } else if (range === "2h" || interval === "2h") {
+      queryInterval = "1h";
+      queryRange = "2y";
+      aggregateFactor = 2;
+    } else if (range === "3h" || interval === "3h") {
+      queryInterval = "1h";
+      queryRange = "2y";
+      aggregateFactor = 3;
+    } else if (range === "4h" || interval === "4h") {
+      queryInterval = "4h";
+      queryRange = "2y";
+    } else if (range === "1d" || interval === "1d") {
+      queryInterval = "1d";
+      queryRange = "max";
+    } else if (range === "1w" || range === "1wk" || interval === "1w" || interval === "1wk") {
+      queryInterval = "1wk";
+      queryRange = "max";
+    } else if (range === "1mo" || interval === "1mo") {
+      queryInterval = "1mo";
+      queryRange = "max";
+    } else if (range === "3mo" || interval === "3mo") {
+      queryInterval = "1mo";
+      queryRange = "max";
+      multiMonthMode = "3mo"; // 1 lilin = 3 bulan (Kuartalan)
+    } else if (range === "6mo" || interval === "6mo") {
+      queryInterval = "1mo";
+      queryRange = "max";
+      multiMonthMode = "6mo"; // 1 lilin = 6 bulan (Semesteran)
+    } else if (range === "1y" || range === "12m" || interval === "1y" || interval === "12m") {
+      queryInterval = "1mo";
+      queryRange = "max";
+      multiMonthMode = "1y"; // 1 lilin = 1 TAHUN PENUH (12M - Tahunan)
     }
 
-    const endpointKey = `chart_${ticker}_${range}_${effectiveInterval}`;
+    const endpointKey = `chart_${ticker}_${range}_${interval || queryInterval}`;
 
     // 1. Cek Caching di Database (api_cache)
     const cached = await prisma.apiCache.findUnique({
@@ -60,7 +82,7 @@ export class MarketDataService {
     }
 
     // 2. Fetch ke Yahoo Finance API query2
-    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${ticker}?interval=${effectiveInterval}&range=${queryRange}`;
+    const url = `https://query2.finance.yahoo.com/v8/finance/chart/${ticker}?interval=${queryInterval}&range=${queryRange}`;
     const response = await fetch(url, {
       headers: { "User-Agent": USER_AGENT },
     });
@@ -81,8 +103,7 @@ export class MarketDataService {
     const quote = result.indicators?.quote?.[0] || {};
 
     // Format Candlestick deret waktu untuk TradingView Lightweight Charts
-    // Gunakan stempel waktu universal (seconds) agar kompatibel di semua timeframe & penggabungan data
-    const candles = [];
+    const rawCandles = [];
     let lastTime = null;
 
     for (let index = 0; index < timestamps.length; index++) {
@@ -98,7 +119,7 @@ export class MarketDataService {
       if (lastTime !== null && ts <= lastTime) continue;
       lastTime = ts;
 
-      candles.push({
+      rawCandles.push({
         time: ts,
         open: Number(open.toFixed(2)),
         high: Number(high.toFixed(2)),
@@ -106,6 +127,49 @@ export class MarketDataService {
         close: Number(close.toFixed(2)),
         volume: Number(volume),
       });
+    }
+
+    // Akumulasi bar jika diperlukan
+    let candles = rawCandles;
+    if (aggregateFactor > 1) {
+      // Agregasi jam (2 Jam / 3 Jam)
+      candles = [];
+      for (let i = 0; i < rawCandles.length; i += aggregateFactor) {
+        const chunk = rawCandles.slice(i, i + aggregateFactor);
+        if (chunk.length === 0) continue;
+        candles.push({
+          time: chunk[0].time,
+          open: chunk[0].open,
+          high: Math.max(...chunk.map((c) => c.high)),
+          low: Math.min(...chunk.map((c) => c.low)),
+          close: chunk[chunk.length - 1].close,
+          volume: chunk.reduce((sum, c) => sum + (c.volume || 0), 0),
+        });
+      }
+    } else if (multiMonthMode) {
+      // Agregasi multi-bulan (3 Bulan, 6 Bulan, dan 1 Tahun per batang lilin)
+      const groups = {};
+      for (const c of rawCandles) {
+        const d = new Date(c.time * 1000);
+        let key;
+        if (multiMonthMode === "3mo") {
+          key = `${d.getFullYear()}-Q${Math.floor(d.getMonth() / 3)}`;
+        } else if (multiMonthMode === "6mo") {
+          key = `${d.getFullYear()}-S${d.getMonth() < 6 ? 1 : 2}`;
+        } else if (multiMonthMode === "1y") {
+          key = `${d.getFullYear()}`;
+        }
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(c);
+      }
+      candles = Object.values(groups).map((list) => ({
+        time: list[0].time,
+        open: list[0].open,
+        high: Math.max(...list.map((c) => c.high)),
+        low: Math.min(...list.map((c) => c.low)),
+        close: list[list.length - 1].close,
+        volume: list.reduce((sum, c) => sum + (c.volume || 0), 0),
+      }));
     }
 
     // Hitung perubahan harga

@@ -44,13 +44,15 @@ export default function TradingViewChart({
 
   // Urutan hierarki timeframe untuk auto-load riwayat masa lalu saat grafik ditarik ke kiri
   const rangeSteps = {
-    "1d": "5d",
-    "5d": "1mo",
+    "1h": "2h",
+    "2h": "3h",
+    "3h": "4h",
+    "4h": "1d",
+    "1d": "1w",
+    "1w": "1mo",
     "1mo": "3mo",
     "3mo": "6mo",
     "6mo": "1y",
-    "1y": "5y",
-    "5y": "max",
   };
 
   const loadOlderHistory = async () => {
@@ -85,23 +87,42 @@ export default function TradingViewChart({
     }
   };
 
-  // Timeframe selector
+  // 10 Resolusi Lilin (1 Batang Lilin = Timeframe yang dipilih)
   const ranges = [
-    { label: "1D", value: "1d", title: "1 Hari (Intraday Menit)" },
-    { label: "1Mgg", value: "5d", title: "1 Minggu Bursa" },
-    { label: "1Bln", value: "1mo", title: "1 Bulan" },
-    { label: "3Bln", value: "3mo", title: "3 Bulan" },
-    { label: "6Bln", value: "6mo", title: "6 Bulan" },
-    { label: "1Th", value: "1y", title: "1 Tahun" },
-    { label: "5Th", value: "5y", title: "5 Tahun" },
-    { label: "Seluruhnya", value: "max", title: "Semua Riwayat Historis" },
+    { label: "1 Jam", short: "1J", value: "1h", title: "1 Lilin = 1 Jam" },
+    { label: "2 Jam", short: "2J", value: "2h", title: "1 Lilin = 2 Jam" },
+    { label: "3 Jam", short: "3J", value: "3h", title: "1 Lilin = 3 Jam" },
+    { label: "4 Jam", short: "4J", value: "4h", title: "1 Lilin = 4 Jam" },
+    { label: "1 Hari", short: "1H", value: "1d", title: "1 Lilin = 1 Hari (Daily)" },
+    { label: "1 Minggu", short: "1Mgg", value: "1w", title: "1 Lilin = 1 Minggu (Weekly)" },
+    { label: "1 Bulan", short: "1Bln", value: "1mo", title: "1 Lilin = 1 Bulan (Monthly)" },
+    { label: "3 Bulan", short: "3Bln", value: "3mo", title: "1 Lilin = 3 Bulan (Kuartalan / Q)" },
+    { label: "6 Bulan", short: "6Bln", value: "6mo", title: "1 Lilin = 6 Bulan (Semesteran / S)" },
+    { label: "1 Tahun", short: "1Th", value: "1y", title: "1 Lilin = 1 Tahun (Tahunan / 12M)" },
   ];
 
-  // Helper format tanggal & jam
+  // Helper format tanggal & jam yang adaptif terhadap resolusi lilin
   const formatTimeDisplay = (time) => {
     if (!time) return "-";
     if (typeof time === "number") {
       const d = new Date(time * 1000);
+      if (range === "1y" || range === "12m") {
+        return `Tahun ${d.getFullYear()}`;
+      }
+      if (range === "6mo") {
+        const sem = d.getMonth() < 6 ? "Semester 1" : "Semester 2";
+        return `${sem} ${d.getFullYear()}`;
+      }
+      if (range === "3mo") {
+        const q = Math.floor(d.getMonth() / 3) + 1;
+        return `Kuartal ${q} (Q${q}) ${d.getFullYear()}`;
+      }
+      if (range === "1mo") {
+        return d.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
+      }
+      if (range === "1d" || range === "1w") {
+        return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+      }
       return d.toLocaleString("id-ID", {
         day: "2-digit",
         month: "short",
@@ -411,20 +432,21 @@ export default function TradingViewChart({
 
       {/* Bottom Controls Bar (Sesuai Layout Screenshot Pengguna) */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-        {/* Left: Timeframe Range Buttons */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
+        {/* Left: Timeframe Range Buttons (1, 2, 3, 4 Jam, 1 Hari, 1 Minggu, 1 Bulan, 3, 6 Bulan, 1 Tahun) */}
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl overflow-x-auto max-w-full scrollbar-none">
           {ranges.map((r) => (
             <button
               key={r.value}
               onClick={() => onRangeChange && onRangeChange(r.value)}
               title={r.title}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
                 range === r.value
                   ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm font-bold"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
               }`}
             >
-              {r.label}
+              <span className="hidden xl:inline">{r.label}</span>
+              <span className="xl:hidden">{r.short}</span>
             </button>
           ))}
         </div>
