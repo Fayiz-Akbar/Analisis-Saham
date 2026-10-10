@@ -1,0 +1,298 @@
+// Prisma Schema for AI-Powered Fundamental Investment Analyzer
+// Primary Database: PostgreSQL 17
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum InvestorProfile {
+  BEGINNER
+  EXPERIENCED
+}
+
+enum SentimentLabel {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
+enum MacroCategory {
+  GLOBAL_INDEX
+  COMMODITY
+}
+
+enum TransactionType {
+  BUY
+  SELL
+}
+
+enum LearningCategory {
+  BEGINNER
+  FUNDAMENTAL
+  ANALYSIS
+  PORTFOLIO
+  STRATEGY
+}
+
+enum DifficultyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+// ==========================================
+// SUB-SISTEM 1: FAYIZ (STOCK ANALYSIS & AI)
+// ==========================================
+
+model User {
+  id              String          @id @default(uuid()) @db.Uuid
+  name            String          @db.VarChar(100)
+  email           String          @unique @db.VarChar(150)
+  passwordHash    String          @map("password_hash") @db.VarChar(255)
+  investorProfile InvestorProfile @default(BEGINNER) @map("investor_profile")
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  watchlists            Watchlist[]
+  aiAnalysisLogs        AiAnalysisLog[]
+  portfolioTransactions PortfolioTransaction[]
+  learningProgresses    LearningProgress[]
+  quizAttempts          QuizAttempt[]
+
+  @@map("users")
+}
+
+model Stock {
+  symbol      String   @id @db.VarChar(10) // Contoh: BBCA, BBRI, TLKM
+  companyName String   @map("company_name") @db.VarChar(255)
+  sector      String   @db.VarChar(100)
+  industry    String   @db.VarChar(100)
+  exchange    String   @default("IDX") @db.VarChar(20)
+  isIdx80     Boolean  @default(true) @map("is_idx80")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  fundamentals          StockFundamental?
+  dailyPrice            StockDailyPrice?
+  news                  NewsSentiment[]
+  watchlists            Watchlist[]
+  aiAnalysisLogs        AiAnalysisLog[]
+  portfolioTransactions PortfolioTransaction[]
+
+  @@index([sector])
+  @@index([isIdx80])
+  @@map("stocks")
+}
+
+model StockFundamental {
+  id              String   @id @default(uuid()) @db.Uuid
+  symbol          String   @unique @db.VarChar(10)
+  marketCap       Decimal? @map("market_cap") @db.Decimal(20, 2)
+  peRatio         Decimal? @map("pe_ratio") @db.Decimal(10, 2)
+  pbvRatio        Decimal? @map("pbv_ratio") @db.Decimal(10, 2)
+  roe             Decimal? @db.Decimal(8, 4)
+  roa             Decimal? @db.Decimal(8, 4)
+  der             Decimal? @db.Decimal(8, 4)
+  netProfitMargin Decimal? @map("net_profit_margin") @db.Decimal(8, 4)
+  eps             Decimal? @db.Decimal(15, 2)
+  dividendYield   Decimal? @map("dividend_yield") @db.Decimal(8, 4)
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  stock Stock @relation(fields: [symbol], references: [symbol], onDelete: Cascade)
+
+  @@index([peRatio])
+  @@index([pbvRatio])
+  @@index([roe])
+  @@index([der])
+  @@map("stock_fundamentals")
+}
+
+model StockDailyPrice {
+  id            String   @id @default(uuid()) @db.Uuid
+  symbol        String   @unique @db.VarChar(10)
+  closePrice    Decimal  @map("close_price") @db.Decimal(15, 2)
+  changeAmount  Decimal  @map("change_amount") @db.Decimal(15, 2)
+  changePercent Decimal  @map("change_percent") @db.Decimal(8, 4)
+  openPrice     Decimal? @map("open_price") @db.Decimal(15, 2)
+  highPrice     Decimal? @map("high_price") @db.Decimal(15, 2)
+  lowPrice      Decimal? @map("low_price") @db.Decimal(15, 2)
+  volume        BigInt?
+  lastUpdated   DateTime @default(now()) @updatedAt @map("last_updated") @db.Timestamptz(6)
+
+  stock Stock @relation(fields: [symbol], references: [symbol], onDelete: Cascade)
+
+  @@map("stock_daily_prices")
+}
+
+model NewsSentiment {
+  id             String         @id @default(uuid()) @db.Uuid
+  symbol         String?        @db.VarChar(10)
+  title          String         @db.VarChar(300)
+  description    String?        @db.Text
+  source         String         @db.VarChar(100)
+  url            String         @db.Text
+  sentiment      SentimentLabel @default(NEUTRAL)
+  sentimentScore Decimal?       @map("sentiment_score") @db.Decimal(4, 2)
+  publishedAt    DateTime       @map("published_at") @db.Timestamptz(6)
+  cachedAt       DateTime       @default(now()) @map("cached_at") @db.Timestamptz(6)
+
+  stock Stock? @relation(fields: [symbol], references: [symbol], onDelete: SetNull)
+
+  @@index([symbol])
+  @@index([publishedAt])
+  @@map("news_sentiment")
+}
+
+model MacroMarket {
+  id            String        @id @default(uuid()) @db.Uuid
+  assetCategory MacroCategory @map("asset_category")
+  assetName     String        @map("asset_name") @db.VarChar(100)
+  symbolCode    String        @unique @map("symbol_code") @db.VarChar(20)
+  price         Decimal       @db.Decimal(15, 2)
+  changePercent Decimal       @map("change_percent") @db.Decimal(8, 4)
+  updatedAt     DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("macro_markets")
+}
+
+model Watchlist {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  symbol    String   @db.VarChar(10)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stock Stock @relation(fields: [symbol], references: [symbol], onDelete: Cascade)
+
+  @@unique([userId, symbol])
+  @@map("watchlists")
+}
+
+model AiAnalysisLog {
+  id                     String          @id @default(uuid()) @db.Uuid
+  userId                 String?         @map("user_id") @db.Uuid
+  symbol                 String?         @db.VarChar(10)
+  investorProfile        InvestorProfile @map("investor_profile")
+  userQuestion           String          @map("user_question") @db.Text
+  groundedContext        Json            @map("grounded_context")
+  aiResponse             String          @map("ai_response") @db.Text
+  factualConsistencyScore Decimal?       @map("factual_consistency_score") @db.Decimal(5, 2)
+  hallucinationFlag      Boolean         @default(false) @map("hallucination_flag")
+  latencyMs              Int             @map("latency_ms")
+  createdAt              DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  stock Stock? @relation(fields: [symbol], references: [symbol], onDelete: SetNull)
+
+  @@index([symbol])
+  @@index([createdAt])
+  @@map("ai_analysis_logs")
+}
+
+model ApiCache {
+  id           String   @id @default(uuid()) @db.Uuid
+  provider     String   @db.VarChar(50)
+  endpointKey  String   @unique @map("endpoint_key") @db.VarChar(150)
+  responseData Json     @map("response_data")
+  fetchedAt    DateTime @default(now()) @map("fetched_at") @db.Timestamptz(6)
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz(6)
+
+  @@index([provider, endpointKey])
+  @@index([expiresAt])
+  @@map("api_cache")
+}
+
+// ==========================================
+// SUB-SISTEM 2: FIRMAN (PORTOFOLIO & EDUKASI)
+// ==========================================
+
+model PortfolioTransaction {
+  id              String          @id @default(uuid()) @db.Uuid
+  userId          String          @map("user_id") @db.Uuid
+  symbol          String          @db.VarChar(10)
+  transactionType TransactionType @map("transaction_type")
+  price           Decimal         @db.Decimal(15, 2)
+  lotQuantity     Int             @map("lot_quantity")
+  transactionDate DateTime        @map("transaction_date") @db.Date
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stock Stock @relation(fields: [symbol], references: [symbol], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([symbol])
+  @@map("portfolio_transactions")
+}
+
+model LearningContent {
+  id               String           @id @default(uuid()) @db.Uuid
+  title            String           @db.VarChar(200)
+  slug             String           @unique @db.VarChar(200)
+  category         LearningCategory
+  difficulty       DifficultyLevel
+  content          String           @db.Text
+  estimatedMinutes Int              @default(5) @map("estimated_minutes")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  quizzes            Quiz[]
+  learningProgresses LearningProgress[]
+
+  @@map("learning_contents")
+}
+
+model LearningProgress {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  contentId   String    @map("content_id") @db.Uuid
+  completed   Boolean   @default(false)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content LearningContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contentId])
+  @@map("learning_progress")
+}
+
+model Quiz {
+  id            String   @id @default(uuid()) @db.Uuid
+  contentId     String   @map("content_id") @db.Uuid
+  question      String   @db.Text
+  optionA       String   @map("option_a") @db.VarChar(255)
+  optionB       String   @map("option_b") @db.VarChar(255)
+  optionC       String   @map("option_c") @db.VarChar(255)
+  optionD       String   @map("option_d") @db.VarChar(255)
+  correctAnswer String   @map("correct_answer") @db.VarChar(5)
+  explanation   String   @db.Text
+
+  content  LearningContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  attempts QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model QuizAttempt {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  quizId    String   @map("quiz_id") @db.Uuid
+  answer    String   @db.VarChar(5)
+  isCorrect Boolean  @map("is_correct")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_attempts")
+}
