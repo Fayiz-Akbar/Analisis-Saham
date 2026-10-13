@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { StockMarketTrackerChart } from "@/components/ui/stock-market-tracker-chart";
+import {
+  MarketOverviewSection,
+} from "@/components/ui/stock-market-tracker-chart";
+import TopMoversSection from "../dashboard/TopMoversSection";
 
 // Generate smooth cubic bezier spline SVG path
 function generateSmoothCurve(values, width = 280, height = 110, padding = 12) {
@@ -111,6 +114,8 @@ export default function DashboardView({ onSelectStock }) {
               ? tapeItem.changePercent
               : (startPrice > 0 ? Number(((change / startPrice) * 100).toFixed(2)) : 0);
 
+            const volume = Number(s.dailyPrice?.volume || tapeItem?.volume || 0);
+
             return {
               symbol: s.symbol,
               companyName: s.companyName,
@@ -119,6 +124,7 @@ export default function DashboardView({ onSelectStock }) {
               price,
               changeAmount: change,
               changePercent: pct,
+              volume,
               isUp: change >= 0,
               sparkline,
             };
@@ -196,82 +202,22 @@ export default function DashboardView({ onSelectStock }) {
     <div className="space-y-8">
       {/* ========================================================
           BAGIAN 1: RINGKASAN INDEKS PASAR (MARKET OVERVIEW)
-          Komponen StockMarketTrackerChart (IHSG, Jam Bursa Buka/Tutup, Perubahan Poin, dll.)
-          Sesuai UI shadcn / recharts pendukung tema gelap & terang
           ======================================================== */}
-      <section className="space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-          {/* Tracker Utama IHSG / Indeks Saham */}
-          <div className="lg:col-span-7 xl:col-span-8 flex">
-            <StockMarketTrackerChart className="h-full" />
-          </div>
-
-          {/* Kartu Ringkasan Aktivitas Perdagangan BEI (IDX Market Highlights) */}
-          <div className="lg:col-span-5 xl:col-span-4 flex flex-col justify-between gap-3.5 rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6 shadow-sm dark:border-slate-800/90 dark:bg-[#12151e]">
-            <div>
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Statistik Pasar BEI
-                </span>
-                <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  Pasar Reguler
-                </span>
-              </div>
-
-              {/* Grid Metrik Pasar */}
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                <div className="rounded-xl bg-slate-50 p-3 dark:bg-[#181c28]/80 border border-slate-100 dark:border-slate-800/50">
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Nilai Transaksi</span>
-                  <span className="text-base font-bold font-mono text-slate-900 dark:text-white block mt-0.5">Rp 11,48 T</span>
-                </div>
-                <div className="rounded-xl bg-slate-50 p-3 dark:bg-[#181c28]/80 border border-slate-100 dark:border-slate-800/50">
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Volume Saham</span>
-                  <span className="text-base font-bold font-mono text-slate-900 dark:text-white block mt-0.5">19,25 M</span>
-                </div>
-                <div className="rounded-xl bg-slate-50 p-3 dark:bg-[#181c28]/80 border border-slate-100 dark:border-slate-800/50">
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Frekuensi Transaksi</span>
-                  <span className="text-base font-bold font-mono text-slate-900 dark:text-white block mt-0.5">1,18 Juta</span>
-                </div>
-                <div className="rounded-xl bg-slate-50 p-3 dark:bg-[#181c28]/80 border border-slate-100 dark:border-slate-800/50">
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Kapitalisasi Pasar</span>
-                  <span className="text-base font-bold font-mono text-slate-900 dark:text-white block mt-0.5">Rp 11.890 T</span>
-                </div>
-              </div>
-
-              {/* Distribusi Emiten: Menguat, Melemah, Stagnan */}
-              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/80">
-                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 block mb-2">
-                  Pergerakan 800+ Emiten BEI
-                </span>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/30 p-2 border border-emerald-200/50 dark:border-emerald-800/30">
-                    <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 block">Menguat</span>
-                    <span className="text-sm font-bold font-mono text-emerald-700 dark:text-emerald-300">248</span>
-                  </div>
-                  <div className="rounded-lg bg-rose-50 dark:bg-rose-950/30 p-2 border border-rose-200/50 dark:border-rose-800/30">
-                    <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 block">Melemah</span>
-                    <span className="text-sm font-bold font-mono text-rose-700 dark:text-rose-300">295</span>
-                  </div>
-                  <div className="rounded-lg bg-slate-100 dark:bg-slate-800/60 p-2 border border-slate-200/50 dark:border-slate-700/50">
-                    <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 block">Stagnan</span>
-                    <span className="text-sm font-bold font-mono text-slate-700 dark:text-slate-300">215</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Catatan Sesi Bursa */}
-            <div className="rounded-xl bg-blue-50/70 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 p-3 mt-3">
-              <span className="text-[11px] text-blue-700 dark:text-blue-300 font-medium block">
-                💡 <strong>Tips Analisis:</strong> IHSG merefleksikan sentimen rata-rata tertimbang seluruh saham di BEI. Pantau indeks LQ45 & IDX30 untuk pergerakan saham lapis satu.
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
+      <MarketOverviewSection />
 
       {/* ========================================================
-          BAGIAN 2: PASAR SAHAM IDX80 (CAROUSEL / SLIDER)
+          BAGIAN 2: SAHAM PELABA & SAHAM PERUGI (TOP 5 IDX80)
+          Desain 2 kolom tanpa container (Sesuai Referensi Gambar)
+          ======================================================== */}
+      <TopMoversSection
+        stocks={stocks}
+        isLoading={isLoading}
+        onSelectStock={onSelectStock}
+      />
+
+      {/* ========================================================
+          BAGIAN 3: PASAR SAHAM IDX80 (CAROUSEL / SLIDER)
+          Desain Sebelumnya (Foto ke-3 Diperbaiki Seperti Semula)
           ======================================================== */}
       <section className="space-y-4">
         {/* Header Bagian Atas: Kategori & Navigasi Geser */}
@@ -281,7 +227,7 @@ export default function DashboardView({ onSelectStock }) {
               <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                 Pasar Saham IDX80
               </h2>
-           
+             
             </div>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
               Geser kartu untuk menjelajahi saham terdaftar. Klik kartu emiten mana saja untuk membuka analisis mendalam di Stock Detail.

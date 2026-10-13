@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  StockMarketTrackerChart,
   MarketOverviewSection,
 } from "@/components/ui/stock-market-tracker-chart";
+import TopMoversSection from "./TopMoversSection";
 
 // Generate smooth cubic bezier spline SVG path
 function generateSmoothCurve(values, width = 280, height = 110, padding = 12) {
@@ -114,6 +114,8 @@ export default function DashboardView({ onSelectStock }) {
               ? tapeItem.changePercent
               : (startPrice > 0 ? Number(((change / startPrice) * 100).toFixed(2)) : 0);
 
+            const volume = Number(s.dailyPrice?.volume || tapeItem?.volume || 0);
+
             return {
               symbol: s.symbol,
               companyName: s.companyName,
@@ -122,6 +124,7 @@ export default function DashboardView({ onSelectStock }) {
               price,
               changeAmount: change,
               changePercent: pct,
+              volume,
               isUp: change >= 0,
               sparkline,
             };
@@ -199,14 +202,21 @@ export default function DashboardView({ onSelectStock }) {
     <div className="space-y-8">
       {/* ========================================================
           BAGIAN 1: RINGKASAN INDEKS PASAR (MARKET OVERVIEW)
-          - Panel Kiri (68–72% desktop): Nilai indeks, periode, grafik monokrom Recharts, High/Low
-          - Panel Kanan (28–32% desktop): Statistik Pasar BEI (Turnover, Volume, Emiten Menguat/Melemah/Stagnan)
-          - Gap 24px, Padding 24-32px, Border #272727, Background #101010
           ======================================================== */}
       <MarketOverviewSection />
 
       {/* ========================================================
-          BAGIAN 2: PASAR SAHAM IDX80 (CAROUSEL / SLIDER)
+          BAGIAN 2: SOROTAN PERGERAKAN SAHAM (TOP MOVERS IDX80)
+          Top Gainers, Top Losers, Most Active
+          ======================================================== */}
+      <TopMoversSection
+        stocks={stocks}
+        isLoading={isLoading}
+        onSelectStock={onSelectStock}
+      />
+
+      {/* ========================================================
+          BAGIAN 3: PASAR SAHAM IDX80 (CAROUSEL / SLIDER)
           Desain Sebelumnya (Foto ke-3 Diperbaiki Seperti Semula)
           ======================================================== */}
       <section className="space-y-4">
@@ -307,7 +317,6 @@ export default function DashboardView({ onSelectStock }) {
               ))
             : filteredStocks.map((stock) => {
                 const { linePath, areaPath, lastPoint } = generateSmoothCurve(stock.sparkline);
-                const isPositive = stock.changeAmount >= 0;
                 const changeSign = stock.changeAmount > 0 ? "+" : (stock.changeAmount < 0 ? "-" : "");
                 const formattedPrice = `Rp ${stock.price.toLocaleString("id-ID")}`;
                 const formattedNominal = `${changeSign}${Math.abs(stock.changeAmount).toLocaleString("id-ID")}`;

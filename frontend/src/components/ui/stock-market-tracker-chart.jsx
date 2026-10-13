@@ -113,11 +113,11 @@ function ChartCrosshairTooltip({ active, payload }) {
   if (!item) return null;
 
   return (
-    <div className="bg-[#121212] border border-[#272727] px-3 py-2 shadow-2xl text-xs select-none">
-      <div className="text-[11px] font-mono text-[#929292] mb-1">
+    <div className="bg-white dark:bg-[#121212] border border-slate-200 dark:border-[#272727] px-3 py-2 shadow-xl rounded-lg text-xs select-none">
+      <div className="text-[11px] font-mono text-slate-500 dark:text-[#929292] mb-1">
         {item.fullTimeLabel || item.timeLabel}
       </div>
-      <div className="text-sm font-semibold font-mono tabular-nums text-[#F5F5F5]">
+      <div className="text-sm font-semibold font-mono tabular-nums text-slate-900 dark:text-[#F5F5F5]">
         {formatIDR(item.price)}
       </div>
     </div>
@@ -127,12 +127,13 @@ function ChartCrosshairTooltip({ active, payload }) {
 /**
  * =========================================================================
  * KOMPONEN 1: STOCK MARKET TRACKER CHART (MARKET OVERVIEW)
- * Desain Black & White Financial Dashboard (Bloomberg / Yahoo Finance / TradingView)
+ * Desain Adaptif Light Mode & Dark Mode (Bloomberg / Financial Dashboard)
  * =========================================================================
  */
 export const StockMarketTrackerChart = ({
   className = "",
   onDataChange,
+  onLoadingChange,
   initialPeriod = "1d",
   initialIndex = "IDX80",
 }) => {
@@ -140,6 +141,27 @@ export const StockMarketTrackerChart = ({
   const [selectedIndex, setSelectedIndex] = useState(initialIndex);
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Deteksi tema aktif (Dark / Light) untuk warna dinamis Recharts
+  const [isDark, setIsDark] = useState(() =>
+    typeof document !== "undefined"
+      ? document.documentElement.classList.contains("dark")
+      : true
+  );
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const updateTheme = () => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    };
+    updateTheme();
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
 
   // Daftar opsi periode sesuai spesifikasi
   const periods = [
@@ -158,6 +180,7 @@ export const StockMarketTrackerChart = ({
     let isMounted = true;
     async function fetchIndexOverview() {
       setIsLoading(true);
+      if (onLoadingChange) onLoadingChange(true);
       try {
         const res = await fetch(
           `http://localhost:5000/api/stocks/market-overview?period=${selectedPeriod}&symbol=${encodeURIComponent(
@@ -174,7 +197,10 @@ export const StockMarketTrackerChart = ({
       } catch (err) {
         console.warn("Gagal memuat ringkasan pasar dari backend:", err);
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+          if (onLoadingChange) onLoadingChange(false);
+        }
       }
     }
 
@@ -182,7 +208,7 @@ export const StockMarketTrackerChart = ({
     return () => {
       isMounted = false;
     };
-  }, [selectedPeriod, selectedIndex, onDataChange]);
+  }, [selectedPeriod, selectedIndex, onDataChange, onLoadingChange]);
 
   // Ekstrak data & metrik
   const chartSeries =
@@ -227,34 +253,33 @@ export const StockMarketTrackerChart = ({
 
   return (
     <div
-      className={`bg-[#101010] border border-[#272727] rounded-xl p-6 md:p-8 flex flex-col justify-between text-[#F5F5F5] select-text ${className}`}
+      className={`bg-white dark:bg-[#101010] border border-slate-200/90 dark:border-[#272727] rounded-2xl p-6 md:p-8 flex flex-col justify-between text-slate-900 dark:text-[#F5F5F5] shadow-xs dark:shadow-none select-text ${className}`}
     >
       <div className="space-y-5">
         {/* ========================================================
             A. HEADER INDEKS (MARKET INDEX)
-            Sederhana, border tipis, pilihan khusus IDX80 sesuai permintaan
             ======================================================== */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3.5 pb-4 border-b border-[#272727]">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3.5 pb-4 border-b border-slate-200/80 dark:border-[#272727]">
           {/* Bagian Kiri: Label Uppercase, Nama Indeks IDX80, Status Bursa, Waktu */}
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[10px] font-semibold tracking-widest uppercase text-[#929292]">
+              <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 dark:text-[#929292]">
                 MARKET INDEX
               </span>
-              <span className="text-[#272727]">•</span>
+              <span className="text-slate-300 dark:text-[#272727]">•</span>
               <div className="flex items-center gap-1.5">
                 <span
                   className={`h-1.5 w-1.5 rounded-full ${
-                    isMarketOpen ? "bg-[#22C55E]" : "bg-[#929292]"
+                    isMarketOpen ? "bg-[#22C55E]" : "bg-slate-400 dark:bg-[#929292]"
                   }`}
                 />
-                <span className="text-xs font-medium text-[#929292]">{marketStatusText}</span>
+                <span className="text-xs font-medium text-slate-500 dark:text-[#929292]">{marketStatusText}</span>
               </div>
-              <span className="text-[#272727]">•</span>
-              <span className="text-xs font-mono text-[#929292]">{lastUpdatedTime}</span>
+              <span className="text-slate-300 dark:text-[#272727]">•</span>
+              <span className="text-xs font-mono text-slate-500 dark:text-[#929292]">{lastUpdatedTime}</span>
             </div>
 
-            <h2 className="text-sm sm:text-base font-semibold text-[#F5F5F5] tracking-tight">
+            <h2 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-[#F5F5F5] tracking-tight">
               {indexDisplayName}
             </h2>
           </div>
@@ -264,7 +289,7 @@ export const StockMarketTrackerChart = ({
             <select
               value={selectedIndex}
               onChange={(e) => setSelectedIndex(e.target.value)}
-              className="bg-[#121212] border border-[#272727] text-[#F5F5F5] text-xs font-medium px-3 py-1.5 rounded-lg focus:outline-none focus:border-[#525252] cursor-pointer hover:border-[#383838] transition-colors"
+              className="bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-[#272727] text-slate-800 dark:text-[#F5F5F5] text-xs font-medium px-3 py-1.5 rounded-lg focus:outline-none focus:border-slate-400 dark:focus:border-[#525252] cursor-pointer hover:border-slate-300 dark:hover:border-[#383838] transition-colors"
               aria-label="Pilih Indeks Saham"
             >
               <option value="IDX80">IDX80 (Indeks 80 Saham)</option>
@@ -276,15 +301,14 @@ export const StockMarketTrackerChart = ({
 
         {/* ========================================================
             B. NILAI INDEKS UTAMA
-            Font 36-44px weight 600, angka tabular-nums, tanpa kartu pill
             ======================================================== */}
         <div className="space-y-1">
           <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <span className="text-4xl md:text-[42px] font-semibold text-[#F5F5F5] font-mono tabular-nums tracking-tight leading-none">
+            <span className="text-4xl md:text-[42px] font-semibold text-slate-900 dark:text-[#F5F5F5] font-mono tabular-nums tracking-tight leading-none">
               {formatIDR(currentPrice)}
             </span>
 
-            {/* Perubahan Poin dan Persentase: Teks Berwarna Bersih */}
+            {/* Perubahan Poin dan Persentase */}
             <span
               className={`text-base md:text-lg font-semibold font-mono tabular-nums ${
                 isPositive ? "text-[#22C55E]" : "text-[#EF4444]"
@@ -297,19 +321,17 @@ export const StockMarketTrackerChart = ({
           </div>
 
           {/* Keterangan Pembanding & Ticker Sekunder */}
-          <div className="flex flex-wrap items-center gap-x-2 text-xs text-[#929292]">
+          <div className="flex flex-wrap items-center gap-x-2 text-xs text-slate-500 dark:text-[#929292]">
             <span>{comparisonText}</span>
-            <span className="text-[#272727]">•</span>
+            <span className="text-slate-300 dark:text-[#272727]">•</span>
             <span>{indexSubText}</span>
           </div>
         </div>
 
         {/* ========================================================
             D. PEMILIHAN PERIODE
-            Teks sederhana dengan indikator aktif berupa underline putih
-            1D | 1W | 1M | 3M | 6M | 1Y | 5Y | MAX
             ======================================================== */}
-        <div className="flex items-center gap-4 sm:gap-6 border-b border-[#272727] overflow-x-auto pb-0">
+        <div className="flex items-center gap-4 sm:gap-6 border-b border-slate-200/80 dark:border-[#272727] overflow-x-auto pb-0">
           {periods.map((p) => {
             const isActive = selectedPeriod === p.value;
             return (
@@ -318,8 +340,8 @@ export const StockMarketTrackerChart = ({
                 onClick={() => setSelectedPeriod(p.value)}
                 className={`pb-2 text-xs uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap ${
                   isActive
-                    ? "text-[#F5F5F5] border-b-2 border-[#F5F5F5] font-semibold"
-                    : "text-[#929292] hover:text-[#D1D5DB] border-b-2 border-transparent font-medium"
+                    ? "text-slate-900 border-b-2 border-slate-900 dark:text-[#F5F5F5] dark:border-[#F5F5F5] font-semibold"
+                    : "text-slate-400 hover:text-slate-700 border-b-2 border-transparent font-medium dark:text-[#929292] dark:hover:text-[#D1D5DB]"
                 }`}
               >
                 {p.label}
@@ -330,13 +352,11 @@ export const StockMarketTrackerChart = ({
 
         {/* ========================================================
             C. GRAFIK INDEKS
-            Tinggi 280-320px, garis monokrom tipis 1.5px, grid horizontal jarang
-            Sumbu Y format Indonesia di sisi kanan, crosshair hover tipis
             ======================================================== */}
         <div className="relative w-full h-[290px] md:h-[310px] select-none pt-2">
           {isLoading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#101010]/60 backdrop-blur-[1px] rounded-lg">
-              <span className="text-xs font-mono text-[#929292] tracking-wider uppercase">
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 dark:bg-[#101010]/60 backdrop-blur-[1px] rounded-lg">
+              <span className="text-xs font-mono text-slate-500 dark:text-[#929292] tracking-wider uppercase">
                 Memuat data...
               </span>
             </div>
@@ -347,19 +367,19 @@ export const StockMarketTrackerChart = ({
               data={chartSeries}
               margin={{ top: 8, right: 10, left: -10, bottom: 0 }}
             >
-              {/* Grid Horizontal Sangat Tipis & Jarang */}
+              {/* Grid Horizontal */}
               <CartesianGrid
                 vertical={false}
-                stroke="#1F1F1F"
+                stroke={isDark ? "#1F1F1F" : "#F1F5F9"}
                 strokeDasharray="2 3"
               />
 
               {/* Sumbu X: Waktu / Tanggal Sesuai Periode */}
               <XAxis
                 dataKey="time"
-                axisLine={{ stroke: "#272727" }}
+                axisLine={{ stroke: isDark ? "#272727" : "#CBD5E1" }}
                 tickLine={false}
-                tick={{ fill: "#929292", fontSize: 11 }}
+                tick={{ fill: isDark ? "#929292" : "#64748B", fontSize: 11 }}
                 tickFormatter={(val) => chartSeries[val]?.timeLabel || ""}
                 minTickGap={35}
                 interval="preserveStartEnd"
@@ -369,9 +389,9 @@ export const StockMarketTrackerChart = ({
               <YAxis
                 orientation="right"
                 domain={["auto", "auto"]}
-                axisLine={{ stroke: "#272727" }}
+                axisLine={{ stroke: isDark ? "#272727" : "#CBD5E1" }}
                 tickLine={false}
-                tick={{ fill: "#929292", fontSize: 11, fontFamily: "monospace" }}
+                tick={{ fill: isDark ? "#929292" : "#64748B", fontSize: 11, fontFamily: "monospace" }}
                 tickFormatter={(val) =>
                   Number(val).toLocaleString("id-ID", {
                     maximumFractionDigits: val < 500 ? 1 : 0,
@@ -383,7 +403,7 @@ export const StockMarketTrackerChart = ({
               <Tooltip
                 content={<ChartCrosshairTooltip />}
                 cursor={{
-                  stroke: "#525252",
+                  stroke: isDark ? "#525252" : "#94A3B8",
                   strokeWidth: 1,
                   strokeDasharray: "3 3",
                 }}
@@ -393,13 +413,13 @@ export const StockMarketTrackerChart = ({
               <Line
                 type="monotone"
                 dataKey="price"
-                stroke="#F5F5F5"
+                stroke={isDark ? "#F5F5F5" : "#0F172A"}
                 strokeWidth={1.5}
                 dot={false}
                 activeDot={{
                   r: 3.5,
-                  fill: "#F5F5F5",
-                  stroke: "#080808",
+                  fill: isDark ? "#F5F5F5" : "#0F172A",
+                  stroke: isDark ? "#080808" : "#FFFFFF",
                   strokeWidth: 2,
                 }}
                 isAnimationActive={false}
@@ -411,25 +431,24 @@ export const StockMarketTrackerChart = ({
 
       {/* ========================================================
           E. RINGKASAN HIGH DAN LOW
-          Satu baris ringkasan dengan pemisah vertikal halus di bawah grafik
           ======================================================== */}
-      <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-8 pt-4 border-t border-[#272727] text-xs mt-3">
+      <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-8 pt-4 border-t border-slate-200/80 dark:border-[#272727] text-xs mt-3">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-[#929292]">
+          <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-slate-400 dark:text-[#929292]">
             {highLowLabelPrefix} LOW
           </span>
-          <span className="font-mono tabular-nums font-semibold text-[#F5F5F5]">
+          <span className="font-mono tabular-nums font-semibold text-slate-900 dark:text-[#F5F5F5]">
             {formatIDR(lowestPrice)}
           </span>
         </div>
 
-        <div className="h-3 w-px bg-[#272727]" />
+        <div className="h-3 w-px bg-slate-200 dark:bg-[#272727]" />
 
         <div className="flex items-center gap-2">
-          <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-[#929292]">
+          <span className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase text-slate-400 dark:text-[#929292]">
             {highLowLabelPrefix} HIGH
           </span>
-          <span className="font-mono tabular-nums font-semibold text-[#F5F5F5]">
+          <span className="font-mono tabular-nums font-semibold text-slate-900 dark:text-[#F5F5F5]">
             {formatIDR(highestPrice)}
           </span>
         </div>
@@ -466,17 +485,21 @@ export const MarketStatisticsPanel = ({
   const decliningPct = ((decliningCount / totalCount) * 100).toFixed(1);
 
   return (
-    <div className={`flex flex-col justify-between gap-3.5 select-text ${className}`}>
+    <div
+      className={`flex flex-col justify-between gap-3.5 select-text transition-opacity duration-200 ${
+        isLoading ? "opacity-75" : "opacity-100"
+      } ${className}`}
+    >
       {/* Grid 4 Kartu Metrik - Sesuai UI Foto ke-4 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 flex-1">
-        {/* KARTU 1: Nilai Transaksi (Total Revenue Style) */}
-        <div className="rounded-xl border border-[#272727] bg-[#101010] p-4.5 sm:p-5 flex flex-col justify-between transition-colors hover:border-[#383838]">
+        {/* KARTU 1: Nilai Transaksi */}
+        <div className="rounded-2xl border border-slate-200/90 dark:border-[#272727] bg-white dark:bg-[#101010] p-4.5 sm:p-5 flex flex-col justify-between shadow-xs dark:shadow-none transition-colors hover:border-slate-300 dark:hover:border-[#383838]">
           <div className="flex items-center justify-between">
-            <span className="text-xs sm:text-sm font-medium text-[#929292]">
+            <span className="text-xs sm:text-sm font-medium text-slate-500 dark:text-[#929292]">
               Nilai Transaksi
             </span>
             <svg
-              className="w-4 h-4 text-[#929292]"
+              className="w-4 h-4 text-slate-400 dark:text-[#929292]"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -489,23 +512,23 @@ export const MarketStatisticsPanel = ({
             </svg>
           </div>
           <div className="mt-3">
-            <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-[#F5F5F5]">
+            <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-slate-900 dark:text-[#F5F5F5]">
               {turnoverFormatted}
             </div>
-            <p className="text-xs text-emerald-400 font-medium mt-1">
-              +12.4% vs rata-rata harian
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
+              {statistics?.turnoverSubtext || "+12.4% vs rata-rata harian"}
             </p>
           </div>
         </div>
 
-        {/* KARTU 2: Volume Saham (Subscriptions Style) */}
-        <div className="rounded-xl border border-[#272727] bg-[#101010] p-4.5 sm:p-5 flex flex-col justify-between transition-colors hover:border-[#383838]">
+        {/* KARTU 2: Volume Saham */}
+        <div className="rounded-2xl border border-slate-200/90 dark:border-[#272727] bg-white dark:bg-[#101010] p-4.5 sm:p-5 flex flex-col justify-between shadow-xs dark:shadow-none transition-colors hover:border-slate-300 dark:hover:border-[#383838]">
           <div className="flex items-center justify-between">
-            <span className="text-xs sm:text-sm font-medium text-[#929292]">
+            <span className="text-xs sm:text-sm font-medium text-slate-500 dark:text-[#929292]">
               Volume Saham
             </span>
             <svg
-              className="w-4 h-4 text-[#929292]"
+              className="w-4 h-4 text-slate-400 dark:text-[#929292]"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -517,23 +540,23 @@ export const MarketStatisticsPanel = ({
             </svg>
           </div>
           <div className="mt-3">
-            <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-[#F5F5F5]">
+            <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-slate-900 dark:text-[#F5F5F5]">
               {volumeFormatted}
             </div>
-            <p className="text-xs text-emerald-400 font-medium mt-1">
-              +8.2% vs sesi kemarin
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
+              {statistics?.volumeSubtext || "+8.2% vs sesi kemarin"}
             </p>
           </div>
         </div>
 
-        {/* KARTU 3: Emiten Menguat (Sales Style) */}
-        <div className="rounded-xl border border-[#272727] bg-[#101010] p-4.5 sm:p-5 flex flex-col justify-between transition-colors hover:border-[#383838]">
+        {/* KARTU 3: Emiten Menguat */}
+        <div className="rounded-2xl border border-slate-200/90 dark:border-[#272727] bg-white dark:bg-[#101010] p-4.5 sm:p-5 flex flex-col justify-between shadow-xs dark:shadow-none transition-colors hover:border-slate-300 dark:hover:border-[#383838]">
           <div className="flex items-center justify-between">
-            <span className="text-xs sm:text-sm font-medium text-[#929292]">
+            <span className="text-xs sm:text-sm font-medium text-slate-500 dark:text-[#929292]">
               Emiten Menguat
             </span>
             <svg
-              className="w-4 h-4 text-emerald-400"
+              className="w-4 h-4 text-emerald-600 dark:text-emerald-400"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -546,23 +569,23 @@ export const MarketStatisticsPanel = ({
             </svg>
           </div>
           <div className="mt-3">
-            <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-emerald-400">
+            <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-emerald-600 dark:text-emerald-400">
               +{advancingCount}
             </div>
-            <p className="text-xs text-emerald-400 font-medium mt-1">
-              +{advancingPct}% dari {totalCount} saham
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
+              {statistics?.advancingSubtext || `+${advancingPct}% dari ${totalCount} saham`}
             </p>
           </div>
         </div>
 
-        {/* KARTU 4: Emiten Melemah (Active Now Style) */}
-        <div className="rounded-xl border border-[#272727] bg-[#101010] p-4.5 sm:p-5 flex flex-col justify-between transition-colors hover:border-[#383838]">
+        {/* KARTU 4: Emiten Melemah */}
+        <div className="rounded-2xl border border-slate-200/90 dark:border-[#272727] bg-white dark:bg-[#101010] p-4.5 sm:p-5 flex flex-col justify-between shadow-xs dark:shadow-none transition-colors hover:border-slate-300 dark:hover:border-[#383838]">
           <div className="flex items-center justify-between">
-            <span className="text-xs sm:text-sm font-medium text-[#929292]">
+            <span className="text-xs sm:text-sm font-medium text-slate-500 dark:text-[#929292]">
               Emiten Melemah
             </span>
             <svg
-              className="w-4 h-4 text-rose-400"
+              className="w-4 h-4 text-rose-600 dark:text-rose-400"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -575,23 +598,23 @@ export const MarketStatisticsPanel = ({
             </svg>
           </div>
           <div className="mt-3">
-            <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-rose-400">
+            <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-rose-600 dark:text-rose-400">
               −{decliningCount}
             </div>
-            <p className="text-xs text-rose-400 font-medium mt-1">
-              −{decliningPct}% dari {totalCount} saham
+            <p className="text-xs text-rose-600 dark:text-rose-400 font-medium mt-1">
+              {statistics?.decliningSubtext || `−${decliningPct}% dari ${totalCount} saham`}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Footer Info Strip: Stagnan & Basis IDX80 */}
-      <div className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-[#272727] bg-[#101010] text-xs text-[#929292] font-mono">
+      {/* Footer Info Strip: Stagnan & Basis Indeks Terfilter */}
+      <div className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-slate-200/90 dark:border-[#272727] bg-slate-50/80 dark:bg-[#101010] text-xs text-slate-600 dark:text-[#929292] font-mono">
         <div className="flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#929292]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-[#929292]" />
           <span>Stagnan: {unchangedCount} Emiten</span>
         </div>
-        <span>Basis {totalCount} Saham IDX80 BEI</span>
+        <span>{statistics?.basisLabel || `Basis ${totalCount} Saham IDX80 BEI`}</span>
       </div>
     </div>
   );
@@ -605,6 +628,7 @@ export const MarketStatisticsPanel = ({
  */
 export const MarketOverviewSection = ({ className = "" }) => {
   const [overviewData, setOverviewData] = useState(null);
+  const [isChartLoading, setIsChartLoading] = useState(false);
 
   return (
     <section className={`w-full ${className}`}>
@@ -614,6 +638,7 @@ export const MarketOverviewSection = ({ className = "" }) => {
           <StockMarketTrackerChart
             className="w-full h-full"
             onDataChange={setOverviewData}
+            onLoadingChange={setIsChartLoading}
           />
         </div>
 
@@ -622,7 +647,7 @@ export const MarketOverviewSection = ({ className = "" }) => {
           <MarketStatisticsPanel
             className="w-full h-full"
             statistics={overviewData?.statistics}
-            isLoading={!overviewData}
+            isLoading={isChartLoading || !overviewData}
           />
         </div>
       </div>

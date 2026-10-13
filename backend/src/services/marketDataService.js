@@ -29,7 +29,10 @@ export class MarketDataService {
     let multiMonthMode = null;
 
     // Menentukan resolusi batang lilin (1 lilin = interval yang dipilih)
-    if (range === "1h" || interval === "1h") {
+    if (interval === "5m" || interval === "1m" || interval === "2m" || interval === "15m" || range === "intraday") {
+      queryInterval = interval || "5m";
+      queryRange = range === "intraday" || range === "1d" ? "1d" : (range || "1d");
+    } else if (range === "1h" || interval === "1h") {
       queryInterval = "1h";
       queryRange = "2y";
     } else if (range === "2h" || interval === "2h") {
