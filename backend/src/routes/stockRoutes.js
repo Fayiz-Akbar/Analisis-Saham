@@ -5,9 +5,18 @@ import {
   getStockQuote,
   getStockHistory,
   getStockDetail,
+  getTickerTape,
+  getMarketOverview,
 } from "../controllers/stockController.js";
 
 const router = Router();
+
+// Endpoint Ringkasan Indeks Pasar (Market Overview: IHSG, LQ45)
+router.get("/market-overview", getMarketOverview);
+
+// Endpoint ticker tape ringkasan pasar terpopuler
+router.get("/ticker-tape", getTickerTape);
+
 
 // Endpoint pencarian saham (Search bar autocomplete)
 router.get("/search", searchStocks);

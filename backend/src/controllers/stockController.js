@@ -188,3 +188,34 @@ export const getStockDetail = async (req, res) => {
     return sendError(res, 500, `Gagal memuat detail emiten ${req.params.symbol}.`);
   }
 };
+
+/**
+ * Mengambil Ticker Tape Ringkasan Saham Terpopuler dengan Sparkline
+ * GET /api/stocks/ticker-tape
+ */
+export const getTickerTape = async (req, res) => {
+  try {
+    const data = await MarketDataService.getTickerTape();
+    return sendSuccess(res, 200, "Market Ticker Tape berhasil dimuat", data);
+  } catch (error) {
+    console.error("Get Ticker Tape Error:", error);
+    return sendError(res, 500, "Gagal memuat data ticker tape.");
+  }
+};
+
+/**
+ * Mengambil Ringkasan Pasar / Indeks Saham (IHSG, LQ45)
+ * GET /api/stocks/market-overview?period=1d&symbol=^JKSE
+ */
+export const getMarketOverview = async (req, res) => {
+  try {
+    const period = req.query.period || "1d";
+    const symbol = req.query.symbol || "IDX80";
+    const data = await MarketDataService.getMarketOverview(period, symbol);
+    return sendSuccess(res, 200, "Market Overview berhasil dimuat", data);
+  } catch (error) {
+    console.error("Get Market Overview Error:", error);
+    return sendError(res, 500, "Gagal memuat ringkasan pasar.");
+  }
+};
+

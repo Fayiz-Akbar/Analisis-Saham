@@ -6,14 +6,7 @@ import {
   HistogramSeries,
   ColorType,
 } from "lightweight-charts";
-import {
-  TrendingUp,
-  BarChart2,
-  Maximize2,
-  Minimize2,
-  Clock,
-  Layers,
-} from "lucide-react";
+
 
 export default function TradingViewChart({
   candles = [],
@@ -185,7 +178,9 @@ export default function TradingViewChart({
         borderColor: gridColor,
         timeVisible: true,
         secondsVisible: false,
+        fixLeftEdge: true,
         fixRightEdge: true,
+        rightOffset: 0,
       },
     });
 
@@ -271,16 +266,12 @@ export default function TradingViewChart({
       }));
       volumeSeries.setData(volumeData);
 
-      // Jika dalam mode 1D, fokuskan ke 60 candle terakhir (sesi perdagangan hari ini)
-      // Namun data hari-hari sebelumnya tetap tersimpan di sebelah kiri sehingga saat di-drag langsung tampil!
-      if (range === "1d" && activeCandles.length > 60) {
-        chart.timeScale().setVisibleLogicalRange({
-          from: activeCandles.length - 60,
-          to: activeCandles.length - 1,
-        });
-      } else {
-        chart.timeScale().fitContent();
+      // Bentangkan grafik sampai mentok ujung kiri & kanan agar tidak ada area kosong
+      if (activeCandles.length > 1 && container.clientWidth) {
+        const optimalBarSpacing = Math.max(container.clientWidth / (activeCandles.length - 1), 6);
+        chart.timeScale().applyOptions({ barSpacing: optimalBarSpacing });
       }
+      chart.timeScale().fitContent();
     }
 
     volumeSeriesRef.current = volumeSeries;
@@ -314,6 +305,11 @@ export default function TradingViewChart({
     const handleResize = () => {
       if (container && chart) {
         chart.applyOptions({ width: container.clientWidth });
+        if (activeCandles.length > 1) {
+          const optimalBarSpacing = Math.max(container.clientWidth / (activeCandles.length - 1), 6);
+          chart.timeScale().applyOptions({ barSpacing: optimalBarSpacing });
+        }
+        chart.timeScale().fitContent();
       }
     };
 
@@ -326,7 +322,7 @@ export default function TradingViewChart({
         chartInstanceRef.current = null;
       }
     };
-  }, [activeCandles, isDarkMode, chartType]);
+  }, [activeCandles, isDarkMode, chartType, range]);
 
   const toggleFullscreen = () => {
     const el = chartContainerRef.current?.parentElement;
@@ -354,7 +350,67 @@ export default function TradingViewChart({
 
   return (
     <div className="space-y-3">
-      {/* Top Bar: Info Harga & Detail Saat Hover */}
+      {/* 1. TOP CONTROLS BAR: Timeframe Pills on Left & Chart Type Toggles on Right */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800/80 pb-3">
+        {/* Left: Timeframe Range Buttons (1, 2, 3, 4 Jam, 1 Hari, 1 Minggu, 1 Bulan, 3, 6 Bulan, 1 Tahun) */}
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl overflow-x-auto max-w-full scrollbar-none">
+          {ranges.map((r) => (
+            <button
+              key={r.value}
+              onClick={() => onRangeChange && onRangeChange(r.value)}
+              title={r.title}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                range === r.value
+                  ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm font-bold"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+              }`}
+            >
+              <span className="hidden xl:inline">{r.label}</span>
+              <span className="xl:hidden">{r.short}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Right: Chart Type Toggles */}
+        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
+          {/* Mode Area / Line Chart */}
+          <button
+            onClick={() => setChartType("area")}
+            title="Tampilan Grafik Garis / Area (Gradient)"
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              chartType === "area"
+                ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm"
+                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+            }`}
+          >
+            Garis / Area
+          </button>
+
+          {/* Mode Candlestick */}
+          <button
+            onClick={() => setChartType("candle")}
+            title="Tampilan Grafik Candlestick Lilin (OHLC)"
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              chartType === "candle"
+                ? "bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
+                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+            }`}
+          >
+            Candlestick
+          </button>
+
+          {/* Fullscreen */}
+          <button
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
+            className="px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors"
+          >
+            {isFullscreen ? "Kecilkan" : "Layar Penuh"}
+          </button>
+        </div>
+      </div>
+
+      {/* 2. SUB-BAR: Info Harga & Detail Saat Hover */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-1">
         {activeCandle ? (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
@@ -425,71 +481,9 @@ export default function TradingViewChart({
         )}
       </div>
 
-      {/* Chart Canvas Container */}
+      {/* 3. CHART CANVAS CONTAINER */}
       <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
-        <div ref={chartContainerRef} className="w-full" style={{ minHeight: "440px" }} />
-      </div>
-
-      {/* Bottom Controls Bar (Sesuai Layout Screenshot Pengguna) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-        {/* Left: Timeframe Range Buttons (1, 2, 3, 4 Jam, 1 Hari, 1 Minggu, 1 Bulan, 3, 6 Bulan, 1 Tahun) */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl overflow-x-auto max-w-full scrollbar-none">
-          {ranges.map((r) => (
-            <button
-              key={r.value}
-              onClick={() => onRangeChange && onRangeChange(r.value)}
-              title={r.title}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
-                range === r.value
-                  ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm font-bold"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-              }`}
-            >
-              <span className="hidden xl:inline">{r.label}</span>
-              <span className="xl:hidden">{r.short}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Right: Chart Type Toggles */}
-        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
-          {/* Mode Area / Line Chart */}
-          <button
-            onClick={() => setChartType("area")}
-            title="Tampilan Grafik Garis / Area (Gradient)"
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              chartType === "area"
-                ? "bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
-                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-            }`}
-          >
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Garis / Area</span>
-          </button>
-
-          {/* Mode Candlestick */}
-          <button
-            onClick={() => setChartType("candle")}
-            title="Tampilan Grafik Candlestick Lilin (OHLC)"
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              chartType === "candle"
-                ? "bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
-                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-            }`}
-          >
-            <BarChart2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Candlestick</span>
-          </button>
-
-          {/* Fullscreen */}
-          <button
-            onClick={toggleFullscreen}
-            title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
-            className="p-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors"
-          >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </button>
-        </div>
+        <div ref={chartContainerRef} className="w-full" style={{ minHeight: "460px" }} />
       </div>
     </div>
   );

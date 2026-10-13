@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Search, X, TrendingUp, Sparkles, Building2 } from "lucide-react";
 
 export default function SearchBar({ onSelectStock, selectedSymbol = "BBCA" }) {
   const [query, setQuery] = useState("");
@@ -55,10 +54,6 @@ export default function SearchBar({ onSelectStock, selectedSymbol = "BBCA" }) {
   return (
     <div ref={wrapperRef} className="relative w-full max-w-md">
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-          <Search className="w-4 h-4" />
-        </div>
-
         <input
           type="text"
           value={query}
@@ -71,15 +66,16 @@ export default function SearchBar({ onSelectStock, selectedSymbol = "BBCA" }) {
             if (results.length === 0) fetchStocks("");
           }}
           placeholder="Cari kode ticker atau nama emiten IDX80..."
-          className="w-full pl-10 pr-10 py-2.5 rounded-2xl text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all shadow-sm"
+          className="w-full px-4 pr-10 py-2.5 rounded-2xl text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all shadow-sm"
         />
 
         {query ? (
           <button
             onClick={() => setQuery("")}
-            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            title="Hapus pencarian"
           >
-            <X className="w-4 h-4" />
+            ✕
           </button>
         ) : null}
       </div>
@@ -89,7 +85,7 @@ export default function SearchBar({ onSelectStock, selectedSymbol = "BBCA" }) {
         <div className="absolute left-0 right-0 mt-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-2xl z-50 overflow-hidden max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
           <div className="px-4 py-2 bg-slate-50/80 dark:bg-slate-800/80 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
             <span>Konstituen Indeks IDX80</span>
-            {isLoading && <span className="animate-spin text-blue-500">⏳</span>}
+            {isLoading && <span className="text-blue-500 text-[11px] font-medium normal-case animate-pulse">Memuat...</span>}
           </div>
 
           {results.length > 0 ? (
@@ -117,11 +113,8 @@ export default function SearchBar({ onSelectStock, selectedSymbol = "BBCA" }) {
                     <div className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">
                       {stock.companyName}
                     </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                      <span className="flex items-center gap-1">
-                        <Building2 className="w-3 h-3 text-slate-400" />
-                        {stock.sector}
-                      </span>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      <span>{stock.sector}</span>
                     </div>
                   </div>
                 </div>
