@@ -3,6 +3,7 @@ import {
   MarketOverviewSection,
 } from "@/components/ui/stock-market-tracker-chart";
 import TopMoversSection from "../dashboard/TopMoversSection";
+import LatestNewsSection from "../dashboard/LatestNewsSection";
 
 // Generate smooth cubic bezier spline SVG path
 function generateSmoothCurve(values, width = 280, height = 110, padding = 12) {
@@ -115,6 +116,10 @@ export default function DashboardView({ onSelectStock }) {
               : (startPrice > 0 ? Number(((change / startPrice) * 100).toFixed(2)) : 0);
 
             const volume = Number(s.dailyPrice?.volume || tapeItem?.volume || 0);
+            const high = Number(s.dailyPrice?.highPrice) || price;
+            const low = Number(s.dailyPrice?.lowPrice) || price;
+            const open = Number(s.dailyPrice?.openPrice) || price;
+            const volatility = low > 0 ? ((high - low) / low) * 100 : Math.abs(pct);
 
             return {
               symbol: s.symbol,
@@ -125,6 +130,10 @@ export default function DashboardView({ onSelectStock }) {
               changeAmount: change,
               changePercent: pct,
               volume,
+              high,
+              low,
+              open,
+              volatility,
               isUp: change >= 0,
               sparkline,
             };
@@ -216,7 +225,13 @@ export default function DashboardView({ onSelectStock }) {
       />
 
       {/* ========================================================
-          BAGIAN 3: PASAR SAHAM IDX80 (CAROUSEL / SLIDER)
+          BAGIAN 3: ARUS BERITA FINANSIAL TERKINI (LATEST NEWS)
+          Label polaritas sentimen (Positif, Netral, Negatif) + Tombol Lihat Semua
+          ======================================================== */}
+      <LatestNewsSection />
+
+      {/* ========================================================
+          BAGIAN 4: PASAR SAHAM IDX80 (CAROUSEL / SLIDER)
           Desain Sebelumnya (Foto ke-3 Diperbaiki Seperti Semula)
           ======================================================== */}
       <section className="space-y-4">

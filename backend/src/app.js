@@ -5,6 +5,7 @@ import morgan from "morgan";
 
 import authRoutes from "./routes/authRoutes.js";
 import stockRoutes from "./routes/stockRoutes.js";
+import newsRoutes from "./routes/newsRoutes.js";
 
 const app = express();
 
@@ -39,5 +40,6 @@ app.get("/api/health", (_req, res) => {
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/stocks", stockRoutes);
+app.use("/api/news", newsRoutes);
 
 export default app;

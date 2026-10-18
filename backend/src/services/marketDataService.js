@@ -579,7 +579,7 @@ export class MarketDataService {
             decliningSubtext: `−${((declining / count) * 100).toFixed(1)}% dari ${count} saham`,
             unchanged,
             trackedCount: count,
-            basisLabel: isLQ45 ? "Basis 45 Saham Likuid LQ45" : "Basis 79 Saham IDX80 BEI",
+            basisLabel: isLQ45 ? "Basis 45 Saham Likuid LQ45" : `Basis ${count} Saham IDX80 BEI`,
             sourceName: isLQ45 ? "Konstituen LQ45" : "Konstituen IDX80",
           };
         }

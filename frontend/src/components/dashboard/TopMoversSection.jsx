@@ -158,21 +158,13 @@ function StockHoverCard({
     return renderSparklineSvg(prices, isGainer, 260, 68, stock.symbol);
   }, [prices, isGainer, stock.symbol]);
 
-  // Penyesuaian posisi vertikal agar popover tidak terpotong tepi atas atau bawah
-  const popoverPositionClass =
-    index <= 1
-      ? "top-0"
-      : index >= 3
-      ? "bottom-0"
-      : "top-1/2 -translate-y-1/2";
-
   return (
     <div
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={(e) => e.stopPropagation()}
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
-      className={`absolute z-50 left-1 sm:left-4 ${popoverPositionClass} w-[285px] sm:w-[310px] bg-white dark:bg-[#1e222d] border border-slate-200 dark:border-[#2a2e39] rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.18)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.7)] p-4 sm:p-5 pointer-events-auto select-none transition-all duration-150 animate-in fade-in zoom-in-95`}
+      className="absolute z-50 left-0 sm:left-2 top-full mt-2 w-[285px] sm:w-[310px] bg-white dark:bg-[#1e222d] border border-slate-200 dark:border-[#2a2e39] rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.18)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.7)] p-4 sm:p-5 pointer-events-auto select-none transition-all duration-150 animate-in fade-in zoom-in-95 before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3"
     >
       {/* Header: Logo Bulat + Nama Emiten */}
       <div className="flex items-center gap-2.5">
@@ -271,20 +263,20 @@ export default function TopMoversSection({
   onSelectStock,
   className = "",
 }) {
-  const [hoveredStock, setHoveredStock] = React.useState(null);
+  const [hoveredKey, setHoveredKey] = React.useState(null);
   const hoverTimeoutRef = React.useRef(null);
 
-  const handleRowMouseEnter = (symbol) => {
+  const handleRowMouseEnter = (key) => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
     }
-    setHoveredStock(symbol);
+    setHoveredKey(key);
   };
 
   const handleRowMouseLeave = () => {
     hoverTimeoutRef.current = setTimeout(() => {
-      setHoveredStock(null);
+      setHoveredKey(null);
     }, 180);
   };
 
@@ -296,10 +288,25 @@ export default function TopMoversSection({
   };
 
   const handleCardMouseLeave = () => {
-    setHoveredStock(null);
+    setHoveredKey(null);
   };
 
-  // Ambil Top 5 Gainers
+  // 1. Saham dengan volume tertinggi (Top 6)
+  const volumeStocks = React.useMemo(() => {
+    return [...stocks]
+      .filter((s) => s.volume > 0)
+      .sort((a, b) => (Number(b.volume) || 0) - (Number(a.volume) || 0))
+      .slice(0, 6);
+  }, [stocks]);
+
+  // 2. Saham paling volatile (Top 6)
+  const volatileStocks = React.useMemo(() => {
+    return [...stocks]
+      .sort((a, b) => (Number(b.volatility) || 0) - (Number(a.volatility) || 0))
+      .slice(0, 6);
+  }, [stocks]);
+
+  // 3. Top 5 Gainers
   const topGainers = React.useMemo(() => {
     return [...stocks]
       .filter((s) => Number(s.changePercent) > 0)
@@ -307,7 +314,7 @@ export default function TopMoversSection({
       .slice(0, 5);
   }, [stocks]);
 
-  // Ambil Top 5 Losers
+  // 4. Top 5 Losers
   const topLosers = React.useMemo(() => {
     return [...stocks]
       .filter((s) => Number(s.changePercent) < 0)
@@ -315,24 +322,30 @@ export default function TopMoversSection({
       .slice(0, 5);
   }, [stocks]);
 
-  const renderStockRow = (stock, isGainer, index) => {
+  // Render Baris untuk Bagian Atas (Volume Tertinggi & Paling Volatile) Sesuai Gambar Referensi Baru
+  const renderActivityStockRow = (stock, sectionKey, index) => {
+    const uniqueKey = `${sectionKey}-${stock.symbol}-${index}`;
     const formattedPrice = formatNumberID(stock.price, 0);
     const formattedChange = formatPercentID(stock.changePercent);
     const displayName = formatCompanyName(stock.companyName);
-    const isHovered = hoveredStock === stock.symbol;
+    const isHovered = hoveredKey === uniqueKey;
+    const isUp = Number(stock.changePercent) > 0;
+    const isDown = Number(stock.changePercent) < 0;
 
     return (
       <div
-        key={stock.symbol}
-        onMouseEnter={() => handleRowMouseEnter(stock.symbol)}
+        key={uniqueKey}
+        onMouseEnter={() => handleRowMouseEnter(uniqueKey)}
         onMouseLeave={handleRowMouseLeave}
         onClick={() => onSelectStock && onSelectStock(stock.symbol)}
-        className="relative flex items-center justify-between py-2 px-2.5 hover:bg-slate-100/70 dark:hover:bg-slate-800/40 rounded-xl transition-all cursor-pointer select-none group"
+        className={`relative flex items-center justify-between py-1.5 px-2 hover:bg-slate-100/70 dark:hover:bg-slate-800/40 rounded-xl transition-all cursor-pointer select-none group ${
+          isHovered ? "z-40" : "z-0"
+        }`}
       >
-        {/* Sisi Kiri: Logo Lingkaran + Nama Emiten + Ticker Badge */}
-        <div className="flex items-center gap-3.5 min-w-0 pr-3">
-          {/* Logo Bulat Sesuai Gambar Referensi */}
-          <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 p-1 flex items-center justify-center flex-shrink-0 shadow-2xs">
+        {/* Sisi Kiri: Logo Bulat + Nama Emiten + Ticker Badge */}
+        <div className="flex items-center gap-2.5 min-w-0 pr-2">
+          {/* Logo Bulat */}
+          <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 p-0.5 flex items-center justify-center flex-shrink-0 shadow-2xs">
             <img
               src={
                 stock.logoUrl ||
@@ -351,6 +364,101 @@ export default function TopMoversSection({
 
           {/* Nama Perusahaan & Ticker Badge */}
           <div className="min-w-0 flex flex-col justify-center">
+            <div className="flex items-center gap-1 min-w-0">
+              <span className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate leading-tight">
+                {displayName}
+              </span>
+              <span className="text-[10px] text-amber-500 font-bold flex-shrink-0" title="Dividen">
+                D
+              </span>
+              <span className="text-[10px] text-slate-400 font-bold flex-shrink-0">
+                -
+              </span>
+            </div>
+            <div className="mt-0.5">
+              <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/90 px-1 py-0.2 rounded tracking-wide uppercase inline-block leading-none">
+                {stock.symbol}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Sisi Kanan: Harga (atas) & Persentase (bawah) Persis Gambar Referensi */}
+        <div className="text-right whitespace-nowrap flex flex-col items-end justify-center flex-shrink-0 pl-2">
+          <div>
+            <span className="text-xs sm:text-[13px] font-extrabold text-slate-900 dark:text-white tabular-nums">
+              {formattedPrice}
+            </span>
+            <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 ml-0.5 uppercase">
+              IDR
+            </span>
+          </div>
+          <span
+            className={`text-[11px] font-bold tabular-nums leading-tight ${
+              isUp
+                ? "text-[#059669] dark:text-[#10b981]"
+                : isDown
+                ? "text-[#dc2626] dark:text-[#ef4444]"
+                : "text-slate-500 dark:text-slate-400"
+            }`}
+          >
+            {formattedChange}
+          </span>
+        </div>
+
+        {/* Hover Popover Card */}
+        {isHovered && (
+          <StockHoverCard
+            stock={stock}
+            isGainer={isUp}
+            index={index}
+            onSelectStock={onSelectStock}
+            onMouseEnter={handleCardMouseEnter}
+            onMouseLeave={handleCardMouseLeave}
+          />
+        )}
+      </div>
+    );
+  };
+
+  // Render Baris untuk Bagian Bawah (Top Gainers & Top Loss)
+  const renderStockRow = (stock, isGainer, sectionKey, index) => {
+    const uniqueKey = `${sectionKey}-${stock.symbol}-${index}`;
+    const formattedPrice = formatNumberID(stock.price, 0);
+    const formattedChange = formatPercentID(stock.changePercent);
+    const displayName = formatCompanyName(stock.companyName);
+    const isHovered = hoveredKey === uniqueKey;
+
+    return (
+      <div
+        key={uniqueKey}
+        onMouseEnter={() => handleRowMouseEnter(uniqueKey)}
+        onMouseLeave={handleRowMouseLeave}
+        onClick={() => onSelectStock && onSelectStock(stock.symbol)}
+        className={`relative flex items-center justify-between py-2 px-2.5 hover:bg-slate-100/70 dark:hover:bg-slate-800/40 rounded-xl transition-all cursor-pointer select-none group ${
+          isHovered ? "z-40" : "z-0"
+        }`}
+      >
+        {/* Sisi Kiri: Logo Lingkaran + Nama Emiten + Ticker Badge */}
+        <div className="flex items-center gap-3.5 min-w-0 pr-3">
+          <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 p-1 flex items-center justify-center flex-shrink-0 shadow-2xs">
+            <img
+              src={
+                stock.logoUrl ||
+                `https://assets.stockbit.com/logos/companies/${stock.symbol}.png`
+              }
+              alt={stock.symbol}
+              className="w-full h-full object-contain rounded-full"
+              onError={(e) => {
+                e.target.style.display = "none";
+                if (e.target.parentNode) {
+                  e.target.parentNode.innerText = stock.symbol.slice(0, 2);
+                }
+              }}
+            />
+          </div>
+
+          <div className="min-w-0 flex flex-col justify-center">
             <span className="text-sm sm:text-[15px] font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate leading-tight">
               {displayName}
             </span>
@@ -364,7 +472,6 @@ export default function TopMoversSection({
 
         {/* Sisi Kanan: Harga + IDR + Solid Rounded Badge Persentase */}
         <div className="flex items-center gap-3.5 sm:gap-5 flex-shrink-0">
-          {/* Harga (contoh: 2.150 IDR) */}
           <div className="text-right whitespace-nowrap">
             <span className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tabular-nums">
               {formattedPrice}
@@ -374,7 +481,6 @@ export default function TopMoversSection({
             </span>
           </div>
 
-          {/* Solid Rounded Badge (+25,00% / -14,71%) */}
           <div
             className={`min-w-[74px] sm:min-w-[80px] text-center px-2.5 py-1.5 rounded-[7px] text-xs sm:text-[13px] font-bold tabular-nums text-white shadow-2xs ${
               isGainer
@@ -404,15 +510,92 @@ export default function TopMoversSection({
   return (
     <section
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
-      className={`w-full py-2 ${className}`}
+      className={`w-full py-2 space-y-8 ${className}`}
     >
-      {/* 2 Kolom Berdampingan Persis Seperti Gambar Referensi */}
+      {/* ========================================================
+          BAGIAN ATAS: SAHAM DENGAN VOLUME TERTINGGI & PALING VOLATILE
+          (Persis Sesuai Gambar Referensi Baru)
+          ======================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14">
-        {/* ========================================================
-            KOLOM 1: TOP GAINERS
-            ======================================================== */}
+        {/* KOLOM 1: SAHAM DENGAN VOLUME TERTINGGI */}
         <div className="space-y-3.5">
-          {/* Judul: Top Gainers (Warna Putih di Dark Mode / Hitam di Light Mode) */}
+          <h2
+            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
+            className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            <span>Saham dengan volume tertinggi</span>
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1">
+            {isLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="py-2 px-2 flex items-center justify-between animate-pulse">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800" />
+                      <div className="space-y-1">
+                        <div className="h-3 w-20 bg-slate-200 dark:bg-slate-800 rounded" />
+                        <div className="h-2.5 w-10 bg-slate-200 dark:bg-slate-800 rounded" />
+                      </div>
+                    </div>
+                    <div className="h-3 w-12 bg-slate-200 dark:bg-slate-800 rounded" />
+                  </div>
+                ))
+              : (
+                  <>
+                    <div className="space-y-1">
+                      {volumeStocks.slice(0, 3).map((stock, idx) => renderActivityStockRow(stock, "vol-left", idx))}
+                    </div>
+                    <div className="space-y-1">
+                      {volumeStocks.slice(3, 6).map((stock, idx) => renderActivityStockRow(stock, "vol-right", idx + 3))}
+                    </div>
+                  </>
+                )}
+          </div>
+        </div>
+
+        {/* KOLOM 2: SAHAM PALING VOLATILE */}
+        <div className="space-y-3.5">
+          <h2
+            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
+            className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            <span>Saham paling volatile</span>
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1">
+            {isLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="py-2 px-2 flex items-center justify-between animate-pulse">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800" />
+                      <div className="space-y-1">
+                        <div className="h-3 w-20 bg-slate-200 dark:bg-slate-800 rounded" />
+                        <div className="h-2.5 w-10 bg-slate-200 dark:bg-slate-800 rounded" />
+                      </div>
+                    </div>
+                    <div className="h-3 w-12 bg-slate-200 dark:bg-slate-800 rounded" />
+                  </div>
+                ))
+              : (
+                  <>
+                    <div className="space-y-1">
+                      {volatileStocks.slice(0, 3).map((stock, idx) => renderActivityStockRow(stock, "vlt-left", idx))}
+                    </div>
+                    <div className="space-y-1">
+                      {volatileStocks.slice(3, 6).map((stock, idx) => renderActivityStockRow(stock, "vlt-right", idx + 3))}
+                    </div>
+                  </>
+                )}
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================
+          BAGIAN BAWAH: TOP GAINERS & TOP LOSS
+          ======================================================== */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 pt-2">
+        {/* KOLOM 1: TOP GAINERS */}
+        <div className="space-y-3.5">
           <h2
             style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
             className="text-2xl sm:text-[28px] font-bold tracking-tight text-slate-900 dark:text-white flex items-center cursor-pointer hover:opacity-80 transition-opacity"
@@ -420,7 +603,6 @@ export default function TopMoversSection({
             <span>Top Gainers</span>
           </h2>
 
-          {/* List 5 Emiten (Tanpa Container, Tanpa Divider Garis) */}
           <div className="space-y-2">
             {isLoading
               ? Array.from({ length: 5 }).map((_, i) => (
@@ -441,15 +623,12 @@ export default function TopMoversSection({
                     </div>
                   </div>
                 ))
-              : topGainers.map((stock, idx) => renderStockRow(stock, true, idx))}
+              : topGainers.map((stock, idx) => renderStockRow(stock, true, "gain", idx))}
           </div>
         </div>
 
-        {/* ========================================================
-            KOLOM 2: TOP LOSS
-            ======================================================== */}
+        {/* KOLOM 2: TOP LOSS */}
         <div className="space-y-3.5">
-          {/* Judul: Top Loss (Warna Putih di Dark Mode / Hitam di Light Mode) */}
           <h2
             style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
             className="text-2xl sm:text-[28px] font-bold tracking-tight text-slate-900 dark:text-white flex items-center cursor-pointer hover:opacity-80 transition-opacity"
@@ -457,7 +636,6 @@ export default function TopMoversSection({
             <span>Top Loss</span>
           </h2>
 
-          {/* List 5 Emiten (Tanpa Container, Tanpa Divider Garis) */}
           <div className="space-y-2">
             {isLoading
               ? Array.from({ length: 5 }).map((_, i) => (
@@ -478,7 +656,7 @@ export default function TopMoversSection({
                     </div>
                   </div>
                 ))
-              : topLosers.map((stock, idx) => renderStockRow(stock, false, idx))}
+              : topLosers.map((stock, idx) => renderStockRow(stock, false, "loss", idx))}
           </div>
         </div>
       </div>
