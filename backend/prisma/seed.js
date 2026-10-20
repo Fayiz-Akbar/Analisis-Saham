@@ -159,6 +159,11 @@ async function main() {
   });
 
   console.log("✅ Watchlist demo berhasil dibuat.");
+
+  // 4. Seeding Data Fundamental 80 Emiten IDX80
+  const { seedAllFundamentals } = await import("./seedFundamentals.js");
+  await seedAllFundamentals();
+
   console.log("🎉 Seeding Database Selesai!");
 }
 

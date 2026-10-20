@@ -4,10 +4,12 @@ import {
   getAllStocks,
   getStockQuote,
   getStockHistory,
+  getStockFundamentals,
   getStockDetail,
   getTickerTape,
   getMarketOverview,
 } from "../controllers/stockController.js";
+import { getLatestNews } from "../controllers/newsController.js";
 
 const router = Router();
 
@@ -16,7 +18,6 @@ router.get("/market-overview", getMarketOverview);
 
 // Endpoint ticker tape ringkasan pasar terpopuler
 router.get("/ticker-tape", getTickerTape);
-
 
 // Endpoint pencarian saham (Search bar autocomplete)
 router.get("/search", searchStocks);
@@ -29,6 +30,15 @@ router.get("/:symbol/quote", getStockQuote);
 
 // Endpoint data historis candlestick OHLCV (TradingView Lightweight Charts)
 router.get("/:symbol/history", getStockHistory);
+
+// Endpoint rasio 4 pilar & laporan keuangan fundamental
+router.get("/:symbol/fundamentals", getStockFundamentals);
+
+// Endpoint berita spesifik emiten dengan label sentimen
+router.get("/:symbol/news", (req, res, next) => {
+  req.query.symbol = req.params.symbol;
+  return getLatestNews(req, res, next);
+});
 
 // Endpoint detail komprehensif saham
 router.get("/:symbol", getStockDetail);

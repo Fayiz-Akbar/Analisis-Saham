@@ -38,27 +38,17 @@ export default function AppHeader({
     <header className="sticky top-0 z-50 w-full bg-[#08090d]/95 border-b border-slate-800/80 backdrop-blur-md transition-colors">
       <div className="max-w-[98%] mx-auto px-3 sm:px-4 lg:px-6 h-16 flex items-center justify-between gap-3">
         {/* ========================================================
-            KIRI: Logo Baru InvestAI Sesuai Brand Resmi
+            KIRI: Logo Investpedia Resmi
             ======================================================== */}
         <div
           onClick={() => setActiveTab("dashboard")}
-          className="flex items-center gap-2.5 sm:gap-3 cursor-pointer select-none flex-shrink-0"
+          className="flex items-center cursor-pointer select-none flex-shrink-0"
         >
-          {/* Logo Solid Putih: 3 Pilar Pertumbuhan Finansial */}
-          <div className="w-8 h-8 rounded-xl bg-[#12151e] border border-slate-800 flex items-center justify-center p-1.5 shadow-sm">
-            <svg
-              viewBox="0 0 24 24"
-              className="w-4.5 h-4.5 fill-white"
-            >
-              <rect x="3" y="13" width="4.5" height="8" rx="2.25" />
-              <rect x="9.75" y="8" width="4.5" height="13" rx="2.25" />
-              <rect x="16.5" y="3" width="4.5" height="18" rx="2.25" />
-            </svg>
-          </div>
-
-          <span className="font-extrabold text-base sm:text-lg tracking-tight text-white block">
-            InvestAI
-          </span>
+          <img
+            src={darkMode ? "/investpedia-full-dark.png" : "/investpedia-full.png"}
+            alt="Investpedia"
+            className="h-8 sm:h-9 w-auto object-contain"
+          />
         </div>
 
         {/* ========================================================
@@ -153,7 +143,7 @@ export default function AppHeader({
 
                 <div className="pt-2 border-t border-slate-800">
                   <span className="text-[10px] text-slate-500 block leading-tight">
-                    InvestAI • Analisis Fundamental Pasar Modal IDX
+                    Investpedia AI • Analisis Fundamental Pasar Modal IDX
                   </span>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 // Layout Components
 import AppHeader from "./components/layout/AppHeader";
+import { Idx80TickerTapeBar } from "./components/ui/stock-market-tracker-chart";
 
 // Search Components (TradingView Style)
 import SearchModal from "./components/search/SearchModal";
@@ -101,6 +102,9 @@ export default function App() {
         darkMode={darkMode}
         toggleDarkMode={toggleDarkMode}
       />
+
+      {/* Running Ticker Tape IDX80 Lebar Penuh dari Ujung Kiri sampai Kanan Tepat di Bawah Header */}
+      <Idx80TickerTapeBar className="w-full" />
 
       {/* Konten Halaman */}
       <main className="flex-1 max-w-[98%] mx-auto w-full px-3 sm:px-4 lg:px-6 py-6">
