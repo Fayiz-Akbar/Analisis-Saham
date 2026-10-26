@@ -58,6 +58,15 @@ export type FolderFile = {
   image?: string
   /** Rendered as a link when the folder is open. */
   href?: string
+  /** Properti khusus emiten saham */
+  ticker?: string
+  companyName?: string
+  logo?: string
+  price?: string | number
+  changePercent?: number | string
+  isPositive?: boolean
+  trend?: number[]
+  sector?: string
 }
 
 export type FolderMenuItem = {
@@ -730,7 +739,37 @@ export default function GlassFolder({
               <img className="gf-art" src={image} alt="" width={W + 24} height={H + 24} draggable={false} />
             ) : art !== "none" ? (
               <ArtCanvas className="gf-art" art={art} seed={seed} w={W + 24} h={H + 24} density={density} priority={0} />
-            ) : null}
+            ) : (
+              <div className="gf-back-stock-grid">
+                <svg className="gf-back-grid-svg" viewBox="0 0 340 272" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id={"gf-bg-grad-" + uid} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="rgba(255,255,255,0.08)" />
+                      <stop offset="100%" stopColor="rgba(255,255,255,0.01)" />
+                    </linearGradient>
+                  </defs>
+                  {/* Grid koordinat keuangan */}
+                  <line x1="0" y1="65" x2="340" y2="65" stroke="rgba(255,255,255,0.05)" strokeDasharray="4 4" />
+                  <line x1="0" y1="135" x2="340" y2="135" stroke="rgba(255,255,255,0.05)" strokeDasharray="4 4" />
+                  <line x1="0" y1="205" x2="340" y2="205" stroke="rgba(255,255,255,0.05)" strokeDasharray="4 4" />
+                  <line x1="85" y1="0" x2="85" y2="272" stroke="rgba(255,255,255,0.04)" strokeDasharray="4 4" />
+                  <line x1="170" y1="0" x2="170" y2="272" stroke="rgba(255,255,255,0.04)" strokeDasharray="4 4" />
+                  <line x1="255" y1="0" x2="255" y2="272" stroke="rgba(255,255,255,0.04)" strokeDasharray="4 4" />
+                  {/* Candlestick watermark */}
+                  <rect x="45" y="110" width="10" height="45" rx="1.5" fill="rgba(255,255,255,0.05)" />
+                  <line x1="50" y1="95" x2="50" y2="170" stroke="rgba(255,255,255,0.05)" strokeWidth="1.2" />
+                  <rect x="105" y="80" width="10" height="60" rx="1.5" fill="rgba(255,255,255,0.06)" />
+                  <line x1="110" y1="65" x2="110" y2="155" stroke="rgba(255,255,255,0.06)" strokeWidth="1.2" />
+                  <rect x="165" y="125" width="10" height="35" rx="1.5" fill="rgba(255,255,255,0.04)" />
+                  <line x1="170" y1="110" x2="170" y2="175" stroke="rgba(255,255,255,0.04)" strokeWidth="1.2" />
+                  <rect x="225" y="70" width="10" height="70" rx="1.5" fill="rgba(255,255,255,0.07)" />
+                  <line x1="230" y1="50" x2="230" y2="155" stroke="rgba(255,255,255,0.07)" strokeWidth="1.2" />
+                  {/* Area tren kurva saham */}
+                  <path d="M 0 170 Q 80 155, 150 115 T 340 60 L 340 272 L 0 272 Z" fill={"url(#gf-bg-grad-" + uid + ")"} />
+                  <path d="M 0 170 Q 80 155, 150 115 T 340 60" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="1.5" />
+                </svg>
+              </div>
+            )}
             <div className="gf-back-sheen" />
           </div>
           <svg className="gf-rim gf-back-rim" viewBox={"0 0 " + W + " " + H} aria-hidden="true">
@@ -748,7 +787,7 @@ export default function GlassFolder({
             <svg className="gf-rim gf-front-rim" viewBox={"0 0 " + W + " " + FRONT_H} aria-hidden="true">
               <defs>
                 <linearGradient id={"gf-rim-" + uid} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#fff" stopOpacity="0.95" />
+                  <stop offset="0%" stopColor="#fff" stopOpacity="0.95" />
                   <stop offset="0.35" stopColor="#fff" stopOpacity="0.35" />
                   <stop offset="1" stopColor="#fff" stopOpacity="0.12" />
                 </linearGradient>
@@ -780,8 +819,106 @@ export default function GlassFolder({
               const id = ids.current[start + v]
               const slot = fanSlot(v, visible.length)
               const jitter = rng(hashString(file.name) + id)
-              const picture = !!(file.art || file.image)
-              const inner = (
+              const isStock = Boolean(
+                file.ticker || file.logo || file.price || file.changePercent !== undefined
+              )
+              const picture = !isStock && !!(file.art || file.image)
+
+              const ticker = file.ticker || file.name
+              const isUp =
+                file.isPositive !== undefined
+                  ? file.isPositive
+                  : Number(file.changePercent) >= 0
+              const chgStr =
+                file.changePercent !== undefined
+                  ? `${Number(file.changePercent) >= 0 ? "+" : ""}${Number(
+                      file.changePercent,
+                    ).toFixed(2)}%`
+                  : ""
+              const priceStr = file.price
+                ? typeof file.price === "number"
+                  ? `Rp ${file.price.toLocaleString("id-ID")}`
+                  : file.price
+                : ""
+
+              const chartW = 244
+              const chartH = 65
+              const samplePoints =
+                file.trend && file.trend.length > 3
+                  ? file.trend
+                  : isUp
+                  ? [20, 24, 22, 28, 25, 32, 30, 36, 42]
+                  : [42, 38, 40, 32, 35, 26, 28, 22, 18]
+
+              const minP = Math.min(...samplePoints)
+              const maxP = Math.max(...samplePoints)
+              const rangeP = maxP - minP || 1
+              const pts = samplePoints.map((val, idx) => {
+                const x = (idx / (samplePoints.length - 1)) * chartW
+                const y = chartH - 8 - ((val - minP) / rangeP) * (chartH - 16)
+                return { x: Number(x.toFixed(1)), y: Number(y.toFixed(1)) }
+              })
+
+              let lineD = `M ${pts[0].x} ${pts[0].y}`
+              for (let i = 0; i < pts.length - 1; i++) {
+                const p0 = pts[i === 0 ? 0 : i - 1]
+                const p1 = pts[i]
+                const p2 = pts[i + 1]
+                const p3 = pts[i + 2] || p2
+                const cp1x = p1.x + (p2.x - p0.x) / 5
+                const cp1y = p1.y + (p2.y - p0.y) / 5
+                const cp2x = p2.x - (p3.x - p1.x) / 5
+                const cp2y = p2.y - (p3.y - p1.y) / 5
+                lineD += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`
+              }
+              const areaD = `${lineD} L ${chartW} ${chartH} L 0 ${chartH} Z`
+
+              const inner = isStock ? (
+                <div className="gf-stock-sheet">
+                  <div className="gf-stock-header">
+                    <div className="gf-stock-id">
+                      {file.logo ? (
+                        <img src={file.logo} alt="" className="gf-stock-logo" draggable={false} />
+                      ) : (
+                        <div className="gf-stock-logo-fallback">{ticker.slice(0, 2)}</div>
+                      )}
+                      <div className="gf-stock-titles">
+                        <span className="gf-stock-ticker">{ticker}</span>
+                        <span className="gf-stock-sub">{file.companyName || file.sector || "IDX80"}</span>
+                      </div>
+                    </div>
+
+                    <div className="gf-stock-pricing">
+                      <span className="gf-stock-price">{priceStr || file.meta}</span>
+                      {chgStr && (
+                        <span className={`gf-stock-pill ${isUp ? "gf-stock-pill--up" : "gf-stock-pill--down"}`}>
+                          {chgStr}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="gf-stock-chart">
+                    <svg viewBox={`0 0 ${chartW} ${chartH}`} className="gf-stock-svg" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id={`gf-stk-grad-${id}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={isUp ? "rgba(34, 197, 94, 0.35)" : "rgba(244, 63, 94, 0.35)"} />
+                          <stop offset="100%" stopColor="rgba(0, 0, 0, 0)" />
+                        </linearGradient>
+                      </defs>
+                      <line x1="0" y1="20" x2={chartW} y2="20" stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
+                      <line x1="0" y1="45" x2={chartW} y2="45" stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
+                      <path d={areaD} fill={`url(#gf-stk-grad-${id})`} />
+                      <path d={lineD} fill="none" stroke={isUp ? "#22c55e" : "#f43f5e"} strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </div>
+
+                  <div className="gf-stock-footer">
+                    <span className="gf-stock-badge">IDX80</span>
+                    <span className="gf-stock-meta">{file.meta || "Emiten Terdaftar"}</span>
+                  </div>
+                </div>
+              ) : (
                 <>
                   {picture ? (
                     file.image ? (
@@ -1314,6 +1451,152 @@ canvas.gf-sheet-art[data-ready] { opacity: 1; filter: none; }
 .gf-root[data-entered] .gf-sheet { transition-delay: calc(var(--gf-depth) * 40ms), 0s, calc(.18s + var(--gf-depth) * 90ms), calc(.18s + var(--gf-depth) * 90ms); }
 .gf-root[data-entered] .gf-front { transition-delay: 0s, .42s, .42s; }
 .gf-key { transition: transform .35s var(--gf-spring), box-shadow .35s var(--gf-ease), opacity .6s var(--gf-ease) .7s, scale .7s var(--gf-spring) .7s; }
+
+/* ---- Stock Sheet Styling (Real Stock Look on Hover) ---- */
+.gf-stock-sheet {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, #181a20 0%, #0e1014 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.gf-stock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  z-index: 2;
+}
+.gf-stock-id {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gf-stock-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.gf-stock-logo-fallback {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.gf-stock-titles {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.gf-stock-ticker {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+.gf-stock-sub {
+  font-size: 9.5px;
+  color: rgba(255, 255, 255, 0.5);
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gf-stock-pricing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.15;
+}
+.gf-stock-price {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #ffffff;
+}
+.gf-stock-pill {
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+.gf-stock-pill--up {
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+.gf-stock-pill--down {
+  color: #fb7185;
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+}
+.gf-stock-chart {
+  position: relative;
+  width: 100%;
+  height: 65px;
+  margin: 4px 0;
+  z-index: 1;
+}
+.gf-stock-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.gf-stock-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9.5px;
+  color: rgba(255, 255, 255, 0.45);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 6px;
+  z-index: 2;
+}
+.gf-stock-badge {
+  font-size: 8.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+.gf-stock-meta {
+  font-family: ui-monospace, "SF Mono", monospace;
+  letter-spacing: 0.01em;
+}
+
+/* Financial Grid Backdrop on Folder Back Panel */
+.gf-back-stock-grid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+.gf-back-grid-svg {
+  width: 100%;
+  height: 100%;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .gf-root *, .gf-root *::before, .gf-root *::after {
