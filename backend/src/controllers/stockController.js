@@ -56,6 +56,7 @@ export const getAllStocks = async (req, res) => {
       orderBy: { symbol: "asc" },
       include: {
         dailyPrice: true,
+        fundamentals: true,
       },
     });
 

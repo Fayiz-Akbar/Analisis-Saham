@@ -9,11 +9,13 @@ import SearchModal from "./components/search/SearchModal";
 // Feature / View Components
 import DashboardView from "./components/dashboard/DashboardView";
 import StockDetailCard from "./components/stock-detail/StockDetailCard";
+import StockTableView from "./components/views/StockTableView";
 import PlaceholderView from "./components/views/PlaceholderView";
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [tableSector, setTableSector] = useState("ALL");
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [selectedSymbol, setSelectedSymbol] = useState("BBCA");
   const [stockData, setStockData] = useState(null);
@@ -88,6 +90,12 @@ export default function App() {
     setShowSearchModal(false);
   };
 
+  // Aksi membuka tabel kategori dari Glass Folder Cards
+  const handleOpenCategoryTable = (sector = "ALL") => {
+    setTableSector(sector);
+    setActiveTab("category-table");
+  };
+
   return (
     <div
       className={`min-h-screen ${
@@ -114,7 +122,10 @@ export default function App() {
             Ketika diklik, langsung membuka halaman Stock Detail.
             ======================================================== */}
         {activeTab === "dashboard" && (
-          <DashboardView onSelectStock={handleSelectFromAnywhere} />
+          <DashboardView
+            onSelectStock={handleSelectFromAnywhere}
+            onOpenCategoryTable={handleOpenCategoryTable}
+          />
         )}
 
         {/* ========================================================
@@ -174,10 +185,10 @@ export default function App() {
           />
         )}
 
-        {activeTab === "screener" && (
-          <PlaceholderView
-            title="Stock Screener"
-            description="Penyaring 80 emiten konstituen IDX80 berdasarkan kriteria 4 pilar fundamental akan diimplementasikan pada sprint mendatang."
+        {(activeTab === "category-table" || activeTab === "screener") && (
+          <StockTableView
+            initialSector={tableSector}
+            onSelectStock={handleSelectFromAnywhere}
             onBackToDashboard={() => setActiveTab("dashboard")}
           />
         )}

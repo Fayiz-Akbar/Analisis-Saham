@@ -4,6 +4,7 @@ import {
 } from "@/components/ui/stock-market-tracker-chart";
 import TopMoversSection from "./TopMoversSection";
 import LatestNewsSection from "./LatestNewsSection";
+import SectorFolderSection from "./SectorFolderSection";
 
 // Generate smooth cubic bezier spline SVG path
 function generateSmoothCurve(values, width = 280, height = 110, padding = 12) {
@@ -57,7 +58,7 @@ function generateSmoothCurve(values, width = 280, height = 110, padding = 12) {
   return { linePath, areaPath, lastPoint: points[points.length - 1] };
 }
 
-export default function DashboardView({ onSelectStock }) {
+export default function DashboardView({ onSelectStock, onOpenCategoryTable }) {
   const [stocks, setStocks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("ALL");
@@ -229,6 +230,15 @@ export default function DashboardView({ onSelectStock }) {
           Label polaritas sentimen (Positif, Netral, Negatif) + Tombol Lihat Semua
           ======================================================== */}
       <LatestNewsSection />
+
+      {/* ========================================================
+          KLASTER BERKAS SEKTOR SAHAM IDX80 (GLASS FOLDER CARDS)
+          Ditempatkan tepat di atas Pasar Saham IDX80
+          ======================================================== */}
+      <SectorFolderSection
+        onSelectStock={onSelectStock}
+        onOpenCategoryTable={onOpenCategoryTable}
+      />
 
       {/* ========================================================
           BAGIAN 4: PASAR SAHAM IDX80 (CAROUSEL / SLIDER)
