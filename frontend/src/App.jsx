@@ -10,6 +10,7 @@ import SearchModal from "./components/search/SearchModal";
 import DashboardView from "./components/dashboard/DashboardView";
 import StockDetailCard from "./components/stock-detail/StockDetailCard";
 import StockTableView from "./components/views/StockTableView";
+import WatchlistView from "./components/views/WatchlistView";
 import PlaceholderView from "./components/views/PlaceholderView";
 
 export default function App() {
@@ -202,10 +203,9 @@ export default function App() {
         )}
 
         {activeTab === "watchlist" && (
-          <PlaceholderView
-            title="Watchlist"
-            description="Manajemen daftar pantauan saham personal pengguna akan diimplementasikan pada sprint mendatang."
-            onBackToDashboard={() => setActiveTab("dashboard")}
+          <WatchlistView
+            onSelectStock={handleSelectFromAnywhere}
+            onBrowseCatalog={() => handleOpenCategoryTable("ALL")}
           />
         )}
 

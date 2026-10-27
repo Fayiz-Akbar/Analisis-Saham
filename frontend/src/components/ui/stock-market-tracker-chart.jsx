@@ -3,11 +3,9 @@ import {
   ResponsiveContainer,
   ComposedChart,
   Area,
-  Bar,
   XAxis,
   YAxis,
   Tooltip,
-  Cell,
 } from "recharts";
 
 /**
@@ -88,6 +86,34 @@ const DEFAULT_TAPE_ITEMS = [
 ];
 
 /**
+ * Hook untuk deteksi sinkronisasi mode terang / gelap
+ */
+export function useIsDarkMode() {
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof document !== "undefined") {
+      return document.documentElement.classList.contains("dark");
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const updateTheme = () => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    };
+    updateTheme();
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
+}
+
+/**
  * =========================================================================
  * KOMPONEN: RUNNING TICKER TAPE (SCROLL KE ARAH KIRI - LEBAR PENUH & SANTAI)
  * Menampilkan pita harga saham real-time yang bergerak mulus ke kiri tanpa lingkaran
@@ -95,6 +121,7 @@ const DEFAULT_TAPE_ITEMS = [
  */
 export const Idx80TickerTapeBar = ({ className = "" }) => {
   const [tapeItems, setTapeItems] = useState(DEFAULT_TAPE_ITEMS);
+  const isDark = useIsDarkMode();
 
   useEffect(() => {
     let isMounted = true;
@@ -123,12 +150,12 @@ export const Idx80TickerTapeBar = ({ className = "" }) => {
 
   return (
     <div
-      className={`w-full overflow-hidden bg-[#0a0d14] border-b border-white/[0.08] flex items-center h-10 select-none ${className}`}
+      className={`w-full overflow-hidden bg-slate-100 dark:bg-[#0a0d14] border-b border-slate-200 dark:border-white/[0.08] flex items-center h-10 select-none ${className}`}
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
     >
       {/* Badge Tetap di Kiri: IDX80 TAPE (Bersih & Elegan, Tanpa Lingkaran) */}
-      <div className="z-20 flex-shrink-0 flex items-center px-4 h-full bg-[#0e121c] border-r border-white/[0.08] shadow-md">
-        <span className="text-[11px] font-black tracking-widest text-slate-100 uppercase">
+      <div className="z-20 flex-shrink-0 flex items-center px-4 h-full bg-slate-200 dark:bg-[#0e121c] border-r border-slate-300 dark:border-white/[0.08] shadow-xs dark:shadow-md">
+        <span className="text-[11px] font-black tracking-widest text-slate-800 dark:text-slate-100 uppercase">
           IDX80 TAPE
         </span>
       </div>
@@ -136,8 +163,8 @@ export const Idx80TickerTapeBar = ({ className = "" }) => {
       {/* Track Bergerak Tanpa Putus (Infinite Marquee Berjalan Santai) */}
       <div className="relative flex-1 overflow-hidden h-full flex items-center">
         {/* Masking Gradient Halus di Sisi Kiri & Kanan */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#0a0d14] to-transparent z-10" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#0a0d14] to-transparent z-10" />
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-slate-100 dark:from-[#0a0d14] to-transparent z-10" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-slate-100 dark:from-[#0a0d14] to-transparent z-10" />
 
         <div className="animate-tape-scroll flex items-center gap-7 pl-6 pr-6 cursor-default">
           {/* Duplikasi data 2x agar animasi loop berjalan seamless tanpa jeda */}
@@ -148,17 +175,17 @@ export const Idx80TickerTapeBar = ({ className = "" }) => {
                 key={`${item.symbol}-${idx}`}
                 className="flex items-center gap-2 text-xs flex-shrink-0 whitespace-nowrap group transition-opacity hover:opacity-80"
               >
-                <span className="font-extrabold text-white tracking-tight">
+                <span className="font-extrabold text-slate-900 dark:text-white tracking-tight">
                   {item.symbol}
                 </span>
-                <span className="font-mono text-slate-300 font-semibold">
+                <span className="font-mono text-slate-600 dark:text-slate-300 font-semibold">
                   {item.price ? Number(item.price).toLocaleString("id-ID") : "—"}
                 </span>
                 <span
                   className={`font-mono text-[11px] font-bold px-1.5 py-0.2 rounded ${
                     isUp
-                      ? "text-emerald-400 bg-emerald-950/40 border border-emerald-500/30"
-                      : "text-rose-400 bg-rose-950/40 border border-rose-500/30"
+                      ? "text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-500/30"
+                      : "text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-500/30"
                   }`}
                 >
                   {isUp ? `+${item.changePercent?.toFixed(2)}%` : `${item.changePercent?.toFixed(2)}%`}
@@ -393,6 +420,7 @@ const TIMEFRAMES = [
  * =========================================================================
  */
 export const HeroMarketChart = ({ className = "" }) => {
+  const isDark = useIsDarkMode();
   const [selectedIndex, setSelectedIndex] = useState("IHSG");
   const [selectedPeriod, setSelectedPeriod] = useState("1d");
 
@@ -496,13 +524,9 @@ export const HeroMarketChart = ({ className = "" }) => {
   const activeVol24h = hoveredPoint?.vol24hFormatted || (stats.turnover ? formatTurnoverID(stats.turnover) : (isIHSG ? "Rp 11,85 Triliun" : "Rp 13,73 Triliun"));
   const volumeTxVal = `${activeVol24h} (${formatVolumeID(stats.volume)})`;
 
-  const netIncomeVal = stats.netIncome
-    ? formatTurnoverID(stats.netIncome)
-    : (isIHSG ? "Rp 482,30T" : "Rp 385,60T");
-
   const prevCloseOpenVal = `${formatIndexPrice(stats.previousClose ?? (isIHSG ? 5185.105 : 142.1))} / ${formatIndexPrice(stats.openPrice ?? (isIHSG ? 4961.0 : 142.65))}`;
-  const dayRangeVal = `${formatIndexPrice(stats.dayLow ?? (isIHSG ? 4907.37 : 141.8))} – ${formatIndexPrice(stats.dayHigh ?? (isIHSG ? 5012.87 : 143.9))}`;
-  const fiftyTwoWeekRangeVal = `${formatIndexPrice(stats.fiftyTwoWeekLow ?? (isIHSG ? 4907.37 : 124.5))} – ${formatIndexPrice(stats.fiftyTwoWeekHigh ?? (isIHSG ? 9174.47 : 156.2))}`;
+  const dayRangeVal = `${formatIndexPrice(stats.dayLow ?? (isIHSG ? 4907.37 : 141.8))} - ${formatIndexPrice(stats.dayHigh ?? (isIHSG ? 5012.87 : 143.9))}`;
+  const fiftyTwoWeekRangeVal = `${formatIndexPrice(stats.fiftyTwoWeekLow ?? (isIHSG ? 4907.37 : 124.5))} - ${formatIndexPrice(stats.fiftyTwoWeekHigh ?? (isIHSG ? 9174.47 : 156.2))}`;
   const pePbvVal = `${formatIDR(stats.peRatio ?? (isIHSG ? 13.45 : 14.1), 2)}x / ${formatIDR(stats.pbvRatio ?? (isIHSG ? 2.14 : 2.35), 2)}x`;
 
   const advancingCount = stats.advancing ?? (isIHSG ? 248 : 30);
@@ -517,28 +541,28 @@ export const HeroMarketChart = ({ className = "" }) => {
       {/* ========================================================
           HEADER KARTU: TOGGLE [IHSG | IDX80], HARGA, & TIMEFRAME
           ======================================================== */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/[0.08]">
         {/* Sisi Kiri: Switcher IHSG/IDX80 + Harga Real-Time (Mengikuti Kursor) */}
         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           {/* Switcher Eksklusif: Hanya IHSG & IDX80 */}
-          <div className="inline-flex items-center bg-[#151926] border border-white/[0.12] p-1 rounded-2xl shadow-inner">
+          <div className="inline-flex items-center bg-slate-100 dark:bg-[#151926] border border-slate-300 dark:border-white/[0.12] p-1 rounded-2xl shadow-xs dark:shadow-inner">
             <button
               onClick={() => setSelectedIndex("IHSG")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
                 isIHSG
                   ? "bg-white text-slate-950 shadow-md scale-100"
-                  : "text-slate-400 hover:text-white"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               }`}
             >
               IHSG
             </button>
-            <span className="text-slate-600 px-1 text-xs">/</span>
+            <span className="text-slate-400 dark:text-slate-600 px-1 text-xs">/</span>
             <button
               onClick={() => setSelectedIndex("IDX80")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
                 !isIHSG
                   ? "bg-white text-slate-950 shadow-md scale-100"
-                  : "text-slate-400 hover:text-white"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               }`}
             >
               IDX80
@@ -547,38 +571,38 @@ export const HeroMarketChart = ({ className = "" }) => {
 
           {/* Judul Bersih Tanpa Ticker ^JKSE */}
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
               {isIHSG ? "IHSG / IDX80" : "IDX80 / IHSG"}
             </h1>
           </div>
 
           {/* Nilai Harga, Perubahan & Status Jam Pasar Riil */}
           <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
-            <span className="text-2xl sm:text-3xl font-extrabold font-mono text-white tracking-tight transition-all">
+            <span className="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white tracking-tight transition-all">
               {formattedPrice}
             </span>
             <span
               className={`text-sm font-bold font-mono transition-all ${
-                isUp ? "text-emerald-400" : "text-rose-400"
+                isUp ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
               }`}
             >
               {formattedChange}
             </span>
             <span
               className={`text-sm font-bold font-mono transition-all ${
-                isUp ? "text-emerald-400" : "text-rose-400"
+                isUp ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
               }`}
             >
               {isUp ? `+${activeChangePercent.toFixed(2)}%` : `${activeChangePercent.toFixed(2)}%`}
             </span>
 
-            {/* Indikator Tanggal Hover Aktif Saat Kursor Digerakkan / Status Jam Pasar (Teks Putih Bersih Tanpa Container) */}
+            {/* Indikator Tanggal Hover Aktif Saat Kursor Digerakkan / Status Jam Pasar */}
             {hoveredPoint ? (
-              <span className="text-xs font-mono font-medium text-white transition-colors">
+              <span className="text-xs font-mono font-medium text-slate-600 dark:text-white transition-colors">
                 {hoveredPoint.fullDate || hoveredPoint.dateLabel} • Vol: {hoveredPoint.vol24hFormatted || "—"}
               </span>
             ) : (
-              <span className="text-xs font-semibold text-white tracking-wide transition-colors">
+              <span className="text-xs font-semibold text-slate-600 dark:text-white tracking-wide transition-colors">
                 {liveMarketStatus.text}
               </span>
             )}
@@ -587,15 +611,15 @@ export const HeroMarketChart = ({ className = "" }) => {
 
         {/* Sisi Kanan: Timeframe Selector (1D, 1Bln, 3Bln, 1Th, 5Th, Seluruhnya) */}
         <div className="flex items-center gap-3 self-start lg:self-auto">
-          <div className="inline-flex items-center bg-[#151926] border border-white/[0.08] p-1 rounded-xl">
+          <div className="inline-flex items-center bg-slate-100 dark:bg-[#151926] border border-slate-300 dark:border-white/[0.08] p-1 rounded-xl">
             {TIMEFRAMES.map((tf) => (
               <button
                 key={tf.id}
                 onClick={() => setSelectedPeriod(tf.id)}
                 className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   selectedPeriod === tf.id
-                    ? "bg-[#252c40] text-white shadow-xs border border-white/10"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-white text-slate-950 shadow-xs border border-slate-300 dark:bg-[#252c40] dark:text-white dark:border-white/10"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                 }`}
               >
                 {tf.label}
@@ -606,10 +630,10 @@ export const HeroMarketChart = ({ className = "" }) => {
       </div>
 
       {/* ========================================================
-          AREA GRAFIK: GARIS PUTIH BERSIH + VOLUME BARS
+          AREA GRAFIK: GARIS CHARTS + VOLUME BARS
           ======================================================== */}
       <div className="relative w-full h-[360px] sm:h-[400px] mt-2 mb-2">
-        {/* Recharts ComposedChart: Area Garis Putih + Volume Bawah */}
+        {/* Recharts ComposedChart: Area Garis + Volume Bawah */}
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={chartData}
@@ -622,16 +646,22 @@ export const HeroMarketChart = ({ className = "" }) => {
             onMouseLeave={() => setHoveredPoint(null)}
           >
             <defs>
-              {/* Gradien Transparan Putih di Bawah Garis */}
+              {/* Gradien di Bawah Garis */}
               <linearGradient id="whiteLineGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#ffffff" stopOpacity={0.16} />
-                <stop offset="50%" stopColor="#ffffff" stopOpacity={0.04} />
-                <stop offset="100%" stopColor="#ffffff" stopOpacity={0.0} />
+                <stop offset="0%" stopColor={isDark ? "#ffffff" : "#0f172a"} stopOpacity={isDark ? 0.16 : 0.12} />
+                <stop offset="50%" stopColor={isDark ? "#ffffff" : "#0f172a"} stopOpacity={isDark ? 0.04 : 0.02} />
+                <stop offset="100%" stopColor={isDark ? "#ffffff" : "#0f172a"} stopOpacity={0.0} />
               </linearGradient>
 
               {/* Glowing Aura Filter */}
               <filter id="whiteGlow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="0" stdDeviation="3.5" floodColor="#ffffff" floodOpacity="0.45" />
+                <feDropShadow
+                  dx="0"
+                  dy="0"
+                  stdDeviation="3.5"
+                  floodColor={isDark ? "#ffffff" : "#0f172a"}
+                  floodOpacity={isDark ? 0.45 : 0.15}
+                />
               </filter>
             </defs>
 
@@ -656,7 +686,7 @@ export const HeroMarketChart = ({ className = "" }) => {
                     x={x}
                     y={y}
                     textAnchor={anchor}
-                    fill={isBold ? "#ffffff" : "#f1f5f9"}
+                    fill={isDark ? (isBold ? "#ffffff" : "#94a3b8") : (isBold ? "#0f172a" : "#64748b")}
                     fontWeight={isBold ? 800 : 600}
                     fontSize={11.5}
                     fontFamily="monospace"
@@ -674,49 +704,25 @@ export const HeroMarketChart = ({ className = "" }) => {
               domain={yDomain}
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#e2e8f0", fontSize: 11, fontFamily: "monospace", fontWeight: 500 }}
+              tick={{ fill: isDark ? "#cbd5e1" : "#475569", fontSize: 11, fontFamily: "monospace", fontWeight: 600 }}
               tickFormatter={(v) => formatIndexPrice(v)}
               dx={10}
             />
 
-            {/* Sumbu Y Volume (Disembunyikan, domain proporsional agar bar volume berada di kuadran bawah) */}
-            <YAxis
-              yAxisId="volume"
-              orientation="left"
-              domain={[0, maxVolume * 2.8]}
-              hide={true}
-            />
-
-            {/* Histogram Volume Bar di Bagian Bawah */}
-            <Bar
-              yAxisId="volume"
-              dataKey="volume"
-              barSize={6}
-              radius={[2, 2, 0, 0]}
-            >
-              {chartData.map((entry, idx) => (
-                <Cell
-                  key={`vol-${idx}`}
-                  fill={entry.isSpike ? "#38bdf8" : "#223042"}
-                  opacity={hoveredPoint && hoveredPoint.time === entry.time ? 1 : 0.8}
-                />
-              ))}
-            </Bar>
-
-            {/* Garis Kurva Putih Murni Sesuai Desain Awal */}
+            {/* Garis Kurva Saham Responsif Terhadap Mode Terang & Gelap */}
             <Area
               yAxisId="price"
               type="monotone"
               dataKey="price"
-              stroke="#ffffff"
+              stroke={isDark ? "#ffffff" : "#0f172a"}
               strokeWidth={2.4}
               filter="url(#whiteGlow)"
               fill="url(#whiteLineGradient)"
               dot={false}
               activeDot={{
                 r: 5,
-                fill: "#ffffff",
-                stroke: "#0b0e17",
+                fill: isDark ? "#ffffff" : "#0f172a",
+                stroke: isDark ? "#0b0e17" : "#ffffff",
                 strokeWidth: 2,
               }}
             />
@@ -725,7 +731,7 @@ export const HeroMarketChart = ({ className = "" }) => {
             <Tooltip
               content={<InstitutionalTooltip period={selectedPeriod} isIHSG={isIHSG} />}
               cursor={{
-                stroke: "#94a3b8",
+                stroke: isDark ? "#94a3b8" : "#64748b",
                 strokeWidth: 1,
                 strokeDasharray: "3 3",
               }}
@@ -749,82 +755,82 @@ export const HeroMarketChart = ({ className = "" }) => {
       {/* ========================================================
           BARIS STATISTIK PERGERAKAN SAHAM (EMITEN MENGUAT / MELEMAH / STAGNAN)
           ======================================================== */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 my-1 rounded-xl bg-[#121622] border border-white/[0.06] text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 my-2 rounded-xl bg-slate-100 dark:bg-[#121622] border border-slate-200 dark:border-white/[0.06] text-xs">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <span className="text-slate-400 font-medium">Emiten Menguat:</span>
-            <span className="font-mono font-extrabold text-emerald-400">+{advancingCount}</span>
+            <span className="text-slate-600 dark:text-slate-400 font-medium">Emiten Menguat:</span>
+            <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400">+{advancingCount}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-slate-400 font-medium">Emiten Melemah:</span>
-            <span className="font-mono font-extrabold text-rose-400">−{decliningCount}</span>
+            <span className="text-slate-600 dark:text-slate-400 font-medium">Emiten Melemah:</span>
+            <span className="font-mono font-extrabold text-rose-600 dark:text-rose-400">-{decliningCount}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-slate-400 font-medium">Stagnan:</span>
-            <span className="font-mono font-extrabold text-slate-300">{unchangedCount}</span>
+            <span className="text-slate-600 dark:text-slate-400 font-medium">Stagnan:</span>
+            <span className="font-mono font-extrabold text-slate-700 dark:text-slate-300">{unchangedCount}</span>
           </div>
         </div>
-        <div className="text-[11px] font-mono text-slate-400">
-          {stats.basisLabel || (isIHSG ? "Basis 900+ Emiten Komposit BEI" : "Basis 80 Saham IDX80 BEI")}
+        <div className="text-[11px] text-slate-500 font-medium">
+          Total Konstituen Pasar: <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{isIHSG ? "945 Saham" : "80 Saham"}</span>
         </div>
       </div>
 
       {/* ========================================================
-          BAGIAN BAWAH: 7 KARTU INDIKATOR METRIC (100% DINAMIS SESUAI INDEKS)
+          7 KARTU INDIKATOR METRIC PERGERAKAN PASAR
           ======================================================== */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 pt-3 border-t border-white/[0.08]">
-        {/* Indikator 1: Previous Close */}
-        <div className="rounded-xl bg-[#131722] border border-white/[0.06] p-3 flex flex-col justify-between">
-          <span className="text-[11px] font-medium text-slate-400 truncate block">Previous Close</span>
-          <span className="text-xs sm:text-sm font-bold font-mono text-white mt-1 block truncate">
-            {formatIndexPrice(stats.previousClose ?? (isIHSG ? 5185.105 : 142.1))}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 pt-1">
+        {/* Indikator 1: Market Cap */}
+        <div className="rounded-xl bg-white dark:bg-[#131722] border border-slate-200 dark:border-white/[0.06] shadow-xs p-3 flex flex-col justify-between">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate block">Kapitalisasi Pasar</span>
+          <span className="text-xs sm:text-sm font-bold font-mono text-slate-900 dark:text-white mt-1 block truncate">
+            {marketCapVal}
           </span>
         </div>
 
-        {/* Indikator 2: Open */}
-        <div className="rounded-xl bg-[#131722] border border-white/[0.06] p-3 flex flex-col justify-between">
-          <span className="text-[11px] font-medium text-slate-400 truncate block">Open</span>
-          <span className="text-xs sm:text-sm font-bold font-mono text-white mt-1 block truncate">
-            {formatIndexPrice(stats.openPrice ?? (isIHSG ? 4961.0 : 142.65))}
+        {/* Indikator 2: Volume / Nilai Tx */}
+        <div className="rounded-xl bg-white dark:bg-[#131722] border border-slate-200 dark:border-white/[0.06] shadow-xs p-3 flex flex-col justify-between">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate block">Nilai Tx (Volume)</span>
+          <span className="text-xs sm:text-sm font-bold font-mono text-slate-900 dark:text-white mt-1 block truncate">
+            {volumeTxVal}
           </span>
         </div>
 
-        {/* Indikator 3: Day's Range */}
-        <div className="rounded-xl bg-[#131722] border border-white/[0.06] p-3 flex flex-col justify-between">
-          <span className="text-[11px] font-medium text-slate-400 truncate block">Day's Range</span>
-          <span className="text-xs sm:text-sm font-bold font-mono text-white mt-1 block truncate">
+        {/* Indikator 3: Rentang Harian */}
+        <div className="rounded-xl bg-white dark:bg-[#131722] border border-slate-200 dark:border-white/[0.06] shadow-xs p-3 flex flex-col justify-between">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate block">Rentang Harian</span>
+          <span className="text-xs sm:text-sm font-bold font-mono text-slate-900 dark:text-white mt-1 block truncate">
             {dayRangeVal}
           </span>
         </div>
 
-        {/* Indikator 4: 52-Week Range */}
-        <div className="rounded-xl bg-[#131722] border border-white/[0.06] p-3 flex flex-col justify-between">
-          <span className="text-[11px] font-medium text-slate-400 truncate block">52-Week Range</span>
-          <span className="text-xs sm:text-sm font-bold font-mono text-white mt-1 block truncate">
+        {/* Indikator 4: Rentang 52 Minggu */}
+        <div className="rounded-xl bg-white dark:bg-[#131722] border border-slate-200 dark:border-white/[0.06] shadow-xs p-3 flex flex-col justify-between">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate block">Rentang 52 Mgg</span>
+          <span className="text-xs sm:text-sm font-bold font-mono text-slate-900 dark:text-white mt-1 block truncate">
             {fiftyTwoWeekRangeVal}
           </span>
         </div>
 
-        {/* Indikator 5: Volume Transaksi */}
-        <div className="rounded-xl bg-[#131722] border border-white/[0.06] p-3 flex flex-col justify-between">
-          <span className="text-[11px] font-medium text-slate-400 truncate block">Volume Transaksi</span>
-          <span className="text-xs sm:text-sm font-bold font-mono text-white mt-1 block truncate">
-            {formatVolumeID(stats.volume ?? (isIHSG ? 18420000000 : 8952507336))}
+        {/* Indikator 5: P/E & PBV */}
+        <div className="rounded-xl bg-white dark:bg-[#131722] border border-slate-200 dark:border-white/[0.06] shadow-xs p-3 flex flex-col justify-between">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate block">P/E & PBV Ratio</span>
+          <span className="text-xs sm:text-sm font-bold font-mono text-slate-900 dark:text-white mt-1 block truncate">
+            {pePbvVal}
           </span>
         </div>
 
         {/* Indikator 6: Nilai Transaksi */}
-        <div className="rounded-xl bg-[#131722] border border-white/[0.06] p-3 flex flex-col justify-between">
-          <span className="text-[11px] font-medium text-slate-400 truncate block">Nilai Transaksi</span>
-          <span className="text-xs sm:text-sm font-bold font-mono text-emerald-400 mt-1 block truncate">
+        <div className="rounded-xl bg-white dark:bg-[#131722] border border-slate-200 dark:border-white/[0.06] shadow-xs p-3 flex flex-col justify-between">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate block">Nilai Transaksi</span>
+          <span className="text-xs sm:text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1 block truncate">
             {formatTurnoverID(stats.turnover ?? (isIHSG ? 11850000000000 : 13730681275700))}
           </span>
         </div>
 
         {/* Indikator 7: Rata-rata Volume */}
-        <div className="rounded-xl bg-[#131722] border border-white/[0.06] p-3 flex flex-col justify-between">
-          <span className="text-[11px] font-medium text-slate-400 truncate block">Rata-rata Volume</span>
-          <span className="text-xs sm:text-sm font-bold font-mono text-white mt-1 block truncate">
+        <div className="rounded-xl bg-white dark:bg-[#131722] border border-slate-200 dark:border-white/[0.06] shadow-xs p-3 flex flex-col justify-between">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate block">Rata-rata Volume</span>
+          <span className="text-xs sm:text-sm font-bold font-mono text-slate-900 dark:text-white mt-1 block truncate">
             {formatVolumeID(stats.averageVolume ?? (isIHSG ? 16900000000 : 8400000000))}
           </span>
         </div>

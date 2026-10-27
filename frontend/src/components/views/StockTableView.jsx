@@ -78,12 +78,31 @@ export default function StockTableView({
       }
       try {
         localStorage.setItem("investai_watchlist_symbols", JSON.stringify(updated));
+        window.dispatchEvent(new Event("watchlist-updated"));
       } catch (err) {
         console.warn("Gagal menyimpan watchlist:", err);
       }
       return updated;
     });
   };
+
+  // Dengarkan event sinkronisasi watchlist saat ada perubahan di WatchlistView
+  useEffect(() => {
+    const handleSync = () => {
+      try {
+        const saved = localStorage.getItem("investai_watchlist_symbols");
+        if (saved) setWatchlistSymbols(JSON.parse(saved));
+      } catch (e) {
+        console.warn(e);
+      }
+    };
+    window.addEventListener("watchlist-updated", handleSync);
+    window.addEventListener("storage", handleSync);
+    return () => {
+      window.removeEventListener("watchlist-updated", handleSync);
+      window.removeEventListener("storage", handleSync);
+    };
+  }, []);
 
   const fetchStocks = async () => {
     setIsLoading(true);
@@ -234,45 +253,6 @@ export default function StockTableView({
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
       className="space-y-5 pb-12"
     >
-      {/* Header Halaman & Breadcrumb Kembali */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onBackToDashboard}
-              className="p-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0e14] hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-              title="Kembali ke Dashboard"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-              <TableProperties className="w-6 h-6 text-slate-300" />
-              <span>Katalog Saham & Analisis Fundamental Sektor</span>
-            </h1>
-          </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 pl-9">
-            Tabel metrik finansial terintegrasi untuk seluruh emiten konstituen IDX80 dengan 9 perspektif analisis pasar.
-          </p>
-        </div>
-
-        {/* Counter & Status Watchlist */}
-        <div className="flex items-center gap-3 self-start sm:self-auto pl-9 sm:pl-0">
-          <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0e14] text-slate-300">
-            <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-            <span>{watchlistSymbols.length} Dipantau</span>
-          </div>
-
-          <button
-            onClick={fetchStocks}
-            disabled={isLoading}
-            className="p-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white hover:bg-slate-50 dark:bg-[#0c0e14] dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-            title="Muat Ulang Data"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-white" : ""}`} />
-          </button>
-        </div>
-      </div>
-
       {/* 9 Tab Navigasi Atas (Sesuai Persis dengan Foto Pengguna) */}
       <div className="border-b border-slate-200 dark:border-white/10 overflow-x-auto no-scrollbar">
         <div className="flex items-center gap-1 min-w-max pb-1">

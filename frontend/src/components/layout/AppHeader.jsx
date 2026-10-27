@@ -35,7 +35,7 @@ export default function AppHeader({
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#080808]/95 border-b border-[#272727] backdrop-blur-md transition-colors">
+    <header className="sticky top-0 z-50 w-full bg-white/95 dark:bg-[#080808]/95 border-b border-slate-200 dark:border-[#272727] backdrop-blur-md transition-colors shadow-xs dark:shadow-none">
       <div className="max-w-[98%] mx-auto px-3 sm:px-4 lg:px-6 h-16 flex items-center justify-between gap-3">
         {/* ========================================================
             KIRI: Logo Investpedia Resmi
@@ -47,7 +47,7 @@ export default function AppHeader({
           <img
             src={darkMode ? "/investpedia-full-dark.png" : "/investpedia-full.png"}
             alt="Investpedia"
-            className="h-8 sm:h-9 w-auto object-contain"
+            className="h-8 sm:h-9 w-auto object-contain transition-opacity"
           />
         </div>
 
@@ -55,7 +55,7 @@ export default function AppHeader({
             TENGAH: Floating Pill Bar Navigasi (9 Menu Header PRD)
             ======================================================== */}
         <nav className="flex-1 flex justify-center max-w-5xl min-w-0 mx-2 sm:mx-4">
-          <div className="bg-[#12151e] border border-slate-800/90 rounded-full p-1 shadow-md flex items-center gap-0.5 sm:gap-1 max-w-full overflow-x-auto scrollbar-none">
+          <div className="bg-slate-100 border border-slate-200/90 dark:bg-[#12151e] dark:border-slate-800/90 rounded-full p-1 shadow-xs dark:shadow-md flex items-center gap-0.5 sm:gap-1 max-w-full overflow-x-auto scrollbar-none">
             {navTabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -64,8 +64,8 @@ export default function AppHeader({
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                     isActive
-                      ? "bg-white text-slate-950 shadow-xs"
-                      : "text-slate-400 hover:text-white"
+                      ? "bg-slate-900 text-white shadow-xs dark:bg-white dark:text-slate-950"
+                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                   }`}
                 >
                   {tab.label}
@@ -82,12 +82,12 @@ export default function AppHeader({
           {/* 1. Global Stock Search Bar Button */}
           <button
             onClick={onOpenSearch}
-            className="w-9 h-9 rounded-xl bg-[#12151e] border border-slate-800 hover:border-slate-700 flex items-center justify-center text-white hover:bg-slate-800 transition-all cursor-pointer shadow-2xs"
+            className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center text-slate-700 dark:text-white transition-all cursor-pointer shadow-xs dark:shadow-2xs"
             title="Cari Saham IDX (Global Search)"
             aria-label="Cari Saham"
           >
             <svg
-              className="w-4 h-4 stroke-white stroke-2 fill-none"
+              className="w-4 h-4 stroke-slate-700 dark:stroke-white stroke-2 fill-none"
               viewBox="0 0 24 24"
             >
               <circle cx="11" cy="11" r="7" />
@@ -99,12 +99,12 @@ export default function AppHeader({
           <div ref={authRef} className="relative">
             <button
               onClick={() => setShowAuthMenu(!showAuthMenu)}
-              className="w-9 h-9 rounded-xl bg-[#12151e] border border-slate-800 hover:border-slate-700 flex items-center justify-center text-white hover:bg-slate-800 transition-all cursor-pointer shadow-2xs"
+              className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center text-slate-700 dark:text-white transition-all cursor-pointer shadow-xs dark:shadow-2xs"
               title="Profil Pengguna & Autentikasi"
               aria-label="Akun Pengguna"
             >
               <svg
-                className="w-4 h-4 stroke-white stroke-2 fill-none"
+                className="w-4 h-4 stroke-slate-700 dark:stroke-white stroke-2 fill-none"
                 viewBox="0 0 24 24"
               >
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" strokeLinecap="round" strokeLinejoin="round" />
@@ -114,10 +114,10 @@ export default function AppHeader({
 
             {/* Auth Dropdown Popover */}
             {showAuthMenu && (
-              <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-800 bg-[#12151e]/98 shadow-2xl p-4 z-50 text-xs space-y-3 backdrop-blur-md">
-                <div className="border-b border-slate-800 pb-2.5">
-                  <span className="font-bold text-white text-sm block">Autentikasi Pengguna</span>
-                  <span className="text-[11px] text-slate-400 block mt-0.5">Sesi Investor Aktif</span>
+              <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/98 dark:bg-[#12151e]/98 shadow-2xl p-4 z-50 text-xs space-y-3 backdrop-blur-md">
+                <div className="border-b border-slate-200 dark:border-slate-800 pb-2.5">
+                  <span className="font-bold text-slate-900 dark:text-white text-sm block">Autentikasi Pengguna</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">Sesi Investor Aktif</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -126,7 +126,7 @@ export default function AppHeader({
                       alert("Fitur login pengguna berbasis JWT aktif.");
                       setShowAuthMenu(false);
                     }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold bg-white text-slate-950 hover:bg-slate-100 transition-colors cursor-pointer"
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 transition-opacity cursor-pointer"
                   >
                     Masuk (Login)
                   </button>
@@ -135,14 +135,14 @@ export default function AppHeader({
                       alert("Fitur pendaftaran akun baru terbuka.");
                       setShowAuthMenu(false);
                     }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 transition-colors cursor-pointer"
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                   >
                     Daftar Akun Baru
                   </button>
                 </div>
 
-                <div className="pt-2 border-t border-slate-800">
-                  <span className="text-[10px] text-slate-500 block leading-tight">
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 block leading-tight">
                     Investpedia AI • Analisis Fundamental Pasar Modal IDX
                   </span>
                 </div>
@@ -153,13 +153,13 @@ export default function AppHeader({
           {/* 3. Dark / Light Mode Toggle Button */}
           <button
             onClick={toggleDarkMode}
-            className="w-9 h-9 rounded-xl bg-[#12151e] border border-slate-800 hover:border-slate-700 flex items-center justify-center text-white hover:bg-slate-800 transition-all cursor-pointer shadow-2xs"
+            className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center text-slate-700 dark:text-white transition-all cursor-pointer shadow-xs dark:shadow-2xs"
             title={darkMode ? "Ganti ke Mode Terang" : "Ganti ke Mode Gelap"}
             aria-label="Ganti Tema"
           >
             {darkMode ? (
               <svg
-                className="w-4 h-4 stroke-white stroke-2 fill-none"
+                className="w-4 h-4 stroke-slate-700 dark:stroke-white stroke-2 fill-none"
                 viewBox="0 0 24 24"
               >
                 <circle cx="12" cy="12" r="5" />
@@ -174,7 +174,7 @@ export default function AppHeader({
               </svg>
             ) : (
               <svg
-                className="w-4 h-4 stroke-white stroke-2 fill-none"
+                className="w-4 h-4 stroke-slate-700 dark:stroke-white stroke-2 fill-none"
                 viewBox="0 0 24 24"
               >
                 <path
