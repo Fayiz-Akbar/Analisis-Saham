@@ -1,175 +1,125 @@
-# MODULE: PORTFOLIO & TRANSACTION TRACKING
+# MODULE: VIRTUAL TRADING, PORTFOLIO & TRANSACTION TRACKING
 
 ## Overview
-Modul Portfolio and Transaction Tracking menyediakan fungsi pencatatan portofolio investasi saham riil maupun simulasi berbasis transaksi lot (1 lot = 100 lembar). Modul ini mengotomatisasi kalkulasi *weighted average buy price*, keuntungan/kerugian belum terealisasi (*unrealized P/L*), keuntungan/kerugian terealisasi (*realized P/L*), serta menyajikan komposisi alokasi aset per emiten dan per sektor industri dalam diagram interaktif.
+Modul Virtual Trading, Portfolio, and Transaction Tracking menyediakan lingkungan simulasi perdagangan saham Bursa Efek Indonesia (IDX) berbasis **Modal Virtual Awal**. Modul ini memfasilitasi transaksi jual dan beli saham menggunakan saldo kas virtual dalam satuan lot (1 lot = 100 lembar), mengotomatisasi kalkulasi *weighted average buy price*, memantau nilai aset portofolio, menghitung *unrealized* dan *realized Profit/Loss*, serta menyajikan riwayat transaksi virtual secara komprehensif tanpa melibatkan dana nyata.
 
 ---
 
 ## Objectives
-1. Memungkinkan pengguna mencatat riwayat transaksi beli (*BUY*) dan jual (*SELL*) saham IDX berbasis satuan lot secara presisi.
-2. Mengkalkulasi harga perolehan rata-rata tertimbang (*weighted average buy price*) secara matematis akurat.
-3. Menghitung nilai investasi total, nilai pasar terkini, dan akumulasi laba/rugi (nominal dan persentase).
-4. Memvisualisasikan diversifikasi dan alokasi portofolio per saham dan per sektor.
+1. Menyediakan modal virtual awal (saldo kas simulasi) bagi setiap Investor baru untuk berlatih transaksi saham.
+2. Memproses transaksi pembelian (*BUY*) dan penjualan (*SELL*) berbasis satuan lot (1 lot = 100 lembar) dengan validasi saldo kas dan kepemilikan saham (*no short selling*).
+3. Mengkalkulasi harga perolehan rata-rata tertimbang (*weighted average buy price*) secara matematis presisi saat melakukan akumulasi saham.
+4. Menghitung ringkasan portofolio virtual: saldo kas virtual, nilai pasar saham aktif, total nilai portofolio, serta akumulasi laba/rugi (realized dan unrealized P/L).
+5. Menyajikan riwayat transaksi virtual kronologis sebagai bahan evaluasi pengambilan keputusan pengguna.
+6. Membedakan lingkungan transaksi virtual utama dari skenario simulasi historis & DCA (yang tidak mengubah saldo atau portofolio utama).
 
 ---
 
 ## Stakeholders
-### Investor Berpengalaman
-Memerlukan pencatatan multi-transaksi yang akurat dengan kalkulasi realized P/L saat melakukan *profit taking* atau *rebalancing* parsial.
-### Investor Pemula
-Mempelajari bagaimana transaksi bertahap mempengaruhi harga beli rata-rata (*averaging up / averaging down*) dan memantau kinerja portofolionya.
+### Investor (End-User / Calon Investor)
+Mempraktikkan teori investasi secara langsung melalui eksekusi transaksi beli/jual dengan modal virtual, mempelajari dampak perubahan harga pasar terhadap nilai portofolionya, dan mengevaluasi riwayat transaksinya.
 
 ---
 
-## Functional Requirements
-- **FR-PTF-001**: Sistem harus menyediakan form pencatatan transaksi dengan field input: Simbol Saham, Tipe Transaksi (`BUY` / `SELL`), Harga per lembar (Rp), Jumlah Lot, dan Tanggal Transaksi (`POST /api/portfolio/transactions`).
-- **FR-PTF-002**: Sistem harus secara otomatis mengkonversi satuan lot ke jumlah lembar saham ($1\text{ lot} = 100\text{ lembar}$).
-- **FR-PTF-003**: Sistem harus menghitung ringkasan portofolio: Total Modal Diinvestasikan, Total Nilai Pasar Terkini, Total Unrealized P/L (Rp), Total Realized P/L (Rp), dan Total Return (%).
-- **FR-PTF-004**: Sistem harus menyajikan tabel kepemilikan saham aktif (*Holdings*) mencakup: Simbol, Nama Perusahaan, Total Lot, Total Lembar, Harga Beli Rata-Rata (*Avg Price*), Harga Terkini, Nilai Modal, Nilai Pasar, P/L Nominal, dan Return (%).
-- **FR-PTF-005**: Sistem harus menampilkan diagram pie/donat komposisi alokasi portofolio berdasarkan saham individual dan sektor industri.
-- **FR-PTF-006**: Sistem harus menyediakan tabel riwayat seluruh transaksi (*Transaction History*) dengan opsi menghapus entri transaksi tertentu (`DELETE /api/portfolio/transactions/:id`).
-- **FR-PTF-007**: Sistem harus memvalidasi agar transaksi `SELL` tidak melebihi jumlah lot yang sedang dimiliki (*no short selling*).
+## Functional Requirements (KF-09, KF-10, KF-11, KF-12, PB-06, PB-08, PB-09)
+- **KF-09**: Sistem menyediakan modal virtual awal (saldo kas virtual) yang dikreditkan ke akun Investor saat pendaftaran pertama kali.
+- **KF-10**: Sistem memproses order pembelian (BUY) dan penjualan (SELL) saham virtual:
+  - Pembelian (BUY): Memeriksa kecukupan saldo kas virtual. Jika cukup, sistem mendebit saldo kas virtual sebesar $(\text{Jumlah Lot} \times 100 \times \text{Harga Saham})$ dan menambah kepemilikan lot/lembar saham.
+  - Penjualan (SELL): Memeriksa kepemilikan saham. Jika lot yang dimiliki mencukupi, sistem mengkreditkan dana ke saldo kas virtual dan mengurangi kuantitas kepemilikan saham. Penjualan yang melebihi kuantitas saham yang dimiliki ditolak (*no short selling*).
+- **KF-11**: Sistem menyajikan tabel dan ringkasan portofolio virtual (*Holdings*) mencakup:
+  - Saldo Kas Virtual (*Cash Balance*).
+  - Nilai Pasar Seluruh Saham (*Total Equity/Stocks Value*).
+  - Nilai Total Portofolio ($V_t = \text{Kas} + \text{Nilai Pasar Saham}$).
+  - Daftar kepemilikan per saham: Simbol, Nama Emiten, Jumlah Lot, Jumlah Lembar, Harga Beli Rata-Rata (*Avg Buy Price*), Harga Pasar Terkini, Nilai Pasar, Unrealized P/L (Rp & %).
+- **KF-12**: Sistem mencatat dan menyajikan riwayat seluruh transaksi virtual (*Transaction History*): Waktu/tanggal transaksi, simbol saham, tipe transaksi (BUY/SELL), kuantitas lot/lembar, harga per lembar saat transaksi, dan total nominal transaksi.
 
 ---
 
 ## Business Rules & Formulas
-- **BR-PTF-001**: Minimum jumlah lot transaksi adalah 1 lot (bilangan bulat positif).
-- **BR-PTF-002**: Formula Kalkulasi Average Buy Price (Averaging):
+- **BR-PTF-001**: Satuan perdagangan minimal adalah 1 lot (100 lembar) dan hanya dapat berupa bilangan bulat positif.
+- **BR-PTF-002**: Formula Kalkulasi Average Buy Price saat akumulasi (BUY):
   $$\text{Avg Price}_{\text{baru}} = \frac{(\text{Qty Lama} \times \text{Avg Price Lama}) + (\text{Qty Beli Baru} \times \text{Harga Beli Baru})}{\text{Qty Lama} + \text{Qty Beli Baru}}$$
-- **BR-PTF-003**: Formula Realized P/L (pada transaksi `SELL`):
-  $$\text{Realized P/L} = \text{Qty Jual} \times (\text{Harga Jual} - \text{Avg Price Beli})$$
-- **BR-PTF-004**: Formula Unrealized P/L (pada sisa kepemilikan aktif):
-  $$\text{Unrealized P/L} = \text{Sisa Qty Lembar} \times (\text{Harga Pasar Terkini} - \text{Avg Price Beli})$$
-- **BR-PTF-005**: Penjualan saham mengurangi kuantitas lot kepemilikan tanpa mengubah harga beli rata-rata (*Avg Buy Price*) dari sisa saham yang masih ada.
+- **BR-PTF-003**: Formula Realized P/L saat penjualan (SELL):
+  $$\text{Realized P/L} = \text{Qty Lembar Jual} \times (\text{Harga Jual} - \text{Avg Price Beli})$$
+- **BR-PTF-004**: Formula Unrealized P/L pada kepemilikan aktif:
+  $$\text{Unrealized P/L} = \text{Qty Lembar Aktif} \times (\text{Harga Pasar Terkini} - \text{Avg Price Beli})$$
+- **BR-PTF-005**: Penjualan saham mengurangi kuantitas kepemilikan lot tanpa mengubah harga perolehan rata-rata (*Avg Buy Price*) dari sisa saham yang masih tersisa.
+- **BR-PTF-006**: Transaksi yang ditolak (karena saldo kas tidak cukup atau lot saham tidak cukup) tidak boleh mengubah saldo kas, kepemilikan, ataupun riwayat transaksi.
+- **BR-PTF-007**: Seluruh tampilan antarmuka wajib mencantumkan penanda eksplisit bahwa saldo dan transaksi adalah simulasi virtual tanpa dana nyata.
 
 ---
 
-## Workflow
-```text
-User Submits Transaction Modal
-(e.g., Symbol: BBCA, Type: BUY, Price: Rp8.000, Lots: 2, Date: 2026-08-20)
-           │
-           ▼
-POST /api/portfolio/transactions
-           │
-           ▼
-Backend Validation:
- ├── Jumlah lot > 0?
- ├── Jika SELL: Apakah user memiliki lot >= Qty Jual?
-           │
-           ▼
-Insert ke Tabel `portfolio_transactions`
-           │
-           ▼
-Recalculate User Portfolio Summary & Holdings
-           │
-           ▼
-Return 201 Created ──> Refresh Portfolio UI & Allocation Chart
-```
+## Database Design (PostgreSQL & Prisma)
 
----
-
-## Database Design
-
-### Table `portfolio_transactions`
 ```sql
-CREATE TABLE portfolio_transactions (
+-- Saldo Kas Virtual di Tabel Users
+ALTER TABLE users ADD COLUMN virtual_balance NUMERIC(15, 2) NOT NULL DEFAULT 10000000.00;
+
+-- Transaksi Virtual
+CREATE TABLE virtual_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     symbol VARCHAR(10) NOT NULL REFERENCES stocks(symbol) ON DELETE RESTRICT,
     transaction_type VARCHAR(10) NOT NULL CHECK (transaction_type IN ('BUY', 'SELL')),
-    price NUMERIC(15, 2) NOT NULL CHECK (price > 0),
-    lot_quantity INTEGER NOT NULL CHECK (lot_quantity > 0),
-    transaction_date DATE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    lots INTEGER NOT NULL CHECK (lots > 0),
+    shares INTEGER NOT NULL CHECK (shares > 0),
+    price_per_share NUMERIC(15, 2) NOT NULL CHECK (price_per_share > 0),
+    total_amount NUMERIC(15, 2) NOT NULL CHECK (total_amount > 0),
+    transaction_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-CREATE INDEX idx_portfolio_user_id ON portfolio_transactions(user_id);
-CREATE INDEX idx_portfolio_symbol ON portfolio_transactions(symbol);
+CREATE INDEX idx_vtx_user_id ON virtual_transactions(user_id);
+CREATE INDEX idx_vtx_symbol ON virtual_transactions(symbol);
+
+-- Kepemilikan Saham Virtual Aktif (Holdings)
+CREATE TABLE virtual_holdings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    symbol VARCHAR(10) NOT NULL REFERENCES stocks(symbol) ON DELETE RESTRICT,
+    lots INTEGER NOT NULL CHECK (lots >= 0),
+    shares INTEGER NOT NULL CHECK (shares >= 0),
+    avg_buy_price NUMERIC(15, 2) NOT NULL CHECK (avg_buy_price >= 0),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT uq_user_stock_holding UNIQUE(user_id, symbol)
+);
 ```
 
 ---
 
-## Backend Design
-- **Services**: `PortfolioService.js`:
-  - `addTransaction(userId, transactionData)`
-  - `deleteTransaction(userId, transactionId)`
-  - `getUserHoldings(userId)`
-  - `getPortfolioSummary(userId)`
-  - `getTransactionHistory(userId)`
-- **Calculation Engine**: `portfolioCalculator.js` memproses deretan transaksi berurutan berdasarkan tanggal untuk menyusun saldo kepemilikan akhir.
+## Workflow Transaksi Virtual
+
+```text
+Investor Membuka Menu Transaksi Saham Virtual
+                        │
+                        ▼
+Pilih Simbol Saham, Tipe Transaksi (BUY / SELL), Jumlah Lot
+                        │
+                        ▼
+POST /api/portfolio/transactions
+                        │
+                        ▼
+Backend Validation:
+ ├── Ambil harga acuan pasar terkini (Yahoo Finance API / Cache)
+ ├── JIKA BUY:
+ │    ├── Hitung total_cost = lots * 100 * current_price
+ │    ├── Apakah user.virtual_balance >= total_cost?
+ │    │    ├── TIDAK ──> Tolak Transaksi (400 Saldo Kas Virtual Tidak Cukup)
+ │    │    └── YA ────> Kurangi user.virtual_balance, update virtual_holdings, catat riwayat
+ └── JIKA SELL:
+      ├── Apakah virtual_holdings.lots >= lots?
+           ├── TIDAK ──> Tolak Transaksi (400 Kepemilikan Saham Tidak Cukup)
+           └── YA ────> Tambah user.virtual_balance, kurangi virtual_holdings, catat riwayat
+                        │
+                        ▼
+Kembalikan 201 Created ──> Refresh Tampilan Portofolio & Saldo Kas
+```
 
 ---
 
 ## API Endpoints
 
-### Endpoint List
 | Method | Path | Purpose | Authorization | Request Body | Response Status |
-|--------|------|---------|---------------|--------------|-----------------|
-| `GET` | `/api/portfolio` | Ringkasan, holdings & alokasi | Bearer JWT | None | `200 OK` |
-| `POST` | `/api/portfolio/transactions`| Tambah transaksi BUY/SELL | Bearer JWT | `{ symbol, transaction_type, price, lot_quantity, transaction_date }` | `201 Created` |
-| `DELETE`| `/api/portfolio/transactions/:id`| Hapus catatan transaksi | Bearer JWT | None | `200 OK` |
-| `GET` | `/api/portfolio/transactions`| Riwayat seluruh transaksi | Bearer JWT | None | `200 OK` |
-
-### Sample JSON Response (`GET /api/portfolio`)
-```json
-{
-  "success": true,
-  "message": "Data portofolio berhasil diambil",
-  "data": {
-    "summary": {
-      "total_invested": 1600000,
-      "total_current_value": 1770000,
-      "total_unrealized_pl": 170000,
-      "total_realized_pl": 0,
-      "total_return_percent": 10.63
-    },
-    "holdings": [
-      {
-        "symbol": "BBCA",
-        "company_name": "PT Bank Central Asia Tbk",
-        "sector": "Financials",
-        "total_lots": 2,
-        "total_shares": 200,
-        "avg_buy_price": 8000,
-        "current_price": 8850,
-        "invested_value": 1600000,
-        "current_value": 1770000,
-        "unrealized_pl": 170000,
-        "return_percent": 10.63,
-        "weight_percent": 100.0
-      }
-    ],
-    "allocation": {
-      "by_stock": [ { "symbol": "BBCA", "percentage": 100.0 } ],
-      "by_sector": [ { "sector": "Financials", "percentage": 100.0 } ]
-    }
-  }
-}
-```
-
----
-
-## Frontend Design
-- **Pages**: `PortfolioPage.jsx` (`/portfolio`).
-- **Components**:
-  - `PortfolioSummaryCards.jsx`: Kartu metrik (Total Nilai, Modal, Total P/L, Return).
-  - `HoldingsTable.jsx`: Tabel interaktif kepemilikan saham dengan badge status laba/rugi.
-  - `PortfolioAllocationChart.jsx`: Diagram donat visualisasi bobot saham dan sektor.
-  - `AddTransactionModal.jsx`: Modal form input transaksi dengan kalkulasi otomatis total nilai (Lots $\times$ 100 $\times$ Price).
-  - `TransactionHistoryTable.jsx`: Tabel riwayat transaksi dengan tombol hapus.
-
----
-
-## Testing Scenarios
-### Unit Test
-- Uji averaging harga beli bertahap (contoh: beli 1 lot di 8.000, lalu beli 1 lot di 9.000 -> Avg price harus 8.500).
-- Uji penjualan parsial dan kalkulasi realized P/L.
-- Penolakan transaksi SELL jika lot melebihi kepemilikan.
-### Integration Test
-- Input transaksi -> Verifikasi perubahan nilai portofolio pada `/api/portfolio`.
-
----
-
-## AI Agent Instructions
-- **Backend Agent**: Pastikan kalkulasi matematis menggunakan tipe numerik dengan presisi terjaga (*floating point arithmetic safety*) sebelum dibulatkan ke format Rupiah.
-- **Frontend Agent**: Sediakan validasi real-time pada modal transaksi: tampilkan estimasi total uang yang dibutuhkan ($Lots \times 100 \times Price$).
+|---|---|---|---|---|---|
+| `GET` | `/api/portfolio/summary` | Mengambil saldo kas, total aset, dan nilai total portofolio | Bearer JWT | None | `200 OK` |
+| `GET` | `/api/portfolio/holdings` | Mengambil daftar saham yang dimiliki & average price | Bearer JWT | None | `200 OK` |
+| `GET` | `/api/portfolio/history` | Mengambil riwayat kronologis transaksi virtual | Bearer JWT | None | `200 OK` |
+| `POST` | `/api/portfolio/transactions` | Melakukan order transaksi virtual (BUY / SELL) | Bearer JWT | `{ "symbol": "BBCA", "type": "BUY", "lots": 2 }` | `201 Created` |
