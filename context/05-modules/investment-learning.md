@@ -138,10 +138,15 @@ CREATE TABLE quiz_attempts (
 | `GET` | `/api/learning/:id/quiz` | Ambil soal kuis tanpa kunci | Bearer JWT | None | `200 OK` |
 | `POST` | `/api/learning/:id/quiz/submit` | Kirim jawaban kuis, terima nilai deterministik, pembahasan, & umpan balik LLM | Bearer JWT | `{ "answers": [{ "question_id": "...", "selected_key": "B" }] }` | `200 OK` |
 | `POST` | `/api/ai/tutor` | Tanya jawab materi edukasi dengan AI Tutor | Bearer JWT | `{ "question": "...", "module_slug": "..." }` | `200 OK` |
-| `POST` | `/api/admin/modules` | Tambah modul pembelajaran (Admin) | Bearer JWT (Admin) | `{ "title": "...", "level": "BEGINNER", ... }` | `201 Created` |
-| `PUT` | `/api/admin/modules/:id` | Edit modul pembelajaran (Admin) | Bearer JWT (Admin) | Payload modul | `200 OK` |
-| `DELETE`| `/api/admin/modules/:id` | Hapus modul pembelajaran (Admin) | Bearer JWT (Admin) | None | `200 OK` |
-| `POST` | `/api/admin/quizzes` | Tambah soal kuis & kunci (Admin) | Bearer JWT (Admin) | `{ "module_id": "...", "question_text": "...", "correct_key": "A", ... }` | `201 Created` |
+| `POST` | `/api/auth/admin/login` | Login gerbang administrator (RBAC) | Public | `{ "email": "...", "password": "..." }` | `200 OK` / `403 Forbidden` |
+| `GET` | `/api/admin/modules` | Ambil katalog modul & statistik kurikulum | Bearer JWT (Admin) | Query: `level`, `status`, `search` | `200 OK` |
+| `POST` | `/api/admin/modules` | Tambah modul pembelajaran baru (Admin) | Bearer JWT (Admin) | `{ "title": "...", "level": "BEGINNER", ... }` | `201 Created` |
+| `PUT` | `/api/admin/modules/:id` | Edit atribut modul pembelajaran (Admin) | Bearer JWT (Admin) | Payload modul (parsial/penuh) | `200 OK` |
+| `DELETE`| `/api/admin/modules/:id` | Hapus modul beserta butir kuis terkait | Bearer JWT (Admin) | None | `200 OK` |
+| `GET` | `/api/admin/modules/:id/quizzes` | Ambil bank soal kuis + kunci deterministik | Bearer JWT (Admin) | None | `200 OK` |
+| `POST` | `/api/admin/quizzes` | Tambah butir soal kuis & kunci (Admin) | Bearer JWT (Admin) | `{ "moduleId": "...", "questionText": "...", "correctKey": "A", ... }` | `201 Created` |
+| `PUT` | `/api/admin/quizzes/:id` | Edit butir soal, opsi A-D, & pembahasan | Bearer JWT (Admin) | Payload butir soal | `200 OK` |
+| `DELETE`| `/api/admin/quizzes/:id` | Hapus butir soal kuis tertentu | Bearer JWT (Admin) | None | `200 OK` |
 
 ---
 
