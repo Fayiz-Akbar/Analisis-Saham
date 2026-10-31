@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, getProfile, updateProfile } from "../controllers/authController.js";
+import { register, login, adminLogin, getProfile, updateProfile } from "../controllers/authController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 
 const router = Router();
@@ -7,6 +7,7 @@ const router = Router();
 // Public routes
 router.post("/register", register);
 router.post("/login", login);
+router.post("/admin/login", adminLogin);
 
 // Protected routes (requires Bearer JWT)
 router.get("/me", authenticateToken, getProfile);

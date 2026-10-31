@@ -35,18 +35,25 @@ enum TransactionType {
   SELL
 }
 
-enum LearningCategory {
-  BEGINNER
-  FUNDAMENTAL
-  ANALYSIS
-  PORTFOLIO
-  STRATEGY
+// Peran pengguna untuk Role-Based Access Control (KF-01, KNF-01)
+enum UserRole {
+  INVESTOR
+  ADMIN
 }
 
+// Tingkat pembelajaran kurikulum 3 level (Pemula, Menengah, Mahir)
 enum DifficultyLevel {
   BEGINNER
   INTERMEDIATE
   ADVANCED
+}
+
+// Kunci jawaban resmi kuis pilihan ganda (deterministik A-D)
+enum QuizOptionKey {
+  A
+  B
+  C
+  D
 }
 
 // ==========================================
@@ -58,6 +65,7 @@ model User {
   name            String          @db.VarChar(100)
   email           String          @unique @db.VarChar(150)
   passwordHash    String          @map("password_hash") @db.VarChar(255)
+  role            UserRole        @default(INVESTOR)
   investorProfile InvestorProfile @default(BEGINNER) @map("investor_profile")
   createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -69,6 +77,7 @@ model User {
   learningProgresses    LearningProgress[]
   quizAttempts          QuizAttempt[]
 
+  @@index([role])
   @@map("users")
 }
 
@@ -237,64 +246,78 @@ model PortfolioTransaction {
   @@map("portfolio_transactions")
 }
 
-model LearningContent {
-  id               String           @id @default(uuid()) @db.Uuid
-  title            String           @db.VarChar(200)
-  slug             String           @unique @db.VarChar(200)
-  category         LearningCategory
-  difficulty       DifficultyLevel
-  content          String           @db.Text
-  estimatedMinutes Int              @default(5) @map("estimated_minutes")
-  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+// Modul materi pembelajaran kurikulum 3 level (KF-02, KF-16, PB-12)
+model LearningModule {
+  id               String          @id @default(uuid()) @db.Uuid
+  title            String          @db.VarChar(200)
+  slug             String          @unique @db.VarChar(200)
+  level            DifficultyLevel
+  summary          String?         @db.VarChar(500)
+  contentBody      String          @map("content_body") @db.Text
+  estimatedMinutes Int             @default(5) @map("estimated_minutes")
+  orderIndex       Int             @default(1) @map("order_index")
+  isPublished      Boolean         @default(true) @map("is_published")
+  createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  quizzes            Quiz[]
+  quizQuestions      QuizQuestion[]
   learningProgresses LearningProgress[]
+  quizAttempts       QuizAttempt[]
 
-  @@map("learning_contents")
+  @@index([level, orderIndex])
+  @@index([isPublished])
+  @@map("learning_modules")
 }
 
+// Progres belajar pengguna per modul, terpisah dari nilai kuis (KF-03)
 model LearningProgress {
   id          String    @id @default(uuid()) @db.Uuid
   userId      String    @map("user_id") @db.Uuid
-  contentId   String    @map("content_id") @db.Uuid
-  completed   Boolean   @default(false)
+  moduleId    String    @map("module_id") @db.Uuid
+  isCompleted Boolean   @default(false) @map("is_completed")
   completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
 
-  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  content LearningContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, contentId])
+  @@unique([userId, moduleId], map: "uq_user_learning_module")
   @@map("learning_progress")
 }
 
-model Quiz {
-  id            String   @id @default(uuid()) @db.Uuid
-  contentId     String   @map("content_id") @db.Uuid
-  question      String   @db.Text
-  optionA       String   @map("option_a") @db.VarChar(255)
-  optionB       String   @map("option_b") @db.VarChar(255)
-  optionC       String   @map("option_c") @db.VarChar(255)
-  optionD       String   @map("option_d") @db.VarChar(255)
-  correctAnswer String   @map("correct_answer") @db.VarChar(5)
-  explanation   String   @db.Text
+// Bank soal kuis evaluasi pilihan ganda A-D (KF-04, KF-16, PB-13)
+model QuizQuestion {
+  id               String        @id @default(uuid()) @db.Uuid
+  moduleId         String        @map("module_id") @db.Uuid
+  questionText     String        @map("question_text") @db.Text
+  optionA          String        @map("option_a") @db.VarChar(255)
+  optionB          String        @map("option_b") @db.VarChar(255)
+  optionC          String        @map("option_c") @db.VarChar(255)
+  optionD          String        @map("option_d") @db.VarChar(255)
+  correctKey       QuizOptionKey @map("correct_key")
+  explanationText  String        @map("explanation_text") @db.Text
+  indicatorConcept String        @map("indicator_concept") @db.VarChar(150)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  content  LearningContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
-  attempts QuizAttempt[]
+  module LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
-  @@map("quizzes")
+  @@index([moduleId])
+  @@map("quiz_questions")
 }
 
+// Riwayat percobaan kuis + payload umpan balik LLM (KF-05, KF-17)
 model QuizAttempt {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
-  quizId    String   @map("quiz_id") @db.Uuid
-  answer    String   @db.VarChar(5)
-  isCorrect Boolean  @map("is_correct")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  moduleId          String   @map("module_id") @db.Uuid
+  scorePercentage   Decimal  @map("score_percentage") @db.Decimal(5, 2)
+  answersPayload    Json     @map("answers_payload")
+  aiFeedbackPayload Json?    @map("ai_feedback_payload")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
+  @@index([userId, moduleId])
   @@map("quiz_attempts")
 }
