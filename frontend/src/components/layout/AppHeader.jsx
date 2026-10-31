@@ -88,22 +88,25 @@ export default function AppHeader({
             KANAN: Portal Admin Pill + Global Search + User Auth + Theme
             ======================================================== */}
         <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
-          {/* Pintasan Portal Admin (Sprint 1 - KF-16) */}
-          <button
-            type="button"
-            onClick={() => setActiveTab("admin")}
-            className={`h-9 px-3 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-              activeTab === "admin"
-                ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-950 dark:border-white shadow-xs"
-                : isAdmin
-                  ? "bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/40 hover:bg-indigo-500/30"
-                  : "bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-white"
-            }`}
-            title="Portal Administrator Manajemen Kurikulum & Kuis"
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span className="hidden xl:inline">Portal Admin</span>
-          </button>
+          {/* Pintasan Switch Admin <-> Sistem Utama (HANYA TAMPIL KETIKA SUDAH LOGIN SEBAGAI ADMIN) */}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setActiveTab(activeTab === "admin" ? "dashboard" : "admin")}
+              className={`h-9 px-3 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                activeTab === "admin"
+                  ? "bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-500 shadow-xs"
+                  : "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/25"
+              }`}
+              title={activeTab === "admin" ? "Beralih ke Sistem Utama (Publik)" : "Beralih ke Portal Administrator"}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">
+                {activeTab === "admin" ? "Ke Sistem Utama" : "Portal Admin"}
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            </button>
+          )}
 
           {/* 1. Global Stock Search Bar Button */}
           <button
@@ -185,20 +188,22 @@ export default function AppHeader({
                     </div>
 
                     <div className="space-y-1.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab("admin");
-                          setShowAuthMenu(false);
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-200 border border-indigo-500/30 transition-colors flex items-center justify-between cursor-pointer"
-                      >
-                        <span className="flex items-center gap-2">
-                          <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                          {isAdmin ? "Buka Portal Administrator" : "Portal Admin (RBAC)"}
-                        </span>
-                        <span>→</span>
-                      </button>
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveTab(activeTab === "admin" ? "dashboard" : "admin");
+                            setShowAuthMenu(false);
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-200 border border-indigo-500/30 transition-colors flex items-center justify-between cursor-pointer"
+                        >
+                          <span className="flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                            {activeTab === "admin" ? "Beralih ke Sistem Utama" : "Buka Portal Administrator"}
+                          </span>
+                          <span>→</span>
+                        </button>
+                      )}
 
                       <button
                         type="button"
@@ -220,7 +225,7 @@ export default function AppHeader({
                         Autentikasi Pengguna
                       </span>
                       <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                        Masuk sebagai Investor atau Administrator
+                        Masuk ke akun investor Anda
                       </span>
                     </div>
 
@@ -247,21 +252,6 @@ export default function AppHeader({
                       >
                         <UserPlus className="w-3.5 h-3.5" />
                         Daftar Akun Investor Baru
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab("admin");
-                          setShowAuthMenu(false);
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 transition-colors flex items-center justify-between cursor-pointer"
-                      >
-                        <span className="flex items-center gap-2">
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                          Login Portal Administrator
-                        </span>
-                        <span>→</span>
                       </button>
                     </div>
                   </>

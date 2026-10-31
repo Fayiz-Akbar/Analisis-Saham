@@ -284,7 +284,7 @@ export default function App() {
               <PlaceholderView
                 title="Learning & Quiz (Investor Reader — Sprint 2)"
                 description="Antarmuka pembaca kurikulum 3 level untuk Investor akan diimplementasikan pada branch Sprint 2 (feat/edukasi-kurikulum-materi). Pengelolaan konten kurikulum & bank soal kuis untuk Administrator telah aktif di Portal Admin."
-                onBackToDashboard={() => setActiveTab("admin")}
+                onBackToDashboard={() => setActiveTab("dashboard")}
               />
             </div>
           )}
@@ -299,7 +299,7 @@ export default function App() {
         </main>
 
         {/* Modal Login & Registrasi Investor */}
-        <AuthModal onNavigateToAdmin={() => setActiveTab("admin")} />
+        <AuthModal />
 
         {/* TradingView Style Search Modal */}
         <SearchModal

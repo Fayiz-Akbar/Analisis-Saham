@@ -300,17 +300,7 @@ export default function AuthModal({ onNavigateToAdmin }) {
                 >
                   Investor Expert
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    closeAuthModal();
-                    if (onNavigateToAdmin) onNavigateToAdmin();
-                  }}
-                  className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/20 transition-colors cursor-pointer flex items-center gap-1"
-                >
-                  <ShieldCheck className="w-3 h-3" />
-                  Portal Admin →
-                </button>
+
               </div>
             </div>
           )}

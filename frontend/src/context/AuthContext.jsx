@@ -19,17 +19,45 @@ const getInitialCachedUser = () => {
 };
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => getStoredToken());
+  const [token, setToken] = useState(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get("token") || params.get("admin_token");
+      if (urlToken) return urlToken;
+    }
+    return getStoredToken();
+  });
   const [user, setUser] = useState(() => getInitialCachedUser());
-  const [isLoading, setIsLoading] = useState(() => Boolean(getStoredToken()));
+  const [isLoading, setIsLoading] = useState(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("token") || params.get("admin_token")) return true;
+    }
+    return Boolean(getStoredToken());
+  });
   const [authModalMode, setAuthModalMode] = useState(null); // "login" | "register" | null
 
-  // Sinkronisasi sesi dari token tersimpan saat aplikasi dimuat
+  // Sinkronisasi sesi dari token tersimpan atau token URL saat aplikasi dimuat
   useEffect(() => {
     let isMounted = true;
-    const savedToken = getStoredToken();
+    let urlToken = null;
 
-    if (!savedToken) {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      urlToken = params.get("token") || params.get("admin_token");
+      if (urlToken) {
+        // Bersihkan token dari query string URL agar tetap bersih dan aman
+        params.delete("token");
+        params.delete("admin_token");
+        const remaining = params.toString();
+        const cleanUrl = window.location.pathname + (remaining ? `?${remaining}` : "") + window.location.hash;
+        window.history.replaceState({}, "", cleanUrl);
+      }
+    }
+
+    const activeToken = urlToken || getStoredToken();
+
+    if (!activeToken) {
       setIsLoading(false);
       return undefined;
     }
@@ -37,11 +65,11 @@ export function AuthProvider({ children }) {
     async function verifySession() {
       try {
         setIsLoading(true);
-        const res = await authApi.getMe(savedToken);
+        const res = await authApi.getMe(activeToken);
         if (isMounted && res?.data?.user) {
           setUser(res.data.user);
-          setToken(savedToken);
-          setStoredSession(savedToken, res.data.user);
+          setToken(activeToken);
+          setStoredSession(activeToken, res.data.user);
         }
       } catch (err) {
         if (isMounted) {
