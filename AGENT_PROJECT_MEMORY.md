@@ -3,9 +3,18 @@
 
 > **Dokumen Status:** Living Architecture & Specification Memory  
 > **Target Pengguna Dokumen:** AI Coding Agent, Software Architect, Full-Stack Developer, AI/QA Engineer  
-> **Terakhir Diperbarui:** 19 Oktober 2026  
+> **Terakhir Diperbarui:** 31 Oktober 2026  
 > **Repositori Root:** `c:\laragon\www\Analisis-Saham\`  
 > **Lokasi File:** `AGENT_PROJECT_MEMORY.md`  
+
+> [!CRITICAL]
+> ### 🛑 KEBIJAKAN MUTLAK GIT & GITHUB PUSH (AI AGENT PUSH RESTRICTION)
+> 1. **Dilarang Keras Auto-Push oleh AI Agent**: AI Coding Agent (model/platform manapun) **TIDAK BOLEH** mengeksekusi perintah `git push` ke GitHub/remote repository secara mandiri atau otomatis.
+> 2. **Eksekusi Push Hanya oleh User**: Setiap eksekusi `git push` ke GitHub adalah hak prerogatif eksklusif pengguna (User) pemilik proyek. AI Agent hanya bertugas menyiapkan kode lokal, pengujian, dan menyarankan perintah commit/push untuk dijalankan oleh User.
+> 3. **Identitas Akun User Wajib Digunakan**: Setiap commit dan push git **WAJIB** membawa identitas resmi akun User:
+>    - **User Name:** `firmanfarelrichardo` (atau nilai dari `git config user.name`)
+>    - **User Email:** `farelpasaribu04@gmail.com` (atau nilai dari `git config user.email`)
+> 4. **Larangan Identitas Bot/AI**: Dilarang keras menggunakan nama atau email bot/AI agent (seperti `antigravity`, `ai-agent`, `noreply@github.com`, dsb.) dalam riwayat commit proyek.
 
 ---
 
@@ -1170,10 +1179,38 @@ Seluruh AI Coding Agent yang bekerja pada repositori ini **wajib mematuhi protok
 - Perbarui status fitur dan log perubahan pada `AGENT_PROJECT_MEMORY.md` jika terdapat implementasi baru atau keputusan teknis yang disetujui.
 - Laporkan secara transparan: fitur yang telah selesai, pengujian yang telah dilakukan, serta isu atau keputusan yang masih memerlukan masukan pengguna.
 
+### 6. Kebijakan Mutlak Git, Commit, dan Push GitHub (Git Push & Ownership Policy)
+
+> [!WARNING]
+> **ATURAN NON-NEGOSIABEL BAGI SETIAP AI CODING AGENT**:
+
+1. **LARANGAN EKSEKUSI `git push` SECARA OTONOM**:
+   - AI Agent **DILARANG KERAS** menjalankan perintah `git push`, `git push origin <branch>`, `git push --force`, atau varian push remote lainnya ke GitHub.
+   - Perintah `git push` hanya boleh dieksekusi secara manual oleh pengguna (User / Pemilik Repositori) melalui terminal lokal miliknya.
+   - Setelah AI Agent menyelesaikan coding, pengujian unit/E2E, serta build verification, AI Agent **hanya diperbolehkan** merangkum perubahan dan memberitahukan User bahwa perubahan siap di-push oleh User sendiri.
+
+2. **IDENTITAS RESMI COMMIT SELALU MEMBAWA NAMA AKUN USER**:
+   - Seluruh commit git yang dibuat pada repositori ini **WAJIB** diatribusikan secara eksklusif kepada akun User:
+     - **Nama Lengkap / Username Git:** `firmanfarelrichardo` (selaras dengan `git config user.name`)
+     - **Alamat Email Git:** `farelpasaribu04@gmail.com` (selaras dengan `git config user.email`)
+   - AI Agent dilarang keras memodifikasi konfigurasi `user.name` atau `user.email` menjadi akun bot, nama AI, atau email anonim/dummy.
+   - Dilarang membuat commit dengan flag `--author` palsu atau mencantumkan AI Agent sebagai author/committer.
+
+3. **PROTOKOL HANDOFF & SERAH TERIMA TASK**:
+   - AI Agent memverifikasi bahwa `git status`, test suite, dan build lulus tanpa error.
+   - Jika diminta melakukan commit lokal, pastikan pesan commit menggunakan format Conventional Commits (`feat(...)`, `fix(...)`, `chore(...)`, dll.) atas identitas user yang aktif.
+   - Sediakan snippet perintah bagi User untuk melakukan review dan push mandiri, contoh:
+     ```powershell
+     git log -n 1
+     git push origin <nama-branch>
+     ```
+
 ---
 
 ## 22. Changelog
 
+- **2026-10-31**:
+  - Penambahan klausul penting pada aturan operasional AI Agent: Kebijakan mutlak larangan eksekusi `git push` otomatis oleh AI Agent ke GitHub, serta penegasan kewajiban atribusi seluruh commit & push atas nama akun User (`firmanfarelrichardo` / `farelpasaribu04@gmail.com`).
 - **2026-10-19**:
   - Inisialisasi komprehensif dokumen `AGENT_PROJECT_MEMORY.md` sebagai memori hidup (*living project memory*) sub-sistem edukasi dan simulasi investasi saham.
   - Dokumentasi pemetaan 13 katalog fitur lengkap beserta ID, input, proses, aturan bisnis, output, dan acceptance criteria.
