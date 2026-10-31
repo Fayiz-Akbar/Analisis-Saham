@@ -79,7 +79,7 @@ export default function AdminDashboardPage({ onBackToDashboard }) {
     return (
       <AdminLoginPage
         onLoginSuccess={() => {
-          showToast("Selamat datang di Portal Administrator InvestAI.", "success");
+          showToast("Sesi administrator aktif.", "success");
         }}
         onBackToDashboard={onBackToDashboard}
       />
@@ -111,17 +111,17 @@ export default function AdminDashboardPage({ onBackToDashboard }) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Notifikasi Umpan Balik Aksi CRUD */}
+    <div className="space-y-5 pb-12">
+      {/* Notifikasi Umpan Balik Aksi CRUD (Flat Hairline Alert) */}
       {toast && (
         <div
-          className={`p-4 rounded-2xl border flex items-center justify-between gap-3 text-xs font-bold shadow-lg transition-all ${
+          className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 text-xs font-semibold transition-all ${
             toast.type === "error"
-              ? "bg-rose-50 dark:bg-rose-950/70 border-rose-200 dark:border-rose-800/70 text-rose-700 dark:text-rose-200"
-              : "bg-emerald-50 dark:bg-emerald-950/70 border-emerald-200 dark:border-emerald-800/70 text-emerald-700 dark:text-emerald-200"
+              ? "bg-rose-50 dark:bg-[#2a0e12] border-rose-200 dark:border-[#4c151c] text-rose-800 dark:text-[#f87171]"
+              : "bg-emerald-50 dark:bg-[#062c19] border-emerald-200 dark:border-[#0e4429] text-emerald-800 dark:text-[#34d399]"
           }`}
         >
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {toast.type === "error" ? (
               <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
             ) : (
@@ -132,18 +132,19 @@ export default function AdminDashboardPage({ onBackToDashboard }) {
           <button
             type="button"
             onClick={() => setToast(null)}
-            className="opacity-70 hover:opacity-100 cursor-pointer"
+            className="opacity-70 hover:opacity-100 cursor-pointer p-0.5"
+            aria-label="Tutup notifikasi"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Header Portal Administrator (Sesuai Layar 12 STITCH_PROTOTYPE_EDUKASI_SIMULASI.md) */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      {/* Header Portal Administrator (Clean Financial Terminal) */}
+      <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-[#1a1f2c] text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-mono">
               <ShieldCheck className="w-3.5 h-3.5" />
               Role: ADMINISTRATOR
             </span>
@@ -152,11 +153,11 @@ export default function AdminDashboardPage({ onBackToDashboard }) {
             </span>
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            PORTAL ADMINISTRATOR: Manajemen Kurikulum & Kuis Evaluasi
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+            PORTAL ADMINISTRATOR: Manajemen Kurikulum & Kuis
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-3xl">
-            Kelola materi pembelajaran investasi saham 3 level (Pemula, Menengah, Mahir), urutan tampil kurikulum, status publikasi, serta instrumen bank soal kuis deterministik dan pemetaan indikator konsep materi.
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-3xl leading-relaxed">
+            Kelola materi kurikulum pasar modal 3 jenjang, status publikasi, urutan tampil, serta bank soal kuis deterministik dan pemetaan indikator materi.
           </p>
         </div>
 
@@ -165,10 +166,10 @@ export default function AdminDashboardPage({ onBackToDashboard }) {
             <button
               type="button"
               onClick={onBackToDashboard}
-              className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-[#151822] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1e2330] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              Ke Dashboard Utama
+              Ke Sistem Utama
             </button>
           )}
 
@@ -176,7 +177,7 @@ export default function AdminDashboardPage({ onBackToDashboard }) {
             type="button"
             onClick={loadAdminModules}
             disabled={isLoading}
-            className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-[#151822] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1e2330] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
             title="Muat Ulang Data"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
@@ -186,118 +187,111 @@ export default function AdminDashboardPage({ onBackToDashboard }) {
           <button
             type="button"
             onClick={logout}
-            className="px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-500/10 border border-rose-500/25 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-[#2a0e12] border border-rose-200 dark:border-[#4c151c] text-rose-700 dark:text-[#f87171] hover:bg-rose-100 dark:hover:bg-[#3d131a] transition-colors inline-flex items-center gap-1.5 cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
-            Keluar Admin
+            Keluar Sesi
           </button>
         </div>
       </div>
 
-      {/* 4 Kartu Ringkasan Metrik Kurikulum (Tabular Monospace) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Total Modul Materi
-            </span>
-            <BookOpen className="w-4 h-4 text-indigo-400" />
+      {/* 4 Kartu Metrik Kurikulum (Clean Flat Surface, Monospace Tabular) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="p-4 rounded-xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] space-y-1.5">
+          <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <span>Total Modul Materi</span>
+            <BookOpen className="w-3.5 h-3.5 text-slate-400" />
           </div>
           <div className="text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white">
-            {stats.totalModules} Modul
+            {stats.totalModules} <span className="text-xs font-medium text-slate-400">Modul</span>
           </div>
           <div className="flex items-center gap-2 text-[11px] font-mono">
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-              {stats.publishedModules} Published
+            <span className="text-emerald-600 dark:text-[#34d399] font-bold">
+              {stats.publishedModules} Terbit
             </span>
-            <span className="text-slate-400">•</span>
-            <span className="text-amber-600 dark:text-amber-400 font-bold">
+            <span className="text-slate-500">•</span>
+            <span className="text-slate-500 dark:text-slate-400">
               {stats.draftModules} Draft
             </span>
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Distribusi 3 Jenjang
-            </span>
-            <Layers className="w-4 h-4 text-emerald-400" />
+        <div className="p-4 rounded-xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] space-y-1.5">
+          <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <span>Distribusi 3 Jenjang</span>
+            <Layers className="w-3.5 h-3.5 text-slate-400" />
           </div>
-          <div className="flex items-center gap-2 pt-0.5">
-            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold">
-              🟢 {stats.modulesByLevel?.BEGINNER ?? 0}
+          <div className="flex items-center gap-1.5 pt-0.5">
+            <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-[#062c19]/70 border border-emerald-200 dark:border-[#0e4429] text-emerald-700 dark:text-[#34d399] font-mono text-xs font-bold inline-flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              {stats.modulesByLevel?.BEGINNER ?? 0}
             </span>
-            <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-mono text-xs font-bold">
-              🟡 {stats.modulesByLevel?.INTERMEDIATE ?? 0}
+            <span className="px-2 py-0.5 rounded-md bg-blue-50 dark:bg-[#0c2340]/70 border border-blue-200 dark:border-[#1e3a8a] text-blue-700 dark:text-[#60a5fa] font-mono text-xs font-bold inline-flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              {stats.modulesByLevel?.INTERMEDIATE ?? 0}
             </span>
-            <span className="px-2.5 py-1 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-mono text-xs font-bold">
-              🔴 {stats.modulesByLevel?.ADVANCED ?? 0}
+            <span className="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-[#2a0e12]/70 border border-rose-200 dark:border-[#4c151c] text-rose-700 dark:text-[#f87171] font-mono text-xs font-bold inline-flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+              {stats.modulesByLevel?.ADVANCED ?? 0}
             </span>
           </div>
-          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+          <div className="text-[10px] text-slate-400 font-medium">
             Pemula • Menengah • Mahir
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Bank Soal Kuis Evaluasi
-            </span>
-            <FileQuestion className="w-4 h-4 text-indigo-400" />
+        <div className="p-4 rounded-xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] space-y-1.5">
+          <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <span>Bank Soal Kuis</span>
+            <FileQuestion className="w-3.5 h-3.5 text-slate-400" />
           </div>
           <div className="text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white">
-            {stats.totalQuizQuestions} Butir Soal
+            {stats.totalQuizQuestions} <span className="text-xs font-medium text-slate-400">Butir</span>
           </div>
           <div className="text-[11px] text-slate-500 dark:text-slate-400">
-            Kunci deterministik A–D & indikator LLM
+            Kunci deterministik A–D & indikator materi
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Durasi Baca & Investor
-            </span>
-            <Clock className="w-4 h-4 text-amber-400" />
+        <div className="p-4 rounded-xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] space-y-1.5">
+          <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <span>Durasi Kurikulum</span>
+            <Clock className="w-3.5 h-3.5 text-slate-400" />
           </div>
           <div className="text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white">
-            {stats.totalEstimatedMinutes} Menit
+            {stats.totalEstimatedMinutes} <span className="text-xs font-medium text-slate-400">Menit</span>
           </div>
           <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-            Total durasi kurikulum • {stats.totalInvestors} Akun Investor
+            {stats.totalInvestors} Akun Investor Terdaftar
           </div>
         </div>
       </div>
 
-      {/* Tab Navigasi Utama Portal Admin (Sesuai Wireframe Layar 12) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-[#272727] pb-4">
-        <div className="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800/90">
+      {/* Segmented Tab Switcher (Linear Style) */}
+      <div className="border-b border-slate-200 dark:border-[#272727] pb-3">
+        <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10">
           <button
             type="button"
             onClick={() => setActiveAdminTab("modules")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeAdminTab === "modules"
-                ? "bg-white text-slate-950 shadow-xs"
+                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-2xs"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
-            <BookOpen className="w-4 h-4" />
-            Kelola Materi Pembelajaran ({stats.totalModules})
+            Materi Pembelajaran ({stats.totalModules})
           </button>
 
           <button
             type="button"
             onClick={() => setActiveAdminTab("quizzes")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeAdminTab === "quizzes"
-                ? "bg-white text-slate-950 shadow-xs"
+                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 shadow-2xs"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
-            <FileQuestion className="w-4 h-4" />
-            Kelola Bank Soal Kuis ({stats.totalQuizQuestions})
+            Bank Soal Kuis ({stats.totalQuizQuestions})
           </button>
         </div>
       </div>
@@ -324,4 +318,3 @@ export default function AdminDashboardPage({ onBackToDashboard }) {
     </div>
   );
 }
-

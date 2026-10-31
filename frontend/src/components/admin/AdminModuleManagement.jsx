@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import AdminModuleFormModal from "./AdminModuleFormModal";
-import { LEVEL_META, LevelBadge, MarkdownArticlePreview } from "./adminConstants";
+import { LevelBadge, MarkdownArticlePreview } from "./adminConstants";
 
 export default function AdminModuleManagement({
   modules = [],
@@ -112,25 +112,25 @@ export default function AdminModuleManagement({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Toolbar Atas: Filter Level, Filter Status, Search, dan Tombol Tambah Materi */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+      <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] flex flex-col xl:flex-row xl:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          {/* Filter Level Kurikulum */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800/90">
+          {/* Filter Level Kurikulum (Clean Segmented) */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10">
             {[
               { id: "ALL", label: "Semua Level" },
-              { id: "BEGINNER", label: "🟢 Pemula" },
-              { id: "INTERMEDIATE", label: "🟡 Menengah" },
-              { id: "ADVANCED", label: "🔴 Mahir" },
+              { id: "BEGINNER", label: "Pemula" },
+              { id: "INTERMEDIATE", label: "Menengah" },
+              { id: "ADVANCED", label: "Mahir" },
             ].map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => setLevelFilter(item.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   levelFilter === item.id
-                    ? "bg-white text-slate-950 shadow-2xs"
+                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
@@ -140,10 +140,10 @@ export default function AdminModuleManagement({
           </div>
 
           {/* Filter Status Publikasi */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800/90">
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10">
             {[
               { id: "ALL", label: "Semua Status" },
-              { id: "published", label: "Published" },
+              { id: "published", label: "Terbit" },
               { id: "draft", label: "Draft" },
             ].map((st) => (
               <button
@@ -152,7 +152,7 @@ export default function AdminModuleManagement({
                 onClick={() => setStatusFilter(st.id)}
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   statusFilter === st.id
-                    ? "bg-white text-slate-950 shadow-2xs"
+                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
@@ -165,13 +165,13 @@ export default function AdminModuleManagement({
         {/* Kanan: Pencarian & Tombol + Tambah Materi Baru */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
           <div className="relative flex-1 sm:w-64">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari judul atau slug modul..."
-              className="w-full pl-9 pr-8 py-2 rounded-xl text-xs font-medium bg-slate-50 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-slate-500"
+              placeholder="Cari judul atau slug..."
+              className="w-full pl-8 pr-7 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0c0e14] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
             />
             {searchQuery && (
               <button
@@ -187,82 +187,82 @@ export default function AdminModuleManagement({
           <button
             type="button"
             onClick={handleOpenCreate}
-            className="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5 shrink-0"
+            className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-slate-200 transition-colors cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
           >
-            <Plus className="w-4 h-4" />
-            Tambah Materi Baru
+            <Plus className="w-3.5 h-3.5" />
+            Tambah Materi
           </button>
         </div>
       </div>
 
-      {/* Tabel Daftar Artikel Materi Pembelajaran */}
-      <div className="rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-slate-200 dark:border-[#272727] flex items-center justify-between">
+      {/* Tabel Kurikulum Materi Pembelajaran */}
+      <div className="rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-slate-200 dark:border-[#272727] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-            <h3 className="text-sm font-extrabold tracking-tight text-slate-900 dark:text-white">
-              Tabel Kurikulum Materi Pembelajaran ({filteredModules.length} Modul)
+            <BookOpen className="w-4 h-4 text-slate-400" />
+            <h3 className="text-xs sm:text-sm font-black tracking-tight text-slate-900 dark:text-white uppercase font-mono">
+              Kurikulum Materi Pembelajaran ({filteredModules.length})
             </h3>
           </div>
-          <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:inline">
-            Klik jumlah soal kuis untuk langsung mengelola butir soal pada modul terkait
+          <span className="text-[11px] text-slate-400 hidden sm:inline">
+            Klik kolom bank soal untuk langsung mengelola kuis terkait
           </span>
         </div>
 
-        <div className="overflow-x-auto custom-scrollbar">
+        <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800/90 bg-slate-50/70 dark:bg-[#12151e]/60 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                <th className="py-3.5 px-4 w-16">Urutan</th>
-                <th className="py-3.5 px-4">Judul & Ringkasan Materi</th>
-                <th className="py-3.5 px-4">Slug URL</th>
-                <th className="py-3.5 px-4">Tingkat Kesulitan</th>
-                <th className="py-3.5 px-4">Waktu Baca</th>
-                <th className="py-3.5 px-4">Bank Soal</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Aksi</th>
+              <tr className="border-b border-slate-200 dark:border-[#272727] bg-slate-50/80 dark:bg-[#0c0e14] text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono">
+                <th className="py-3 px-4 w-14">#</th>
+                <th className="py-3 px-4">Judul & Ringkasan</th>
+                <th className="py-3 px-4">Slug URL</th>
+                <th className="py-3 px-4">Jenjang</th>
+                <th className="py-3 px-4">Durasi</th>
+                <th className="py-3 px-4">Bank Soal</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4 text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800/70 text-xs">
+            <tbody className="divide-y divide-slate-200/80 dark:divide-[#272727] text-xs">
               {isLoading ? (
                 Array.from({ length: 4 }).map((_, idx) => (
                   <tr key={idx} className="animate-pulse">
-                    <td className="py-4 px-4">
-                      <div className="h-5 w-10 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                    <td className="py-3.5 px-4">
+                      <div className="h-4 w-8 bg-slate-200 dark:bg-slate-800 rounded" />
                     </td>
-                    <td className="py-4 px-4 space-y-2">
-                      <div className="h-4 w-56 bg-slate-200 dark:bg-slate-800 rounded" />
-                      <div className="h-3 w-72 bg-slate-100 dark:bg-slate-800/60 rounded" />
+                    <td className="py-3.5 px-4 space-y-1.5">
+                      <div className="h-4 w-52 bg-slate-200 dark:bg-slate-800 rounded" />
+                      <div className="h-3 w-64 bg-slate-100 dark:bg-slate-800/60 rounded" />
                     </td>
-                    <td className="py-4 px-4">
-                      <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded" />
+                    <td className="py-3.5 px-4">
+                      <div className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded" />
                     </td>
-                    <td className="py-4 px-4">
-                      <div className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                    <td className="py-3.5 px-4">
+                      <div className="h-5 w-20 bg-slate-200 dark:bg-slate-800 rounded-full" />
                     </td>
-                    <td className="py-4 px-4">
-                      <div className="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+                    <td className="py-3.5 px-4">
+                      <div className="h-4 w-14 bg-slate-200 dark:bg-slate-800 rounded" />
                     </td>
-                    <td className="py-4 px-4">
-                      <div className="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                    <td className="py-3.5 px-4">
+                      <div className="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded-full" />
                     </td>
-                    <td className="py-4 px-4">
-                      <div className="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                    <td className="py-3.5 px-4">
+                      <div className="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded-full" />
                     </td>
-                    <td className="py-4 px-4">
-                      <div className="h-7 w-28 bg-slate-200 dark:bg-slate-800 rounded-xl ml-auto" />
+                    <td className="py-3.5 px-4">
+                      <div className="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-lg ml-auto" />
                     </td>
                   </tr>
                 ))
               ) : filteredModules.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 px-6 text-center space-y-2">
-                    <FileText className="w-8 h-8 text-slate-400 mx-auto opacity-60" />
-                    <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                      Belum ada modul pembelajaran yang sesuai filter
+                    <FileText className="w-8 h-8 text-slate-400 mx-auto opacity-50" />
+                    <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      Tidak ada modul pembelajaran yang sesuai filter
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                      Tambahkan modul materi baru atau ubah filter pencarian untuk melihat daftar kurikulum.
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                      Ganti kata kunci pencarian atau buat modul baru menggunakan tombol Tambah Materi.
                     </p>
                   </td>
                 </tr>
@@ -276,23 +276,23 @@ export default function AdminModuleManagement({
                   return (
                     <tr
                       key={mod.id}
-                      className="hover:bg-slate-50/90 dark:hover:bg-slate-800/30 transition-colors"
+                      className="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition-colors"
                     >
                       {/* 1. Urutan */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 font-mono font-bold tabular-nums text-slate-700 dark:text-slate-300">
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <span className="font-mono text-xs font-bold tabular-nums text-slate-500 dark:text-slate-400">
                           #{orderIndex}
                         </span>
                       </td>
 
                       {/* 2. Judul & Ringkasan */}
-                      <td className="py-3.5 px-4 max-w-md">
+                      <td className="py-3 px-4 max-w-md">
                         <button
                           type="button"
                           onClick={() => setPreviewModule(mod)}
                           className="text-left group cursor-pointer"
                         >
-                          <span className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors block leading-snug">
+                          <span className="font-bold text-slate-900 dark:text-white group-hover:underline block leading-snug">
                             {mod.title}
                           </span>
                           {mod.summary && (
@@ -304,82 +304,82 @@ export default function AdminModuleManagement({
                       </td>
 
                       {/* 3. Slug */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#12151e] px-2 py-1 rounded-md border border-slate-200/70 dark:border-slate-800">
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#0c0e14] px-2 py-0.5 rounded border border-slate-200 dark:border-white/10">
                           /{mod.slug}
                         </span>
                       </td>
 
                       {/* 4. Tingkat Kesulitan */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">
+                      <td className="py-3 px-4 whitespace-nowrap">
                         <LevelBadge level={mod.level} />
                       </td>
 
                       {/* 5. Estimasi Waktu Baca */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1 font-mono font-bold tabular-nums text-slate-700 dark:text-slate-300">
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 font-mono tabular-nums text-slate-700 dark:text-slate-300">
+                          <Clock className="w-3 h-3 text-slate-400" />
                           {estimatedMinutes} Menit
                         </span>
                       </td>
 
                       {/* 6. Jumlah Soal Kuis (Klik untuk Kelola Kuis Modul) */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">
+                      <td className="py-3 px-4 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => onOpenModuleQuizzes && onOpenModuleQuizzes(mod)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold font-mono tabular-nums bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/20 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 transition-colors cursor-pointer"
                           title="Kelola Bank Soal Kuis untuk modul ini"
                         >
-                          <FileQuestion className="w-3.5 h-3.5" />
+                          <FileQuestion className="w-3 h-3 text-slate-400" />
                           {quizCount} Soal →
                         </button>
                       </td>
 
                       {/* 7. Status Publikasi (Klik untuk Toggle) */}
-                      <td className="py-3.5 px-4 whitespace-nowrap">
+                      <td className="py-3 px-4 whitespace-nowrap">
                         <button
                           type="button"
                           disabled={togglingId === mod.id}
                           onClick={() => handleTogglePublish(mod)}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition-colors cursor-pointer ${
                             isPublished
-                              ? "bg-emerald-950/10 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-                              : "bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700"
+                              ? "bg-[#062c19]/70 text-[#34d399] border border-[#0e4429]"
+                              : "bg-slate-100 dark:bg-[#1a1f2c] text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700"
                           }`}
-                          title="Klik untuk mengubah status Published / Draft"
+                          title="Klik untuk mengubah status Terbit / Draft"
                         >
                           <CheckCircle2 className="w-3 h-3" />
-                          {togglingId === mod.id ? "..." : isPublished ? "Published" : "Draft"}
+                          {togglingId === mod.id ? "..." : isPublished ? "Terbit" : "Draft"}
                         </button>
                       </td>
 
                       {/* 8. Aksi */}
-                      <td className="py-3.5 px-4 whitespace-nowrap text-right">
-                        <div className="inline-flex items-center justify-end gap-1.5">
+                      <td className="py-3 px-4 whitespace-nowrap text-right">
+                        <div className="inline-flex items-center justify-end gap-1">
                           <button
                             type="button"
                             onClick={() => setPreviewModule(mod)}
-                            className="p-2 rounded-xl bg-slate-100 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:border-slate-400 transition-colors cursor-pointer"
-                            title="Pratinjau Isi Materi"
+                            className="p-1.5 rounded-lg border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                            title="Pratinjau Artikel"
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(mod)}
-                            className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 font-bold text-[11px] inline-flex items-center gap-1 transition-colors cursor-pointer"
+                            className="px-2 py-1 rounded-lg border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-[11px] font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
                           >
-                            <Edit3 className="w-3.5 h-3.5" />
+                            <Edit3 className="w-3 h-3" />
                             Edit
                           </button>
                           <button
                             type="button"
                             onClick={() => setDeleteTarget(mod)}
-                            className="px-2.5 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 font-bold text-[11px] inline-flex items-center gap-1 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg border border-rose-200 dark:border-[#4c151c] text-rose-600 dark:text-[#f87171] hover:bg-rose-50 dark:hover:bg-[#2a0e12] transition-colors cursor-pointer"
+                            title="Hapus Modul"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
-                            Hps
                           </button>
                         </div>
                       </td>
@@ -401,12 +401,12 @@ export default function AdminModuleManagement({
         onSubmitModule={handleSubmitForm}
       />
 
-      {/* Modal Pratinjau Artikel */}
+      {/* Modal Pratinjau Artikel (Clean Flat Surface) */}
       {previewModule && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-3xl max-h-[88vh] rounded-3xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] shadow-2xl flex flex-col overflow-hidden">
-            <div className="px-6 py-4 bg-slate-50 dark:bg-[#12151e] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
+          <div className="w-full max-w-3xl max-h-[88vh] rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] flex flex-col overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-slate-200 dark:border-[#272727] flex items-center justify-between gap-3 bg-slate-50 dark:bg-[#0c0e14]">
+              <div className="flex items-center gap-2">
                 <LevelBadge level={previewModule.level} showFull />
                 <span className="font-mono text-xs text-slate-400">
                   #{previewModule.orderIndex ?? previewModule.order_index} •{" "}
@@ -416,15 +416,15 @@ export default function AdminModuleManagement({
               <button
                 type="button"
                 onClick={() => setPreviewModule(null)}
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-800 cursor-pointer"
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
               <div>
-                <h2 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">
                   {previewModule.title}
                 </h2>
                 <span className="text-xs font-mono text-slate-400 block mt-1">
@@ -433,7 +433,7 @@ export default function AdminModuleManagement({
               </div>
 
               {previewModule.summary && (
-                <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   {previewModule.summary}
                 </div>
               )}
@@ -443,7 +443,7 @@ export default function AdminModuleManagement({
               />
             </div>
 
-            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div className="px-5 py-3 border-t border-slate-200 dark:border-[#272727] flex items-center justify-between bg-slate-50 dark:bg-[#0c0e14]">
               <button
                 type="button"
                 onClick={() => {
@@ -451,57 +451,53 @@ export default function AdminModuleManagement({
                   setPreviewModule(null);
                   if (onOpenModuleQuizzes) onOpenModuleQuizzes(mod);
                 }}
-                className="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/25 cursor-pointer"
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 cursor-pointer"
               >
-                Kelola Soal Kuis ({previewModule.quizCount ?? 0} Soal) →
+                Kelola Bank Soal ({previewModule.quizCount ?? 0} Soal) →
               </button>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const mod = previewModule;
-                    setPreviewModule(null);
-                    handleOpenEdit(mod);
-                  }}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-950 cursor-pointer"
-                >
-                  Edit Modul Ini
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const mod = previewModule;
+                  setPreviewModule(null);
+                  handleOpenEdit(mod);
+                }}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 cursor-pointer"
+              >
+                Edit Modul
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal Konfirmasi Hapus Modul */}
+      {/* Modal Konfirmasi Hapus Modul (Clean Flat Alert) */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-500 shrink-0">
-                <AlertTriangle className="w-5 h-5" />
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] p-5 space-y-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-rose-600 dark:text-[#f87171] font-bold text-xs uppercase font-mono tracking-wider">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>Konfirmasi Penghapusan Modul</span>
               </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-                  Hapus Modul Pembelajaran?
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Anda akan menghapus modul{" "}
-                  <strong className="text-slate-900 dark:text-white">"{deleteTarget.title}"</strong>.
-                  {(deleteTarget.quizCount ?? 0) > 0 && (
-                    <span className="block mt-1 text-rose-500 font-semibold">
-                      Perhatian: {deleteTarget.quizCount} butir soal kuis yang terikat pada modul ini juga akan ikut terhapus secara otomatis (Cascade Delete).
-                    </span>
-                  )}
-                </p>
-              </div>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">
+                Hapus "{deleteTarget.title}"?
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Modul ini akan dihapus permanen.
+                {(deleteTarget.quizCount ?? 0) > 0 && (
+                  <span className="block mt-1 text-rose-600 dark:text-[#f87171] font-semibold">
+                    Perhatian: {deleteTarget.quizCount} butir soal kuis pada modul ini akan otomatis terhapus (Cascade Delete).
+                  </span>
+                )}
+              </p>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-[#272727]">
               <button
                 type="button"
                 onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"
               >
                 Batal
               </button>
@@ -509,9 +505,9 @@ export default function AdminModuleManagement({
                 type="button"
                 disabled={isDeleting}
                 onClick={handleConfirmDelete}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 text-white hover:bg-rose-500 disabled:opacity-50 cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-600 text-white hover:bg-rose-500 disabled:opacity-50 cursor-pointer transition-colors"
               >
-                {isDeleting ? "Menghapus..." : "Ya, Hapus Permanen"}
+                {isDeleting ? "Menghapus..." : "Hapus Permanen"}
               </button>
             </div>
           </div>
@@ -520,4 +516,3 @@ export default function AdminModuleManagement({
     </div>
   );
 }
-

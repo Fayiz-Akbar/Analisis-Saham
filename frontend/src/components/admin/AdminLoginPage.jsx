@@ -2,17 +2,14 @@ import React, { useState } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
-  BookOpen,
   CheckCircle2,
   Eye,
   EyeOff,
-  FileQuestion,
   KeyRound,
   Lock,
   Mail,
   ShieldAlert,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -49,62 +46,49 @@ export default function AdminLoginPage({ onLoginSuccess, onBackToDashboard }) {
   };
 
   return (
-    <div className="min-h-[calc(100vh-7rem)] flex items-center justify-center py-8 px-3 sm:px-6">
-      <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 rounded-3xl overflow-hidden border border-slate-200 dark:border-[#272727] bg-white dark:bg-[#101010] shadow-2xl">
-        {/* Panel Kiri: Informasi Otorisasi RBAC & Ruang Lingkup Portal Admin */}
-        <div className="lg:col-span-5 p-6 sm:p-8 bg-slate-900 dark:bg-[#12151e] border-b lg:border-b-0 lg:border-r border-slate-800 flex flex-col justify-between text-white relative overflow-hidden">
-          <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-20 -left-20 w-56 h-56 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
-
-          <div className="space-y-5 relative z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-[11px] font-bold uppercase tracking-wider">
-              <ShieldCheck className="w-3.5 h-3.5" />
+    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center py-8 px-3 sm:px-6">
+      <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 rounded-2xl overflow-hidden border border-slate-200 dark:border-[#272727] bg-white dark:bg-[#101010]">
+        {/* Panel Kiri: Informasi Otorisasi RBAC & Penjelasan Fitur */}
+        <div className="lg:col-span-5 p-6 sm:p-8 bg-slate-900 dark:bg-[#0c0e14] border-b lg:border-b-0 lg:border-r border-slate-800 dark:border-[#272727] flex flex-col justify-between text-white">
+          <div className="space-y-5">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-bold uppercase tracking-wider font-mono">
+              <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
               RBAC Protected Portal
             </div>
 
             <div className="space-y-2">
-              <h1 className="text-2xl font-extrabold tracking-tight text-white leading-snug">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white leading-snug">
                 Portal Administrator Kurikulum & Evaluasi
               </h1>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Antarmuka khusus pengelola sistem untuk memelihara modul pembelajaran pasar modal 3 jenjang serta bank soal kuis deterministik dan indikator konsep LLM.
+                Antarmuka khusus pengelola sistem untuk memelihara materi pasar modal 3 jenjang serta bank soal kuis deterministik dan indikator konsep.
               </p>
             </div>
 
-            <div className="space-y-3 pt-2">
-              <div className="p-3.5 rounded-2xl bg-black/30 border border-slate-800/90 flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5">
-                  <BookOpen className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-white block">
-                    Manajemen Modul Pembelajaran (PB-12)
-                  </span>
-                  <span className="text-[11px] text-slate-400 leading-relaxed block mt-0.5">
-                    Kelola judul, slug unik, tingkat kesulitan (Pemula, Menengah, Mahir), urutan tampil, estimasi baca, dan status publikasi.
-                  </span>
-                </div>
+            <div className="space-y-2.5 pt-2">
+              <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-1">
+                <span className="text-xs font-bold text-white block">
+                  Manajemen Kurikulum Materi (PB-12)
+                </span>
+                <span className="text-[11px] text-slate-400 leading-relaxed block">
+                  Kelola judul, slug URL, tingkat kesulitan (Pemula, Menengah, Mahir), estimasi baca, urutan tampil, dan status terbit.
+                </span>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-black/30 border border-slate-800/90 flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-300 shrink-0 mt-0.5">
-                  <FileQuestion className="w-4 h-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-white block">
-                    Manajemen Bank Soal & Kunci Kuis (PB-13)
-                  </span>
-                  <span className="text-[11px] text-slate-400 leading-relaxed block mt-0.5">
-                    Susun soal pilihan ganda A–D, tetapkan kunci jawaban resmi deterministik, pembahasan resmi, serta indikator konsep materi.
-                  </span>
-                </div>
+              <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-1">
+                <span className="text-xs font-bold text-white block">
+                  Manajemen Bank Soal & Kunci Kuis (PB-13)
+                </span>
+                <span className="text-[11px] text-slate-400 leading-relaxed block">
+                  Pilihan ganda A–D, penetapan kunci jawaban resmi deterministik, teks pembahasan, serta pemetaan indikator materi.
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="pt-6 mt-6 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 relative z-10">
+          <div className="pt-6 mt-6 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between font-mono">
             <span>Middleware: verifyAdmin (JWT)</span>
-            <span className="font-mono text-emerald-400 font-bold">KNF-01 • KF-01 • KF-16</span>
+            <span className="text-slate-300 font-bold">KNF-01 • KF-16</span>
           </div>
         </div>
 
@@ -113,10 +97,10 @@ export default function AdminLoginPage({ onLoginSuccess, onBackToDashboard }) {
           <div className="space-y-5">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block font-mono">
                   Otorisasi Administrator
                 </span>
-                <h2 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white mt-0.5">
+                <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white mt-0.5">
                   Masuk ke Portal Manajemen Konten
                 </h2>
               </div>
@@ -125,32 +109,29 @@ export default function AdminLoginPage({ onLoginSuccess, onBackToDashboard }) {
                 <button
                   type="button"
                   onClick={onBackToDashboard}
-                  className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-[#151822] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1e2330] transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  Dashboard
+                  Sistem Utama
                 </button>
               )}
             </div>
 
             {/* Peringatan RBAC jika saat ini sedang login sebagai INVESTOR */}
             {isAuthenticated && !isAdmin && (
-              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-start gap-3">
-                <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                <div className="flex-1 text-xs space-y-1.5">
-                  <div className="font-bold text-amber-900 dark:text-amber-300">
+              <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-[#261c0c] border border-amber-200 dark:border-[#523d18] flex items-start gap-2.5">
+                <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div className="flex-1 text-xs space-y-1">
+                  <div className="font-bold text-amber-900 dark:text-amber-200">
                     Akses Dibatasi (RBAC Role: INVESTOR)
                   </div>
-                  <p className="text-amber-800/90 dark:text-amber-200/80 leading-relaxed">
-                    Anda saat ini masuk sebagai <span className="font-mono font-bold">{user?.email}</span> dengan peran{" "}
-                    <span className="font-mono font-bold">INVESTOR</span>. Sesuai aturan keamanan{" "}
-                    <span className="font-mono font-bold">KNF-01</span>, hanya akun berhak akses{" "}
-                    <span className="font-mono font-bold">ADMIN</span> yang diizinkan mengelola modul materi dan kunci jawaban kuis.
+                  <p className="text-amber-800/90 dark:text-amber-200/80 leading-relaxed text-[11px]">
+                    Anda saat ini masuk sebagai <span className="font-mono font-bold">{user?.email}</span> (Investor). Akses modul admin memerlukan hak akses <span className="font-mono font-bold">ADMIN</span>.
                   </p>
                   <button
                     type="button"
                     onClick={logout}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 underline cursor-pointer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 underline cursor-pointer pt-0.5"
                   >
                     Keluar dari sesi Investor saat ini
                   </button>
@@ -159,43 +140,43 @@ export default function AdminLoginPage({ onLoginSuccess, onBackToDashboard }) {
             )}
 
             {errorMessage && (
-              <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300 font-medium">
+              <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-[#2a0e12] border border-rose-200 dark:border-[#4c151c] flex items-start gap-2.5 text-xs text-rose-700 dark:text-[#f87171] font-semibold">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
                 <span>{errorMessage}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Email Administrator
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="admin.investai@example.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-medium bg-slate-50 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-slate-50 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Kata Sandi Administrator
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type={showPassword ? "text" : "password"}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Masukkan kata sandi administrator"
-                    className="w-full pl-10 pr-10 py-2.5 rounded-xl text-xs font-medium bg-slate-50 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full pl-9 pr-9 py-2 rounded-xl text-xs font-medium bg-slate-50 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
                   />
                   <button
                     type="button"
@@ -211,21 +192,20 @@ export default function AdminLoginPage({ onLoginSuccess, onBackToDashboard }) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 px-4 rounded-xl text-xs font-bold bg-white text-slate-950 border border-slate-300 dark:border-transparent hover:bg-slate-100 disabled:opacity-50 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-slate-200 disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center gap-2 mt-2"
               >
-                <KeyRound className="w-4 h-4" />
-                {isSubmitting ? "Memverifikasi Hak Akses ADMIN..." : "Masuk ke Portal Administrator"}
+                <KeyRound className="w-3.5 h-3.5" />
+                {isSubmitting ? "Memverifikasi..." : "Masuk ke Portal Administrator"}
               </button>
             </form>
           </div>
 
-          {/* Box Kredensial Demo Pengujian Langsung */}
-          <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800/80">
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#12151e]/90 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Kredensial Demo Seeder */}
+          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-[#272727]">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div className="space-y-0.5">
-                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                  Kredensial Akun Administrator Terdaftar (Seeder):
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 block">
+                  Kredensial Administrator Seeder:
                 </span>
                 <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                   Email: <strong className="text-slate-800 dark:text-white">admin.investai@example.com</strong> • Pass:{" "}
@@ -236,9 +216,9 @@ export default function AdminLoginPage({ onLoginSuccess, onBackToDashboard }) {
               <button
                 type="button"
                 onClick={handleFillDemoAdmin}
-                className="px-3 py-1.5 rounded-xl text-[11px] font-bold bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/25 transition-colors cursor-pointer shrink-0 flex items-center gap-1"
+                className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors cursor-pointer shrink-0 inline-flex items-center gap-1"
               >
-                <CheckCircle2 className="w-3.5 h-3.5" />
+                <CheckCircle2 className="w-3 h-3 text-slate-400" />
                 Isi Otomatis
               </button>
             </div>
@@ -248,4 +228,3 @@ export default function AdminLoginPage({ onLoginSuccess, onBackToDashboard }) {
     </div>
   );
 }
-

@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
-  BookOpen,
   CheckCircle2,
   Edit3,
   FileQuestion,
@@ -9,7 +8,6 @@ import {
   Plus,
   RotateCcw,
   Save,
-  Sparkles,
   Trash2,
 } from "lucide-react";
 import { adminApi } from "../../services/apiClient";
@@ -178,39 +176,39 @@ export default function AdminQuizManagement({
 
   if (modules.length === 0) {
     return (
-      <div className="p-10 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] text-center space-y-2">
-        <BookOpen className="w-8 h-8 text-slate-400 mx-auto opacity-60" />
-        <div className="text-sm font-bold text-slate-900 dark:text-white">
-          Belum Ada Modul Materi Pembelajaran
-        </div>
+      <div className="p-10 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] text-center space-y-3">
+        <FileQuestion className="w-8 h-8 text-slate-400 mx-auto opacity-50" />
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+          Belum Ada Modul Materi
+        </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-          Silakan buat minimal 1 modul materi pada tab Kelola Materi Pembelajaran terlebih dahulu sebelum menyusun bank soal kuis.
+          Silakan buat modul pembelajaran terlebih dahulu pada tab Materi Pembelajaran sebelum mengelola bank soal kuis evaluasi.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Selector Modul Pembelajaran */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div className="space-y-4">
+      {/* Bar Pemilih Modul Materi Terkait */}
+      <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="space-y-1">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block">
-            Pilih Modul Materi Kurikulum
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">
+            Modul Pembelajaran Aktif
           </span>
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
+            <h3 className="text-sm sm:text-base font-black tracking-tight text-slate-900 dark:text-white">
               {activeModule?.title}
             </h3>
             {activeModule && <LevelBadge level={activeModule.level} />}
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
           <select
             value={activeModule?.id || ""}
             onChange={(e) => onSelectModuleId && onSelectModuleId(e.target.value)}
-            className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-slate-50 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 cursor-pointer min-w-[260px]"
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 cursor-pointer min-w-[260px]"
           >
             {modules.map((mod) => (
               <option key={mod.id} value={mod.id}>
@@ -222,17 +220,17 @@ export default function AdminQuizManagement({
       </div>
 
       {/* Grid Utama: Form Editor Butir Soal (Kiri) & Daftar Bank Soal Modul (Kanan) */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-        {/* KOLOM KIRI (5 Kolom): FORM EDITOR BUTIR SOAL KUIS (Sesuai Layar 12 STITCH) */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+        {/* KOLOM KIRI (5 Kolom): FORM EDITOR BUTIR SOAL KUIS */}
         <div
           ref={formRef}
-          className="xl:col-span-5 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] overflow-hidden shadow-sm"
+          className="xl:col-span-5 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] overflow-hidden"
         >
-          <div className="px-5 py-4 bg-slate-50 dark:bg-[#12151e] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div className="px-4 py-3 bg-slate-50 dark:bg-[#0c0e14] border-b border-slate-200 dark:border-[#272727] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <FileQuestion className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-              <h4 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
-                {editingQuizId ? "Edit Butir Soal Kuis" : "Form Editor Butir Soal Kuis"}
+              <FileQuestion className="w-3.5 h-3.5 text-slate-400" />
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white font-mono">
+                {editingQuizId ? "Edit Butir Soal" : "Form Butir Soal Baru"}
               </h4>
             </div>
 
@@ -240,30 +238,26 @@ export default function AdminQuizManagement({
               <button
                 type="button"
                 onClick={handleResetForm}
-                className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:opacity-90 flex items-center gap-1 cursor-pointer"
+                className="px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:opacity-90 flex items-center gap-1 cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
-                Buat Baru
+                Batal Edit
               </button>
             )}
           </div>
 
-          <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <form onSubmit={handleSubmit} className="p-4 space-y-3.5">
             {formError && (
-              <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 flex items-start gap-2 text-xs text-rose-700 dark:text-rose-300 font-medium">
+              <div className="p-3 rounded-xl bg-rose-50 dark:bg-[#2a0e12] border border-rose-200 dark:border-[#4c151c] flex items-start gap-2 text-xs text-rose-700 dark:text-[#f87171] font-semibold">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
                 <span>{formError}</span>
               </div>
             )}
 
-            {/* Indikator Konsep Materi (Digunakan oleh LLM Evaluator pada KF-17) */}
+            {/* Indikator Konsep Materi */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                <span className="inline-flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                  Indikator Konsep Materi (Pemetaan LLM Evaluator){" "}
-                  <span className="text-rose-500">*</span>
-                </span>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                Indikator Konsep Materi <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -271,7 +265,7 @@ export default function AdminQuizManagement({
                 value={form.indicatorConcept}
                 onChange={(e) => setForm((prev) => ({ ...prev, indicatorConcept: e.target.value }))}
                 placeholder="Contoh: Formula dan Perhitungan Return on Equity (ROE)"
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs font-medium bg-slate-50 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-50 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
               />
               {fieldErrors.indicatorConcept && (
                 <span className="text-[11px] text-rose-500 mt-1 block">
@@ -282,7 +276,7 @@ export default function AdminQuizManagement({
 
             {/* Pertanyaan */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Teks Pertanyaan Kuis <span className="text-rose-500">*</span>
               </label>
               <textarea
@@ -290,8 +284,8 @@ export default function AdminQuizManagement({
                 required
                 value={form.questionText}
                 onChange={(e) => setForm((prev) => ({ ...prev, questionText: e.target.value }))}
-                placeholder="Masukkan teks soal pertanyaan pilihan ganda di sini..."
-                className="w-full p-3.5 rounded-xl text-xs font-medium bg-slate-50 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                placeholder="Tuliskan butir pertanyaan pilihan ganda..."
+                className="w-full p-2.5 rounded-xl text-xs font-medium bg-slate-50 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
               />
               {fieldErrors.questionText && (
                 <span className="text-[11px] text-rose-500 mt-1 block">
@@ -301,13 +295,13 @@ export default function AdminQuizManagement({
             </div>
 
             {/* Pilihan Opsi A, B, C, D */}
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Pilihan Jawaban (Opsi A – D) <span className="text-rose-500">*</span>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Pilihan Jawaban (A – D) <span className="text-rose-500">*</span>
                 </label>
-                <span className="text-[10px] font-semibold text-slate-400">
-                  Klik huruf opsi untuk menandai kunci jawaban
+                <span className="text-[10px] text-slate-400">
+                  Klik huruf opsi untuk menetapkan kunci
                 </span>
               </div>
 
@@ -315,15 +309,15 @@ export default function AdminQuizManagement({
                 const fieldName = `option${key}`;
                 const isCorrect = form.correctKey === key;
                 return (
-                  <div key={key} className="space-y-1">
+                  <div key={key} className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setForm((prev) => ({ ...prev, correctKey: key }))}
-                        className={`w-9 h-9 rounded-xl font-mono text-xs font-black shrink-0 border transition-all cursor-pointer ${
+                        className={`w-8 h-8 rounded-lg font-mono text-xs font-black shrink-0 border transition-colors cursor-pointer ${
                           isCorrect
-                            ? "bg-emerald-500 text-slate-950 border-emerald-400 shadow-sm"
-                            : "bg-slate-100 dark:bg-[#12151e] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-slate-400"
+                            ? "bg-[#062c19] text-[#34d399] border-[#0e4429]"
+                            : "bg-slate-100 dark:bg-[#0c0e14] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-400"
                         }`}
                         title={`Jadikan Opsi ${key} sebagai Kunci Jawaban Benar`}
                       >
@@ -337,16 +331,16 @@ export default function AdminQuizManagement({
                         onChange={(e) =>
                           setForm((prev) => ({ ...prev, [fieldName]: e.target.value }))
                         }
-                        placeholder={`Teks Opsi Jawaban ${key}...`}
-                        className={`flex-1 px-3.5 py-2 rounded-xl text-xs font-medium bg-slate-50 dark:bg-[#12151e] border text-slate-900 dark:text-white focus:outline-none ${
+                        placeholder={`Teks Jawaban ${key}...`}
+                        className={`flex-1 px-3 py-1.5 rounded-xl text-xs font-medium border text-slate-900 dark:text-white focus:outline-none ${
                           isCorrect
-                            ? "border-emerald-500/60 dark:border-emerald-500/50"
-                            : "border-slate-200 dark:border-slate-800 focus:border-indigo-500"
+                            ? "border-[#0e4429] bg-[#062c19]/30"
+                            : "border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0c0e14] focus:border-slate-400 dark:focus:border-slate-600"
                         }`}
                       />
                     </div>
                     {fieldErrors[fieldName] && (
-                      <span className="text-[11px] text-rose-500 pl-11 block">
+                      <span className="text-[11px] text-rose-500 pl-10 block">
                         {fieldErrors[fieldName]}
                       </span>
                     )}
@@ -355,12 +349,12 @@ export default function AdminQuizManagement({
               })}
             </div>
 
-            {/* Pemilih Kunci Jawaban Deterministik (Sesuai Wireframe Layar 12) */}
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+            {/* Pemilih Kunci Jawaban Deterministik */}
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 space-y-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block font-mono">
                 Kunci Jawaban Resmi (Deterministik):
               </span>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 gap-1.5">
                 {OPTION_KEYS.map((key) => {
                   const selected = form.correctKey === key;
                   return (
@@ -368,14 +362,14 @@ export default function AdminQuizManagement({
                       type="button"
                       key={key}
                       onClick={() => setForm((prev) => ({ ...prev, correctKey: key }))}
-                      className={`py-2 px-2 rounded-xl text-xs font-bold font-mono flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                      className={`py-1.5 px-2 rounded-lg text-xs font-mono font-bold flex items-center justify-center gap-1 border transition-colors cursor-pointer ${
                         selected
-                          ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/40"
-                          : "bg-white dark:bg-[#080808] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800"
+                          ? "bg-[#062c19] text-[#34d399] border-[#0e4429]"
+                          : "bg-white dark:bg-[#101010] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-slate-400"
                       }`}
                     >
-                      <span>{selected ? "(•)" : "( )"}</span>
-                      <span>Opsi {key}</span>
+                      <span>{selected ? "●" : "○"}</span>
+                      <span>{key}</span>
                     </button>
                   );
                 })}
@@ -384,16 +378,16 @@ export default function AdminQuizManagement({
 
             {/* Pembahasan Resmi */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Pembahasan Resmi <span className="text-rose-500">*</span>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                Teks Pembahasan Resmi <span className="text-rose-500">*</span>
               </label>
               <textarea
                 rows={3}
                 required
                 value={form.explanationText}
                 onChange={(e) => setForm((prev) => ({ ...prev, explanationText: e.target.value }))}
-                placeholder="Tulis penjelasan detail mengapa kunci jawaban tersebut benar untuk ditampilkan ke investor setelah submit kuis..."
-                className="w-full p-3.5 rounded-xl text-xs font-medium bg-slate-50 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                placeholder="Penjelasan rasional mengapa kunci tersebut benar..."
+                className="w-full p-2.5 rounded-xl text-xs font-medium bg-slate-50 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
               />
               {fieldErrors.explanationText && (
                 <span className="text-[11px] text-rose-500 mt-1 block">
@@ -405,25 +399,25 @@ export default function AdminQuizManagement({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 px-4 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 disabled:opacity-50 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-slate-200 disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
             >
-              <Save className="w-4 h-4" />
+              <Save className="w-3.5 h-3.5" />
               {isSubmitting
                 ? "Menyimpan..."
                 : editingQuizId
-                  ? "Simpan Perubahan Soal Kuis ✓"
-                  : "Simpan Butir Soal Kuis ✓"}
+                  ? "Perbarui Soal Kuis"
+                  : "Simpan Butir Soal"}
             </button>
           </form>
         </div>
 
         {/* KOLOM KANAN (7 Kolom): DAFTAR BANK SOAL PADA MODUL TERPILIH */}
-        <div className="xl:col-span-7 space-y-4">
-          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <HelpCircle className="w-4 h-4 text-emerald-500" />
-              <h4 className="text-sm font-extrabold tracking-tight text-slate-900 dark:text-white">
-                Daftar Butir Soal Kuis ({quizzes.length} Soal)
+        <div className="xl:col-span-7 space-y-3">
+          <div className="p-3.5 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <HelpCircle className="w-4 h-4 text-slate-400" />
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white font-mono">
+                Daftar Bank Soal ({quizzes.length})
               </h4>
             </div>
 
@@ -431,48 +425,48 @@ export default function AdminQuizManagement({
               <button
                 type="button"
                 onClick={handleResetForm}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/25 flex items-center gap-1 cursor-pointer"
+                className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 flex items-center gap-1 cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" />
-                Tambah Soal Baru
+                <Plus className="w-3 h-3" />
+                Tambah Baru
               </button>
             )}
           </div>
 
           {loadError && (
-            <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-xs text-rose-600 dark:text-rose-300">
+            <div className="p-3 rounded-xl bg-rose-50 dark:bg-[#2a0e12] border border-rose-200 dark:border-[#4c151c] text-xs text-rose-700 dark:text-[#f87171] font-semibold">
               {loadError}
             </div>
           )}
 
           {isLoadingQuizzes ? (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {Array.from({ length: 3 }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="p-5 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] animate-pulse space-y-3"
+                  className="p-4 rounded-xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] animate-pulse space-y-2.5"
                 >
-                  <div className="h-4 w-48 bg-slate-200 dark:bg-slate-800 rounded" />
-                  <div className="h-5 w-3/4 bg-slate-200 dark:bg-slate-800 rounded" />
+                  <div className="h-4 w-40 bg-slate-200 dark:bg-slate-800 rounded" />
+                  <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded" />
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="h-9 bg-slate-100 dark:bg-slate-800/70 rounded-xl" />
-                    <div className="h-9 bg-slate-100 dark:bg-slate-800/70 rounded-xl" />
+                    <div className="h-8 bg-slate-100 dark:bg-slate-800/70 rounded-lg" />
+                    <div className="h-8 bg-slate-100 dark:bg-slate-800/70 rounded-lg" />
                   </div>
                 </div>
               ))}
             </div>
           ) : quizzes.length === 0 ? (
-            <div className="p-10 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] text-center space-y-2">
-              <FileQuestion className="w-8 h-8 text-slate-400 mx-auto opacity-60" />
-              <div className="text-sm font-bold text-slate-900 dark:text-white">
-                Belum Ada Soal Kuis pada Modul Ini
+            <div className="p-8 rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] text-center space-y-2">
+              <FileQuestion className="w-8 h-8 text-slate-400 mx-auto opacity-50" />
+              <div className="text-xs font-bold text-slate-900 dark:text-white">
+                Belum ada butir soal kuis untuk modul ini
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                Gunakan Form Editor Butir Soal Kuis di samping untuk menambahkan pertanyaan pilihan ganda A–D beserta kunci jawaban dan pembahasan resminya.
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                Gunakan form di samping untuk memasukkan soal pilihan ganda A–D beserta kunci deterministiknya.
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {quizzes.map((quiz, idx) => {
                 const isBeingEdited = editingQuizId === quiz.id;
                 const options = [
@@ -486,66 +480,65 @@ export default function AdminQuizManagement({
                 return (
                   <div
                     key={quiz.id}
-                    className={`p-5 rounded-2xl bg-white dark:bg-[#101010] border transition-all space-y-4 ${
+                    className={`p-4 rounded-xl bg-white dark:bg-[#101010] border transition-colors space-y-3 ${
                       isBeingEdited
-                        ? "border-indigo-500 ring-1 ring-indigo-500/30"
+                        ? "border-slate-500 dark:border-white/40 bg-slate-50/50 dark:bg-white/[0.02]"
                         : "border-slate-200 dark:border-[#272727]"
                     }`}
                   >
                     {/* Header Kartu Soal */}
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 font-mono text-xs font-black text-slate-800 dark:text-white">
-                          Soal #{idx + 1}
+                        <span className="font-mono text-xs font-bold tabular-nums text-slate-500 dark:text-slate-400">
+                          #{idx + 1}
                         </span>
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30">
-                          <Sparkles className="w-3 h-3" />
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-[#1a1f2c] text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
                           Indikator: {quiz.indicatorConcept || quiz.indicator_concept}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1">
                         <button
                           type="button"
                           onClick={() => handleEditQuiz(quiz)}
-                          className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                          className="px-2 py-1 rounded-lg border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-[11px] font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
                         >
-                          <Edit3 className="w-3.5 h-3.5" />
+                          <Edit3 className="w-3 h-3" />
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(quiz)}
-                          className="px-2.5 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                          className="p-1 rounded-lg border border-rose-200 dark:border-[#4c151c] text-rose-600 dark:text-[#f87171] hover:bg-rose-50 dark:hover:bg-[#2a0e12] transition-colors cursor-pointer"
+                          title="Hapus Soal"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          Hps
                         </button>
                       </div>
                     </div>
 
                     {/* Teks Pertanyaan */}
-                    <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-relaxed">
+                    <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white leading-relaxed">
                       {quiz.questionText || quiz.question_text}
                     </p>
 
                     {/* Grid 4 Opsi Jawaban */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {options.map((opt) => {
                         const isKey = opt.key === correctKey;
                         return (
                           <div
                             key={opt.key}
-                            className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 ${
+                            className={`p-2.5 rounded-lg border text-xs flex items-start gap-2 ${
                               isKey
-                                ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-900 dark:text-emerald-200 font-bold"
-                                : "bg-slate-50 dark:bg-[#12151e]/70 border-slate-200/80 dark:border-slate-800/90 text-slate-600 dark:text-slate-300"
+                                ? "bg-[#062c19]/50 border-[#0e4429] text-white font-medium"
+                                : "bg-slate-50 dark:bg-[#0c0e14] border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400"
                             }`}
                           >
                             <span
-                              className={`w-6 h-6 rounded-lg font-mono text-xs font-black flex items-center justify-center shrink-0 ${
+                              className={`w-5 h-5 rounded font-mono text-[11px] font-bold flex items-center justify-center shrink-0 ${
                                 isKey
-                                  ? "bg-emerald-500 text-slate-950"
+                                  ? "bg-emerald-600 text-white"
                                   : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                               }`}
                             >
@@ -554,8 +547,8 @@ export default function AdminQuizManagement({
                             <div className="flex-1 leading-snug">
                               <span>{opt.text}</span>
                               {isKey && (
-                                <span className="mt-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                                  <CheckCircle2 className="w-3 h-3" /> Kunci Jawaban Resmi
+                                <span className="mt-0.5 flex items-center gap-1 text-[10px] font-bold text-[#34d399] uppercase font-mono">
+                                  <CheckCircle2 className="w-2.5 h-2.5" /> Kunci Resmi
                                 </span>
                               )}
                             </div>
@@ -565,11 +558,11 @@ export default function AdminQuizManagement({
                     </div>
 
                     {/* Kotak Pembahasan Resmi */}
-                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800/90 text-xs space-y-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                        Pembahasan Resmi (Ditampilkan Pasca-Submit):
+                    <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 text-xs space-y-0.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block font-mono">
+                        Pembahasan Resmi:
                       </span>
-                      <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                      <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px]">
                         {quiz.explanationText || quiz.explanation_text}
                       </p>
                     </div>
@@ -581,33 +574,28 @@ export default function AdminQuizManagement({
         </div>
       </div>
 
-      {/* Modal Konfirmasi Hapus Soal Kuis */}
+      {/* Modal Konfirmasi Hapus Soal Kuis (Clean Flat Alert) */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-500 shrink-0">
-                <AlertTriangle className="w-5 h-5" />
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] p-5 space-y-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-rose-600 dark:text-[#f87171] font-bold text-xs uppercase font-mono tracking-wider">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>Konfirmasi Penghapusan Soal</span>
               </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-                  Hapus Butir Soal Kuis?
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Apakah Anda yakin ingin menghapus soal:{" "}
-                  <strong className="text-slate-900 dark:text-white">
-                    "{deleteTarget.questionText || deleteTarget.question_text}"
-                  </strong>
-                  ?
-                </p>
-              </div>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                Hapus Butir Soal Ini?
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                "{deleteTarget.questionText || deleteTarget.question_text}"
+              </p>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-[#272727]">
               <button
                 type="button"
                 onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"
               >
                 Batal
               </button>
@@ -615,9 +603,9 @@ export default function AdminQuizManagement({
                 type="button"
                 disabled={isDeleting}
                 onClick={handleConfirmDelete}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 text-white hover:bg-rose-500 disabled:opacity-50 cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-600 text-white hover:bg-rose-500 disabled:opacity-50 cursor-pointer transition-colors"
               >
-                {isDeleting ? "Menghapus..." : "Ya, Hapus Soal"}
+                {isDeleting ? "Menghapus..." : "Hapus Permanen"}
               </button>
             </div>
           </div>
@@ -626,4 +614,3 @@ export default function AdminQuizManagement({
     </div>
   );
 }
-

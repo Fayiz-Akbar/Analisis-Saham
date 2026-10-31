@@ -134,20 +134,20 @@ export default function AdminModuleFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
-      <div className="w-full max-w-4xl max-h-[92vh] rounded-3xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-5">
+      <div className="w-full max-w-4xl max-h-[92vh] rounded-xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#272727] flex flex-col overflow-hidden">
         {/* Header Modal */}
-        <div className="px-6 py-4 bg-slate-50 dark:bg-[#12151e] border-b border-slate-200 dark:border-slate-800/90 flex items-center justify-between gap-3">
+        <div className="px-6 py-4 bg-slate-50 dark:bg-[#0c0e14] border-b border-slate-200 dark:border-[#272727] flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-500 dark:text-indigo-300">
-              <BookOpen className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-lg border border-slate-200 dark:border-[#272727] bg-white dark:bg-[#161922] flex items-center justify-center text-slate-700 dark:text-slate-300">
+              <BookOpen className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
+              <h3 className="text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-white">
                 {isEditMode ? "Edit Modul Pembelajaran" : "Tambah Modul Pembelajaran Baru"}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Kurikulum 3 Jenjang Pasar Modal IDX • Mendukung Format Markdown & Kotak Formula
+                Kurikulum 3 Jenjang Pasar Modal IDX • Format Markdown & Kotak Formula Finansial
               </p>
             </div>
           </div>
@@ -155,7 +155,7 @@ export default function AdminModuleFormModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-[#1a1d26] border border-transparent hover:border-slate-300 dark:hover:border-[#333333] transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -164,7 +164,7 @@ export default function AdminModuleFormModal({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
           {errorMessage && (
-            <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300 font-medium">
+            <div className="p-3.5 rounded-lg bg-rose-50 dark:bg-[#2a0e12]/60 border border-rose-200 dark:border-[#4c151c] flex items-start gap-2.5 text-xs text-rose-700 dark:text-rose-300 font-medium">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
               <span>{errorMessage}</span>
             </div>
@@ -182,7 +182,7 @@ export default function AdminModuleFormModal({
                 value={form.title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="Contoh: Analisis Profitabilitas: Return on Equity (ROE)"
-                className="w-full px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                className="w-full px-3.5 py-2.5 rounded-lg text-xs font-semibold bg-white dark:bg-[#080808] border border-slate-200 dark:border-[#272727] text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
               />
               {fieldErrors.title && (
                 <span className="text-[11px] text-rose-500 mt-1 block">{fieldErrors.title}</span>
@@ -198,7 +198,7 @@ export default function AdminModuleFormModal({
                 <button
                   type="button"
                   onClick={() => setSlugLocked(!slugLocked)}
-                  className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  className="text-[11px] font-mono font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
                 >
                   {slugLocked ? (
                     <>
@@ -218,8 +218,8 @@ export default function AdminModuleFormModal({
                 value={form.slug}
                 onChange={(e) => setForm((prev) => ({ ...prev, slug: toSlugClient(e.target.value) }))}
                 placeholder="contoh-slug-materi"
-                className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-mono bg-slate-50 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 ${
-                  slugLocked ? "opacity-75 cursor-not-allowed" : ""
+                className={`w-full px-3.5 py-2.5 rounded-lg text-xs font-mono bg-white dark:bg-[#080808] border border-slate-200 dark:border-[#272727] text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors ${
+                  slugLocked ? "opacity-60 cursor-not-allowed bg-slate-50 dark:bg-[#121212]" : ""
                 }`}
               />
               {fieldErrors.slug && (
@@ -242,10 +242,10 @@ export default function AdminModuleFormModal({
                       type="button"
                       key={lvl.id}
                       onClick={() => handleLevelChange(lvl.id)}
-                      className={`py-2 px-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      className={`py-2 px-2.5 rounded-lg border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         active
                           ? lvl.pillActiveClass
-                          : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#12151e] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                          : "border-slate-200 dark:border-[#272727] bg-slate-50 dark:bg-[#0c0e14] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
                       <span>{lvl.dot}</span>
@@ -269,7 +269,7 @@ export default function AdminModuleFormModal({
                 required
                 value={form.orderIndex}
                 onChange={(e) => setForm((prev) => ({ ...prev, orderIndex: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-xl text-xs font-mono font-bold tabular-nums bg-slate-50 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2.5 rounded-lg text-xs font-mono font-bold tabular-nums bg-white dark:bg-[#080808] border border-slate-200 dark:border-[#272727] text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-slate-500"
               />
             </div>
 
@@ -286,7 +286,7 @@ export default function AdminModuleFormModal({
                 required
                 value={form.estimatedMinutes}
                 onChange={(e) => setForm((prev) => ({ ...prev, estimatedMinutes: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-xl text-xs font-mono font-bold tabular-nums bg-slate-50 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2.5 rounded-lg text-xs font-mono font-bold tabular-nums bg-white dark:bg-[#080808] border border-slate-200 dark:border-[#272727] text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-slate-500"
               />
             </div>
 
@@ -297,10 +297,10 @@ export default function AdminModuleFormModal({
               <button
                 type="button"
                 onClick={() => setForm((prev) => ({ ...prev, isPublished: !prev.isPublished }))}
-                className={`w-full py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                className={`w-full py-2.5 px-3 rounded-lg border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   form.isPublished
-                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
-                    : "bg-slate-100 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-700"
+                    ? "bg-[#062c19] text-[#34d399] border-[#0e4429]"
+                    : "bg-slate-100 dark:bg-[#161922] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-[#272727]"
                 }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -320,21 +320,21 @@ export default function AdminModuleFormModal({
               value={form.summary}
               onChange={(e) => setForm((prev) => ({ ...prev, summary: e.target.value }))}
               placeholder="Ringkasan 1-2 kalimat mengenai kompetensi utama yang dipelajari pada modul ini..."
-              className="w-full px-3.5 py-2.5 rounded-xl text-xs font-medium bg-slate-50 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+              className="w-full px-3.5 py-2.5 rounded-lg text-xs font-medium bg-white dark:bg-[#080808] border border-slate-200 dark:border-[#272727] text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors"
             />
           </div>
 
           {/* Baris 4: Editor Konten Materi & Pratinjau */}
           <div className="space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#12151e] p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#0c0e14] p-1 rounded-lg border border-slate-200 dark:border-[#272727]">
                 <button
                   type="button"
                   onClick={() => setEditorTab("write")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                     editorTab === "write"
-                      ? "bg-white text-slate-950 shadow-2xs"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                      ? "bg-white dark:bg-[#1a1d26] text-slate-900 dark:text-white border border-slate-200 dark:border-[#333333]"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent"
                   }`}
                 >
                   <FileEdit className="w-3.5 h-3.5" />
@@ -343,10 +343,10 @@ export default function AdminModuleFormModal({
                 <button
                   type="button"
                   onClick={() => setEditorTab("preview")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                     editorTab === "preview"
-                      ? "bg-white text-slate-950 shadow-2xs"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                      ? "bg-white dark:bg-[#1a1d26] text-slate-900 dark:text-white border border-slate-200 dark:border-[#333333]"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent"
                   }`}
                 >
                   <Eye className="w-3.5 h-3.5" />
@@ -359,7 +359,7 @@ export default function AdminModuleFormModal({
                 <button
                   type="button"
                   onClick={() => insertSnippet("## Subjudul Pembahasan\nTuliskan penjelasan konsep di sini.")}
-                  className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-500 cursor-pointer"
+                  className="px-2.5 py-1 rounded-md text-[11px] font-mono font-medium bg-slate-100 dark:bg-[#12141c] border border-slate-200 dark:border-[#272727] text-slate-600 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500 transition-colors cursor-pointer"
                 >
                   + Subjudul
                 </button>
@@ -368,7 +368,7 @@ export default function AdminModuleFormModal({
                   onClick={() =>
                     insertSnippet("```\nROE (%) = (Laba Bersih Setahun / Total Ekuitas) × 100%\n```")
                   }
-                  className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-500/10 border border-indigo-500/30 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-500/20 flex items-center gap-1 cursor-pointer"
+                  className="px-2.5 py-1 rounded-md text-[11px] font-mono font-medium bg-slate-100 dark:bg-[#12141c] border border-slate-200 dark:border-[#272727] text-slate-600 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500 transition-colors flex items-center gap-1 cursor-pointer"
                 >
                   <Code2 className="w-3 h-3" />+ Kotak Rumus
                 </button>
@@ -377,7 +377,7 @@ export default function AdminModuleFormModal({
                   onClick={() =>
                     insertSnippet("> **Catatan Penting**: Tuliskan highlight atau aturan praktis analisis di sini.")
                   }
-                  className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/20 cursor-pointer"
+                  className="px-2.5 py-1 rounded-md text-[11px] font-mono font-medium bg-slate-100 dark:bg-[#12141c] border border-slate-200 dark:border-[#272727] text-slate-600 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500 transition-colors cursor-pointer"
                 >
                   + Highlight
                 </button>
@@ -392,23 +392,24 @@ export default function AdminModuleFormModal({
                   value={form.contentBody}
                   onChange={(e) => setForm((prev) => ({ ...prev, contentBody: e.target.value }))}
                   placeholder="Tulis isi materi pembelajaran menggunakan format Markdown. Gunakan blok tiga backtick (```) untuk membuat kotak formula matematis..."
-                  className="w-full p-4 rounded-2xl text-xs sm:text-sm font-mono leading-relaxed bg-slate-50 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500 custom-scrollbar"
+                  className="w-full p-4 rounded-xl text-xs sm:text-sm font-mono leading-relaxed bg-white dark:bg-[#080808] border border-slate-200 dark:border-[#272727] text-slate-900 dark:text-slate-100 focus:outline-none focus:border-slate-400 dark:focus:border-slate-500 transition-colors custom-scrollbar"
                 />
                 {fieldErrors.contentBody && (
                   <span className="text-[11px] text-rose-500 mt-1 block">{fieldErrors.contentBody}</span>
                 )}
               </div>
             ) : (
-              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-[#080808] border border-slate-200 dark:border-slate-800 min-h-[260px]">
-                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
+              <div className="p-5 rounded-xl bg-slate-50 dark:bg-[#080808] border border-slate-200 dark:border-[#272727] min-h-[260px]">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#272727] pb-3 mb-4">
                   <div>
                     <LevelBadge level={form.level} showFull />
-                    <h4 className="text-lg font-extrabold text-slate-900 dark:text-white mt-2">
+                    <h4 className="text-base font-bold text-slate-900 dark:text-white mt-2">
                       {form.title || "Judul Modul Materi"}
                     </h4>
                   </div>
-                  <span className="font-mono text-xs font-bold text-slate-400">
-                    ⏱ {form.estimatedMinutes || 5} Menit Baca
+                  <span className="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5" />
+                    {form.estimatedMinutes || 5} Menit Baca
                   </span>
                 </div>
                 <MarkdownArticlePreview content={form.contentBody} />
@@ -417,18 +418,18 @@ export default function AdminModuleFormModal({
           </div>
 
           {/* Footer Tombol Simpan */}
-          <div className="pt-4 border-t border-slate-200 dark:border-slate-800/90 flex items-center justify-end gap-2.5">
+          <div className="pt-4 border-t border-slate-200 dark:border-[#272727] flex items-center justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-lg text-xs font-bold bg-slate-100 dark:bg-[#161922] border border-slate-200 dark:border-[#272727] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#202432] transition-colors cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 disabled:opacity-50 transition-all cursor-pointer shadow-sm flex items-center gap-2"
+              className="px-5 py-2 rounded-lg text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 disabled:opacity-50 transition-all cursor-pointer flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
               {isSaving
@@ -443,4 +444,3 @@ export default function AdminModuleFormModal({
     </div>
   );
 }
-
