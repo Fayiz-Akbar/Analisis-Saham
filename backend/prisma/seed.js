@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+﻿import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -106,13 +106,13 @@ Di pasar reguler Bursa Efek Indonesia, investor ritel tidak membeli saham per 1 
 
 \`\`\`
 1 Lot = 100 Lembar Saham
-Modal Pembelian = Jumlah Lot × 100 × Harga per Lembar
+Modal Pembelian = Jumlah Lot Ã— 100 Ã— Harga per Lembar
 \`\`\`
 
 ### Contoh Perhitungan Modal
 Jika harga saham **BBRI** saat ini adalah **Rp 4.800** per lembar dan Anda ingin membeli **2 Lot**:
-- Jumlah lembar = \`2 × 100 = 200 lembar\`
-- Total modal = \`200 × Rp 4.800 = Rp 960.000\`
+- Jumlah lembar = \`2 Ã— 100 = 200 lembar\`
+- Total modal = \`200 Ã— Rp 4.800 = Rp 960.000\`
 
 ### Dua Sumber Keuntungan Utama Saham
 1. **Capital Gain**: Selisih positif ketika harga jual lebih tinggi dibanding harga beli rata-rata (*Average Buy Price*).
@@ -139,7 +139,7 @@ Jika harga saham **BBRI** saat ini adalah **Rp 4.800** per lembar dan Anda ingin
         optionD: "Rp 8.850.000",
         correctKey: "C",
         explanationText:
-          "Total biaya pembelian = 3 lot × 100 lembar × Rp 8.850 = 300 lembar × Rp 8.850 = Rp 2.655.000.",
+          "Total biaya pembelian = 3 lot Ã— 100 lembar Ã— Rp 8.850 = 300 lembar Ã— Rp 8.850 = Rp 2.655.000.",
         indicatorConcept: "Perhitungan Nilai Transaksi Pembelian Berbasis Lot",
       },
       {
@@ -176,12 +176,12 @@ Harga saham di bursa bergerak setiap detik selama jam perdagangan karena mekanis
 Kapitalisasi pasar mencerminkan nilai total perusahaan di mata pasar:
 
 \`\`\`
-Market Cap = Harga Saham per Lembar × Total Saham Beredar
+Market Cap = Harga Saham per Lembar Ã— Total Saham Beredar
 \`\`\`
 
 Klasifikasi umum di Indonesia:
 - **Big Cap (Blue Chip)**: Market Cap > Rp 10 Triliun (contoh: BBCA, BBRI, BMRI, TLKM, ASII).
-- **Mid Cap (Second Liner)**: Market Cap Rp 1 Triliun – Rp 10 Triliun.
+- **Mid Cap (Second Liner)**: Market Cap Rp 1 Triliun â€“ Rp 10 Triliun.
 - **Small Cap (Third Liner)**: Market Cap < Rp 1 Triliun.`,
     quizzes: [
       {
@@ -226,16 +226,16 @@ Investor fundamental membeli saham karena ingin memiliki bisnis yang mampu mence
 **ROE** mengukur seberapa besar laba bersih yang mampu dihasilkan perusahaan dari setiap rupiah modal pemegang saham (*ekuitas*):
 
 \`\`\`
-ROE (%) = (Laba Bersih Setahun / Total Ekuitas) × 100%
+ROE (%) = (Laba Bersih Setahun / Total Ekuitas) Ã— 100%
 \`\`\`
 
-- **Interpretasi Umum**: Emiten dengan **ROE ≥ 15%** secara konsisten umumnya menandakan keunggulan kompetitif dan efisiensi pengelolaan modal yang kuat.
+- **Interpretasi Umum**: Emiten dengan **ROE â‰¥ 15%** secara konsisten umumnya menandakan keunggulan kompetitif dan efisiensi pengelolaan modal yang kuat.
 
 ### 2. Net Profit Margin (NPM)
 **NPM** mengukur persentase laba bersih yang tersisa dari total pendapatan (*revenue*) setelah dikurangi seluruh beban usaha, bunga, dan pajak:
 
 \`\`\`
-NPM (%) = (Laba Bersih / Total Pendapatan) × 100%
+NPM (%) = (Laba Bersih / Total Pendapatan) Ã— 100%
 \`\`\`
 
 ### Studi Kasus
@@ -244,10 +244,10 @@ Jika PT Bank Central Asia Tbk (BBCA) membukukan ROE sebesar **21,5%**, artinya d
       {
         questionText:
           "Rumus yang tepat untuk menghitung rasio Return on Equity (ROE) adalah...",
-        optionA: "(Total Utang / Total Ekuitas) × 100%",
-        optionB: "(Harga Saham / Laba per Lembar) × 100%",
-        optionC: "(Laba Bersih / Total Ekuitas) × 100%",
-        optionD: "(Total Aset / Pendapatan Kotor) × 100%",
+        optionA: "(Total Utang / Total Ekuitas) Ã— 100%",
+        optionB: "(Harga Saham / Laba per Lembar) Ã— 100%",
+        optionC: "(Laba Bersih / Total Ekuitas) Ã— 100%",
+        optionD: "(Total Aset / Pendapatan Kotor) Ã— 100%",
         correctKey: "C",
         explanationText:
           "Return on Equity (ROE) dihitung dengan membagi Laba Bersih (Net Income) terhadap Total Ekuitas pemegang saham dikalikan 100%.",
@@ -262,7 +262,7 @@ Jika PT Bank Central Asia Tbk (BBCA) membukukan ROE sebesar **21,5%**, artinya d
         optionD: "40%",
         correctKey: "C",
         explanationText:
-          "ROE = (Rp 400 Miliar / Rp 2.000 Miliar) × 100% = 0,20 × 100% = 20%.",
+          "ROE = (Rp 400 Miliar / Rp 2.000 Miliar) Ã— 100% = 0,20 Ã— 100% = 20%.",
         indicatorConcept: "Aplikasi Numerik Rasio Profitabilitas ROE",
       },
       {
@@ -357,7 +357,7 @@ Dalam manajemen portofolio modern, kinerja investasi wajib dievaluasi bersama **
 ### 1. Return on Investment (ROI) & Volatilitas Imbal Hasil
 - **ROI Portofolio**:
 \`\`\`
-ROI (%) = ((Nilai Akhir Portofolio Vt - Modal Awal V0) / Modal Awal V0) × 100%
+ROI (%) = ((Nilai Akhir Portofolio Vt - Modal Awal V0) / Modal Awal V0) Ã— 100%
 \`\`\`
 - **Volatilitas Periodik (s)**: Simpangan baku (*standard deviation*) dari imbal hasil periodik portofolio. Semakin rendah volatilitas pada return positif, semakin sehat stabilitas portofolio (**Portfolio Health Score**).
 
@@ -449,7 +449,7 @@ async function main() {
   );
 
   // 2. Seeding 80 Emiten Indeks IDX80
-  console.log(`⏳ Seeding ${IDX80_STOCKS.length} Emiten Konstituen Indeks IDX80...`);
+  console.log(`â³ Seeding ${IDX80_STOCKS.length} Emiten Konstituen Indeks IDX80...`);
   for (const stock of IDX80_STOCKS) {
     const logoUrl = stock.logoUrl || `https://assets.stockbit.com/logos/companies/${stock.symbol}.png`;
     await prisma.stock.upsert({
@@ -492,7 +492,7 @@ async function main() {
   console.log("✅ Watchlist demo berhasil dibuat.");
 
   // 4. Seeding Modul Pembelajaran 3 Level & Bank Soal Kuis Evaluasi
-  console.log("⏳ Seeding Kurikulum Modul Pembelajaran & Bank Soal Kuis...");
+  console.log("â³ Seeding Kurikulum Modul Pembelajaran & Bank Soal Kuis...");
   let seededModulesCount = 0;
   let seededQuizzesCount = 0;
 
@@ -539,12 +539,16 @@ async function main() {
   console.log(
     `✅ ${seededModulesCount} Modul Kurikulum dipastikan aktif (${seededQuizzesCount} butir soal kuis baru ditambahkan).`
   );
+  // 5. Seeding Data Fundamental 80 Emiten IDX80
+  console.log("⏳ Seeding Data Fundamental 80 Emiten IDX80...");
+  const { seedAllFundamentals } = await import("./seedFundamentals.js");
+  await seedAllFundamentals();
   console.log("🎉 Seeding Database Selesai!");
 }
 
 main()
   .catch((e) => {
-    console.error("❌ Error seeding:", e);
+    console.error("âŒ Error seeding:", e);
     process.exit(1);
   })
   .finally(async () => {

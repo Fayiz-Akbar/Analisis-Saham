@@ -56,6 +56,7 @@ export const getAllStocks = async (req, res) => {
       orderBy: { symbol: "asc" },
       include: {
         dailyPrice: true,
+        fundamentals: true,
       },
     });
 
@@ -78,6 +79,34 @@ export const getAllStocks = async (req, res) => {
 };
 
 /**
+ * Helper untuk sanitasi nilai Decimal fundamental ke tipe Number
+ */
+export const sanitizeFundamental = (f) => {
+  if (!f) return null;
+  return {
+    ...f,
+    marketCap: f.marketCap !== null && f.marketCap !== undefined ? Number(f.marketCap) : null,
+    peRatio: f.peRatio !== null && f.peRatio !== undefined ? Number(f.peRatio) : null,
+    pbvRatio: f.pbvRatio !== null && f.pbvRatio !== undefined ? Number(f.pbvRatio) : null,
+    roe: f.roe !== null && f.roe !== undefined ? Number(f.roe) : null,
+    roa: f.roa !== null && f.roa !== undefined ? Number(f.roa) : null,
+    der: f.der !== null && f.der !== undefined ? Number(f.der) : null,
+    netProfitMargin: f.netProfitMargin !== null && f.netProfitMargin !== undefined ? Number(f.netProfitMargin) : null,
+    eps: f.eps !== null && f.eps !== undefined ? Number(f.eps) : null,
+    dividendYield: f.dividendYield !== null && f.dividendYield !== undefined ? Number(f.dividendYield) : null,
+    revenue: f.revenue !== null && f.revenue !== undefined ? Number(f.revenue) : null,
+    netIncome: f.netIncome !== null && f.netIncome !== undefined ? Number(f.netIncome) : null,
+    totalAssets: f.totalAssets !== null && f.totalAssets !== undefined ? Number(f.totalAssets) : null,
+    totalEquity: f.totalEquity !== null && f.totalEquity !== undefined ? Number(f.totalEquity) : null,
+    totalLiabilities: f.totalLiabilities !== null && f.totalLiabilities !== undefined ? Number(f.totalLiabilities) : null,
+    cashEquivalents: f.cashEquivalents !== null && f.cashEquivalents !== undefined ? Number(f.cashEquivalents) : null,
+    revenueGrowth: f.revenueGrowth !== null && f.revenueGrowth !== undefined ? Number(f.revenueGrowth) : null,
+    netIncomeGrowth: f.netIncomeGrowth !== null && f.netIncomeGrowth !== undefined ? Number(f.netIncomeGrowth) : null,
+    financialPeriod: f.financialPeriod || "FY2024 Audit (Konsolidasian)",
+  };
+};
+
+/**
  * Mengambil Quote Harga Saham Terkini
  * GET /api/stocks/:symbol/quote
  */
@@ -86,16 +115,33 @@ export const getStockQuote = async (req, res) => {
     const { symbol } = req.params;
     const cleanSymbol = symbol.toUpperCase().replace(".JK", "");
 
-    // Cek master emiten di database
+    // Cek master emiten di database beserta data fundamental
     const stock = await prisma.stock.findUnique({
       where: { symbol: cleanSymbol },
+      include: {
+        fundamentals: true,
+      },
     });
 
     // Ambil quote harga terkini via MarketDataService
     const marketData = await MarketDataService.fetchYahooChart(cleanSymbol, "5d", "1d");
 
+    const sanitizedStock = stock
+      ? {
+          ...stock,
+          fundamentals: sanitizeFundamental(stock.fundamentals),
+        }
+      : {
+          symbol: cleanSymbol,
+          companyName: cleanSymbol,
+          sector: "Financials",
+          industry: "General",
+          exchange: "IDX",
+          fundamentals: null,
+        };
+
     const responsePayload = {
-      stock: stock || { symbol: cleanSymbol, companyName: cleanSymbol, sector: "Unknown", exchange: "IDX" },
+      stock: sanitizedStock,
       quote: {
         symbol: cleanSymbol,
         regularMarketPrice: marketData.regularMarketPrice,
@@ -147,6 +193,39 @@ export const getStockHistory = async (req, res) => {
 };
 
 /**
+ * Mengambil Rasio 4 Pilar & Laporan Keuangan Fundamental Saham
+ * GET /api/stocks/:symbol/fundamentals
+ */
+export const getStockFundamentals = async (req, res) => {
+  try {
+    const { symbol } = req.params;
+    const cleanSymbol = symbol.toUpperCase().replace(".JK", "");
+
+    const stock = await prisma.stock.findUnique({
+      where: { symbol: cleanSymbol },
+      include: {
+        fundamentals: true,
+      },
+    });
+
+    if (!stock) {
+      return sendError(res, 404, `Emiten dengan simbol ${cleanSymbol} tidak ditemukan.`);
+    }
+
+    return sendSuccess(res, 200, `Data fundamental ${cleanSymbol} berhasil dimuat`, {
+      symbol: cleanSymbol,
+      companyName: stock.companyName,
+      sector: stock.sector,
+      industry: stock.industry,
+      fundamentals: sanitizeFundamental(stock.fundamentals),
+    });
+  } catch (error) {
+    console.error(`Get Stock Fundamentals Error (${req.params.symbol}):`, error);
+    return sendError(res, 500, `Gagal memuat fundamental emiten ${req.params.symbol}.`);
+  }
+};
+
+/**
  * Mengambil Detail Komprehensif Saham
  * GET /api/stocks/:symbol
  */
@@ -170,7 +249,10 @@ export const getStockDetail = async (req, res) => {
     const marketData = await MarketDataService.fetchYahooChart(cleanSymbol, "1mo", "1d");
 
     return sendSuccess(res, 200, `Detail saham ${cleanSymbol} berhasil dimuat`, {
-      stock,
+      stock: {
+        ...stock,
+        fundamentals: sanitizeFundamental(stock.fundamentals),
+      },
       currentPrice: marketData.regularMarketPrice,
       changePercent: marketData.changePercent,
       changeAmount: marketData.changeAmount,

@@ -156,3 +156,36 @@
   width: 0 !important;
   height: 0 !important;
 }
+
+/* ========================================================
+   ANIMASI RUNNING TICKER TAPE (SCROLL KE ARAH KIRI)
+   ======================================================== */
+@keyframes marquee-scroll-left {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-tape-scroll {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll-left 140s linear infinite;
+  will-change: transform;
+}
+
+.animate-tape-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

@@ -106,18 +106,27 @@ model Stock {
 }
 
 model StockFundamental {
-  id              String   @id @default(uuid()) @db.Uuid
-  symbol          String   @unique @db.VarChar(10)
-  marketCap       Decimal? @map("market_cap") @db.Decimal(20, 2)
-  peRatio         Decimal? @map("pe_ratio") @db.Decimal(10, 2)
-  pbvRatio        Decimal? @map("pbv_ratio") @db.Decimal(10, 2)
-  roe             Decimal? @db.Decimal(8, 4)
-  roa             Decimal? @db.Decimal(8, 4)
-  der             Decimal? @db.Decimal(8, 4)
-  netProfitMargin Decimal? @map("net_profit_margin") @db.Decimal(8, 4)
-  eps             Decimal? @db.Decimal(15, 2)
-  dividendYield   Decimal? @map("dividend_yield") @db.Decimal(8, 4)
-  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id               String   @id @default(uuid()) @db.Uuid
+  symbol           String   @unique @db.VarChar(10)
+  marketCap        Decimal? @map("market_cap") @db.Decimal(20, 2)
+  peRatio          Decimal? @map("pe_ratio") @db.Decimal(10, 2)
+  pbvRatio         Decimal? @map("pbv_ratio") @db.Decimal(10, 2)
+  roe              Decimal? @db.Decimal(8, 4)
+  roa              Decimal? @db.Decimal(8, 4)
+  der              Decimal? @db.Decimal(8, 4)
+  netProfitMargin  Decimal? @map("net_profit_margin") @db.Decimal(8, 4)
+  eps              Decimal? @db.Decimal(15, 2)
+  dividendYield    Decimal? @map("dividend_yield") @db.Decimal(8, 4)
+  revenue          Decimal? @db.Decimal(20, 2)
+  netIncome        Decimal? @map("net_income") @db.Decimal(20, 2)
+  totalAssets      Decimal? @map("total_assets") @db.Decimal(20, 2)
+  totalEquity      Decimal? @map("total_equity") @db.Decimal(20, 2)
+  totalLiabilities Decimal? @map("total_liabilities") @db.Decimal(20, 2)
+  cashEquivalents  Decimal? @map("cash_equivalents") @db.Decimal(20, 2)
+  revenueGrowth    Decimal? @map("revenue_growth") @db.Decimal(8, 4)
+  netIncomeGrowth  Decimal? @map("net_income_growth") @db.Decimal(8, 4)
+  financialPeriod  String?  @default("TTM / FY2024") @map("financial_period") @db.VarChar(50)
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   stock Stock @relation(fields: [symbol], references: [symbol], onDelete: Cascade)
 

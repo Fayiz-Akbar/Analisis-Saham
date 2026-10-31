@@ -44,34 +44,27 @@ export default function AppHeader({
       : "Investor (Pemula)";
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#080808]/95 border-b border-[#272727] backdrop-blur-md transition-colors">
+    <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-[#080808]/95 border-b border-slate-200 dark:border-[#272727] backdrop-blur-md transition-colors shadow-xs dark:shadow-none">
       <div className="max-w-[98%] mx-auto px-3 sm:px-4 lg:px-6 h-16 flex items-center justify-between gap-3">
         {/* ========================================================
-            KIRI: Logo Baru InvestAI Sesuai Brand Resmi
+            KIRI: Logo Investpedia Resmi (Dukungan Light & Dark Mode)
             ======================================================== */}
         <div
           onClick={() => setActiveTab("dashboard")}
-          className="flex items-center gap-2.5 sm:gap-3 cursor-pointer select-none flex-shrink-0"
+          className="flex items-center cursor-pointer select-none flex-shrink-0"
         >
-          {/* Logo Solid Putih: 3 Pilar Pertumbuhan Finansial */}
-          <div className="w-8 h-8 rounded-xl bg-[#12151e] border border-slate-800 flex items-center justify-center p-1.5 shadow-sm">
-            <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-white">
-              <rect x="3" y="13" width="4.5" height="8" rx="2.25" />
-              <rect x="9.75" y="8" width="4.5" height="13" rx="2.25" />
-              <rect x="16.5" y="3" width="4.5" height="18" rx="2.25" />
-            </svg>
-          </div>
-
-          <span className="font-extrabold text-base sm:text-lg tracking-tight text-white block">
-            InvestAI
-          </span>
+          <img
+            src={darkMode ? "/investpedia-full-dark.png" : "/investpedia-full.png"}
+            alt="Investpedia"
+            className="h-8 sm:h-9 w-auto object-contain transition-opacity"
+          />
         </div>
 
         {/* ========================================================
             TENGAH: Floating Pill Bar Navigasi (9 Menu Header PRD)
             ======================================================== */}
         <nav className="flex-1 flex justify-center max-w-5xl min-w-0 mx-2 sm:mx-4">
-          <div className="bg-[#12151e] border border-slate-800/90 rounded-full p-1 shadow-md flex items-center gap-0.5 sm:gap-1 max-w-full overflow-x-auto scrollbar-none">
+          <div className="bg-slate-100 border border-slate-200/90 dark:bg-[#12151e] dark:border-slate-800/90 rounded-full p-1 shadow-xs dark:shadow-md flex items-center gap-0.5 sm:gap-1 max-w-full overflow-x-auto scrollbar-none">
             {navTabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -80,8 +73,8 @@ export default function AppHeader({
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                     isActive
-                      ? "bg-white text-slate-950 shadow-xs"
-                      : "text-slate-400 hover:text-white"
+                      ? "bg-slate-900 text-white shadow-xs dark:bg-white dark:text-slate-950"
+                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                   }`}
                 >
                   {tab.label}
@@ -101,10 +94,10 @@ export default function AppHeader({
             onClick={() => setActiveTab("admin")}
             className={`h-9 px-3 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
               activeTab === "admin"
-                ? "bg-white text-slate-950 border-white shadow-xs"
+                ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-950 dark:border-white shadow-xs"
                 : isAdmin
-                  ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/40 hover:bg-indigo-500/30"
-                  : "bg-[#12151e] text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white"
+                  ? "bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/40 hover:bg-indigo-500/30"
+                  : "bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:text-slate-900 dark:hover:text-white"
             }`}
             title="Portal Administrator Manajemen Kurikulum & Kuis"
           >
@@ -115,12 +108,12 @@ export default function AppHeader({
           {/* 1. Global Stock Search Bar Button */}
           <button
             onClick={onOpenSearch}
-            className="w-9 h-9 rounded-xl bg-[#12151e] border border-slate-800 hover:border-slate-700 flex items-center justify-center text-white hover:bg-slate-800 transition-all cursor-pointer shadow-2xs"
+            className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center text-slate-700 dark:text-white transition-all cursor-pointer shadow-xs dark:shadow-2xs"
             title="Cari Saham IDX (Global Search)"
             aria-label="Cari Saham"
           >
             <svg
-              className="w-4 h-4 stroke-white stroke-2 fill-none"
+              className="w-4 h-4 stroke-slate-700 dark:stroke-white stroke-2 fill-none"
               viewBox="0 0 24 24"
             >
               <circle cx="11" cy="11" r="7" />
@@ -132,12 +125,12 @@ export default function AppHeader({
           <div ref={authRef} className="relative">
             <button
               onClick={() => setShowAuthMenu(!showAuthMenu)}
-              className={`h-9 px-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer shadow-2xs ${
+              className={`h-9 px-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer shadow-xs dark:shadow-2xs ${
                 isAuthenticated
                   ? isAdmin
-                    ? "bg-indigo-950/60 border-indigo-500/40 text-indigo-200 hover:bg-indigo-950/80"
-                    : "bg-emerald-950/50 border-emerald-500/40 text-emerald-200 hover:bg-emerald-950/70"
-                  : "w-9 justify-center bg-[#12151e] border-slate-800 hover:border-slate-700 text-white hover:bg-slate-800"
+                    ? "bg-indigo-500/15 border-indigo-500/40 text-indigo-700 dark:text-indigo-200 hover:bg-indigo-500/25"
+                    : "bg-emerald-500/15 border-emerald-500/40 text-emerald-700 dark:text-emerald-200 hover:bg-emerald-500/25"
+                  : "w-9 justify-center bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-white"
               }`}
               title="Profil Pengguna & Autentikasi"
               aria-label="Akun Pengguna"
@@ -168,25 +161,25 @@ export default function AppHeader({
 
             {/* Auth Dropdown Popover */}
             {showAuthMenu && (
-              <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-slate-800 bg-[#12151e]/98 shadow-2xl p-4 z-50 text-xs space-y-3 backdrop-blur-md">
+              <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/98 dark:bg-[#12151e]/98 shadow-2xl p-4 z-50 text-xs space-y-3 backdrop-blur-md">
                 {isAuthenticated ? (
                   <>
-                    <div className="border-b border-slate-800 pb-3 space-y-1">
+                    <div className="border-b border-slate-200 dark:border-slate-800 pb-3 space-y-1">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-white text-sm truncate">
+                        <span className="font-bold text-slate-900 dark:text-white text-sm truncate">
                           {user?.name}
                         </span>
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${
                             isAdmin
-                              ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
-                              : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+                              ? "bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30"
+                              : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
                           }`}
                         >
                           {roleBadgeLabel}
                         </span>
                       </div>
-                      <span className="text-[11px] font-mono text-slate-400 block truncate">
+                      <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 block truncate">
                         {user?.email}
                       </span>
                     </div>
@@ -198,10 +191,10 @@ export default function AppHeader({
                           setActiveTab("admin");
                           setShowAuthMenu(false);
                         }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-200 border border-indigo-500/30 transition-colors flex items-center justify-between cursor-pointer"
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-200 border border-indigo-500/30 transition-colors flex items-center justify-between cursor-pointer"
                       >
                         <span className="flex items-center gap-2">
-                          <ShieldCheck className="w-4 h-4 text-indigo-400" />
+                          <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                           {isAdmin ? "Buka Portal Administrator" : "Portal Admin (RBAC)"}
                         </span>
                         <span>→</span>
@@ -213,7 +206,7 @@ export default function AppHeader({
                           logout();
                           setShowAuthMenu(false);
                         }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/25 transition-colors flex items-center gap-2 cursor-pointer"
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/25 transition-colors flex items-center gap-2 cursor-pointer"
                       >
                         <LogOut className="w-3.5 h-3.5" />
                         Keluar (Logout Sesi)
@@ -222,11 +215,11 @@ export default function AppHeader({
                   </>
                 ) : (
                   <>
-                    <div className="border-b border-slate-800 pb-2.5">
-                      <span className="font-bold text-white text-sm block">
+                    <div className="border-b border-slate-200 dark:border-slate-800 pb-2.5">
+                      <span className="font-bold text-slate-900 dark:text-white text-sm block">
                         Autentikasi Pengguna
                       </span>
-                      <span className="text-[11px] text-slate-400 block mt-0.5">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
                         Masuk sebagai Investor atau Administrator
                       </span>
                     </div>
@@ -238,7 +231,7 @@ export default function AppHeader({
                           openAuthModal("login");
                           setShowAuthMenu(false);
                         }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold bg-white text-slate-950 hover:bg-slate-100 transition-colors flex items-center gap-2 cursor-pointer"
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer"
                       >
                         <UserCheck className="w-3.5 h-3.5" />
                         Masuk (Login Investor)
@@ -250,7 +243,7 @@ export default function AppHeader({
                           openAuthModal("register");
                           setShowAuthMenu(false);
                         }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 transition-colors flex items-center gap-2 cursor-pointer"
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-2 cursor-pointer"
                       >
                         <UserPlus className="w-3.5 h-3.5" />
                         Daftar Akun Investor Baru
@@ -262,7 +255,7 @@ export default function AppHeader({
                           setActiveTab("admin");
                           setShowAuthMenu(false);
                         }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 transition-colors flex items-center justify-between cursor-pointer"
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 transition-colors flex items-center justify-between cursor-pointer"
                       >
                         <span className="flex items-center gap-2">
                           <ShieldCheck className="w-3.5 h-3.5" />
@@ -274,9 +267,9 @@ export default function AppHeader({
                   </>
                 )}
 
-                <div className="pt-2 border-t border-slate-800">
-                  <span className="text-[10px] text-slate-500 block leading-tight">
-                    InvestAI • Analisis Fundamental & Simulasi Pasar Modal IDX
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 block leading-tight">
+                    Investpedia AI • Analisis Fundamental Pasar Modal IDX
                   </span>
                 </div>
               </div>
@@ -286,13 +279,13 @@ export default function AppHeader({
           {/* 3. Dark / Light Mode Toggle Button */}
           <button
             onClick={toggleDarkMode}
-            className="w-9 h-9 rounded-xl bg-[#12151e] border border-slate-800 hover:border-slate-700 flex items-center justify-center text-white hover:bg-slate-800 transition-all cursor-pointer shadow-2xs"
+            className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center text-slate-700 dark:text-white transition-all cursor-pointer shadow-xs dark:shadow-2xs"
             title={darkMode ? "Ganti ke Mode Terang" : "Ganti ke Mode Gelap"}
             aria-label="Ganti Tema"
           >
             {darkMode ? (
               <svg
-                className="w-4 h-4 stroke-white stroke-2 fill-none"
+                className="w-4 h-4 stroke-slate-700 dark:stroke-white stroke-2 fill-none"
                 viewBox="0 0 24 24"
               >
                 <circle cx="12" cy="12" r="5" />
@@ -307,7 +300,7 @@ export default function AppHeader({
               </svg>
             ) : (
               <svg
-                className="w-4 h-4 stroke-white stroke-2 fill-none"
+                className="w-4 h-4 stroke-slate-700 dark:stroke-white stroke-2 fill-none"
                 viewBox="0 0 24 24"
               >
                 <path

@@ -5,6 +5,7 @@ import AuthModal from "./components/auth/AuthModal";
 
 // Layout Components
 import AppHeader from "./components/layout/AppHeader";
+import { Idx80TickerTapeBar } from "./components/ui/stock-market-tracker-chart";
 
 // Search Components (TradingView Style)
 import SearchModal from "./components/search/SearchModal";
@@ -12,6 +13,8 @@ import SearchModal from "./components/search/SearchModal";
 // Feature / View Components
 import DashboardView from "./components/dashboard/DashboardView";
 import StockDetailCard from "./components/stock-detail/StockDetailCard";
+import StockTableView from "./components/views/StockTableView";
+import WatchlistView from "./components/views/WatchlistView";
 import PlaceholderView from "./components/views/PlaceholderView";
 import AdminDashboardPage from "./components/admin/AdminDashboardPage";
 
@@ -25,6 +28,7 @@ const getInitialTabFromLocation = () => {
 export default function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [activeTab, setActiveTabState] = useState(getInitialTabFromLocation);
+  const [tableSector, setTableSector] = useState("ALL");
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [selectedSymbol, setSelectedSymbol] = useState("BBCA");
   const [stockData, setStockData] = useState(null);
@@ -130,6 +134,12 @@ export default function App() {
     setShowSearchModal(false);
   };
 
+  // Aksi membuka tabel kategori dari Glass Folder Cards
+  const handleOpenCategoryTable = (sector = "ALL") => {
+    setTableSector(sector);
+    setActiveTab("category-table");
+  };
+
   return (
     <AuthProvider>
       <div
@@ -146,13 +156,19 @@ export default function App() {
           toggleDarkMode={toggleDarkMode}
         />
 
+        {/* Running Ticker Tape IDX80 Lebar Penuh dari Ujung Kiri sampai Kanan Tepat di Bawah Header */}
+        <Idx80TickerTapeBar className="w-full" />
+
         {/* Konten Halaman */}
         <main className="flex-1 max-w-[98%] mx-auto w-full px-3 sm:px-4 lg:px-6 py-6">
           {/* ========================================================
               1. DASHBOARD: Kartu Geser Saham (Carousel / Slider)
               ======================================================== */}
           {activeTab === "dashboard" && (
-            <DashboardView onSelectStock={handleSelectFromAnywhere} />
+            <DashboardView
+              onSelectStock={handleSelectFromAnywhere}
+              onOpenCategoryTable={handleOpenCategoryTable}
+            />
           )}
 
           {/* ========================================================
@@ -208,6 +224,27 @@ export default function App() {
           )}
 
           {/* ========================================================
+              4. STOCK TABLE VIEW / SCREENER
+              ======================================================== */}
+          {(activeTab === "category-table" || activeTab === "screener") && (
+            <StockTableView
+              initialSector={tableSector}
+              onSelectStock={handleSelectFromAnywhere}
+              onBackToDashboard={() => setActiveTab("dashboard")}
+            />
+          )}
+
+          {/* ========================================================
+              5. WATCHLIST VIEW
+              ======================================================== */}
+          {activeTab === "watchlist" && (
+            <WatchlistView
+              onSelectStock={handleSelectFromAnywhere}
+              onBrowseCatalog={() => handleOpenCategoryTable("ALL")}
+            />
+          )}
+
+          {/* ========================================================
               HALAMAN LAIN (Sprint Mendatang)
               ======================================================== */}
           {activeTab === "market" && (
@@ -218,26 +255,10 @@ export default function App() {
             />
           )}
 
-          {activeTab === "screener" && (
-            <PlaceholderView
-              title="Stock Screener"
-              description="Penyaring 80 emiten konstituen IDX80 berdasarkan kriteria 4 pilar fundamental akan diimplementasikan pada sprint mendatang."
-              onBackToDashboard={() => setActiveTab("dashboard")}
-            />
-          )}
-
           {activeTab === "komparasi" && (
             <PlaceholderView
               title="Stock Comparison"
               description="Komparasi multi-emiten (2–4 saham) secara side-by-side akan diimplementasikan pada sprint mendatang."
-              onBackToDashboard={() => setActiveTab("dashboard")}
-            />
-          )}
-
-          {activeTab === "watchlist" && (
-            <PlaceholderView
-              title="Watchlist"
-              description="Manajemen daftar pantauan saham personal pengguna akan diimplementasikan pada sprint mendatang."
               onBackToDashboard={() => setActiveTab("dashboard")}
             />
           )}
