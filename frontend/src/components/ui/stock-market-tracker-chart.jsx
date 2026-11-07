@@ -942,35 +942,33 @@ export const HeroMarketChart = ({ className = "" }) => {
         <div className="flex flex-wrap items-center justify-between gap-3 w-full">
           {/* Sisi Kiri: Switcher Chips Indeks Bursa + Judul Indeks */}
           <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
-            <div className="inline-flex items-center bg-slate-100 dark:bg-[#141824] border border-slate-200 dark:border-white/[0.12] p-1 rounded-xl shadow-xs shrink-0">
+            <div className="inline-flex items-center bg-transparent p-0 gap-1 shrink-0">
               <button
                 onClick={() => setSelectedIndex("IHSG")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
                   selectedIndex === "IHSG"
-                    ? "bg-white text-slate-950 shadow-sm dark:bg-[#252c40] dark:text-white"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                    ? "bg-slate-200 text-slate-900 dark:bg-[#2a2e39] dark:text-white"
+                    : "text-slate-600 hover:text-slate-900 dark:text-[#787b86] dark:hover:text-white"
                 }`}
               >
                 IHSG
               </button>
-              <span className="text-slate-400 dark:text-slate-600 px-0.5 text-xs">/</span>
               <button
                 onClick={() => setSelectedIndex("IDX80")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
                   selectedIndex === "IDX80"
-                    ? "bg-white text-slate-950 shadow-sm dark:bg-[#252c40] dark:text-white"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                    ? "bg-slate-200 text-slate-900 dark:bg-[#2a2e39] dark:text-white"
+                    : "text-slate-600 hover:text-slate-900 dark:text-[#787b86] dark:hover:text-white"
                 }`}
               >
                 IDX80
               </button>
-              <span className="text-slate-400 dark:text-slate-600 px-0.5 text-xs">/</span>
               <button
                 onClick={() => setSelectedIndex("LQ45")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
                   selectedIndex === "LQ45"
-                    ? "bg-white text-slate-950 shadow-sm dark:bg-[#252c40] dark:text-white"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                    ? "bg-slate-200 text-slate-900 dark:bg-[#2a2e39] dark:text-white"
+                    : "text-slate-600 hover:text-slate-900 dark:text-[#787b86] dark:hover:text-white"
                 }`}
               >
                 LQ45
@@ -983,10 +981,10 @@ export const HeroMarketChart = ({ className = "" }) => {
             </h1>
           </div>
 
-          {/* Sisi Kanan: TOGGLE Candle/Garis + Timeframe Selector (Ditaruh di Kanan Sesuai Permintaan) */}
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 ml-auto">
+          {/* Sisi Kanan: TOGGLE Candle/Garis + Timeframe Selector (Tanpa Container Box di Belakang) */}
+          <div className="flex items-center gap-3 shrink-0 ml-auto">
             {/* TOGGLE: Candlestick (Lilin) vs Garis / Area */}
-            <div className="inline-flex items-center bg-slate-100 dark:bg-[#141824] border border-slate-200 dark:border-white/[0.12] p-1 rounded-xl shadow-xs shrink-0">
+            <div className="inline-flex items-center bg-transparent p-0 gap-1 shrink-0">
               <button
                 onClick={() => setChartType("candle")}
                 title="Tampilan Grafik Candlestick Lilin (OHLC)"
@@ -1017,16 +1015,16 @@ export const HeroMarketChart = ({ className = "" }) => {
               </button>
             </div>
 
-            {/* Timeframe Selector Sebelahan (Satu Baris Sejajar, Tidak Terpotong) */}
-            <div className="inline-flex items-center bg-slate-100 dark:bg-[#141824] border border-slate-200 dark:border-white/[0.08] p-1 rounded-xl shrink-0">
+            {/* Timeframe Selector Sebelahan (Tanpa Container Box di Belakang) */}
+            <div className="inline-flex items-center bg-transparent p-0 gap-1 shrink-0">
               {TIMEFRAMES.map((tf) => (
                 <button
                   key={tf.id}
                   onClick={() => setSelectedPeriod(tf.id)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                     selectedPeriod === tf.id
-                      ? "bg-white text-slate-950 shadow-xs border border-slate-200 dark:bg-[#252c40] dark:text-white dark:border-white/10"
-                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                      ? "bg-slate-200 text-slate-900 dark:bg-[#2a2e39] dark:text-white font-bold"
+                      : "text-slate-600 hover:text-slate-900 dark:text-[#787b86] dark:hover:text-white"
                   }`}
                 >
                   {tf.label}

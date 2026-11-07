@@ -176,32 +176,6 @@ export default function App() {
               ======================================================== */}
           {activeTab === "stock-detail" && (
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-                <div>
-                  <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-                    Stock Detail ({selectedSymbol})
-                  </h1>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Halaman analisis mendalam emiten: grafik candlestick TradingView, 4 pilar rasio fundamental, dan metrik harga pasar.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setActiveTab("dashboard")}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                  >
-                    ← Kembali ke Dashboard
-                  </button>
-                  <button
-                    onClick={() => setShowSearchModal(true)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-950 dark:bg-white dark:text-slate-950 hover:bg-slate-200 transition-colors cursor-pointer shadow-xs"
-                  >
-                    Cari Saham Lain
-                  </button>
-                </div>
-              </div>
-
               <StockDetailCard
                 stockData={stockData}
                 candles={candles}

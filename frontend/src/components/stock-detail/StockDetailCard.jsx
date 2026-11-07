@@ -130,9 +130,9 @@ export default function StockDetailCard({
           Logo, Ticker, Nama Perusahaan, Badges, Harga Live, & Perubahan
           ======================================================== */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-5 pb-6 border-b border-slate-100 dark:border-slate-850">
-        {/* Kelompok Kiri: Logo, Ticker, Nama Perusahaan, & Badge Pasar */}
+        {/* Kelompok Kiri: Logo, Ticker, Nama Perusahaan, & Badge Pasar (Tanpa Container Box) */}
         <div className="flex items-start gap-4 min-w-0">
-          <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-xl bg-white dark:bg-[#0c0e14] p-2 border border-slate-200/90 dark:border-slate-800 flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center flex-shrink-0 bg-transparent border-0 p-0">
             <img
               src={stock?.logoUrl || `https://assets.stockbit.com/logos/companies/${quote.symbol}.png`}
               alt={quote.symbol}
@@ -145,29 +145,17 @@ export default function StockDetailCard({
           </div>
 
           <div className="min-w-0 space-y-1.5">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
               <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 leading-none">
                 {quote.symbol}
               </h1>
-              <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold tracking-wide border border-slate-200 dark:border-slate-750 bg-slate-50 dark:bg-slate-850 text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1 select-none">
                 <span>{stock?.exchange || "IDX"}</span>
                 <img src={idxCircleImg} alt="IDX" className="w-3.5 h-3.5 rounded-full object-cover shrink-0" />
               </span>
               {stock?.isIdx80 && (
-                <span className="px-2 py-0.5 rounded-md text-[11px] font-medium border border-[#0e4429] bg-[#062c19] text-[#2fe695]">
-                  Konstituen IDX80
-                </span>
-              )}
-              {fromCache ? (
-                <span
-                  className="px-2 py-0.5 rounded-md text-[11px] font-medium border border-slate-200 dark:border-slate-750 bg-slate-50 dark:bg-slate-850 text-slate-400"
-                  title="Data disajikan instan dari cache PostgreSQL"
-                >
-                  PostgreSQL Cache
-                </span>
-              ) : (
-                <span className="px-2 py-0.5 rounded-md text-[11px] font-medium border border-slate-200 dark:border-slate-750 bg-slate-50 dark:bg-slate-850 text-slate-400">
-                  Live Feed
+                <span className="text-xs font-bold text-emerald-600 dark:text-[#2fe695] select-none">
+                  IDX80
                 </span>
               )}
             </div>
