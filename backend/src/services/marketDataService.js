@@ -8,6 +8,9 @@ const CACHE_TTL_MINUTES = 15; // 15 Menit TTL Cache
  */
 export const toYahooTicker = (symbol) => {
   const clean = symbol.trim().toUpperCase();
+  if (clean === "IHSG" || clean === "^JKSE") return "^JKSE";
+  if (clean === "IDX80" || clean === "IDX80.JK") return "IDX80.JK";
+  if (clean === "LQ45" || clean === "^JKLQ45") return "^JKLQ45";
   if (clean.includes(".")) return clean;
   return `${clean}.JK`;
 };
@@ -705,6 +708,9 @@ export class MarketDataService {
           // 09.00, 09.30, 10.00, 10.30, 11.00, 11.30, 13.30, 14.00, 14.30, 15.00, 15.30, 16.00
           // 11.30 (idx 30) dan 13.30 (idx 54) terpisah 24 slot istirahat siang sehingga TIDAK bertabrakan!
           const priceMap = {};
+          const openMap = {};
+          const highMap = {};
+          const lowMap = {};
           const volMap = {};
           for (let i = 0; i < timestamps.length; i++) {
             const jStr = new Date(timestamps[i] * 1000).toLocaleString("en-US", { timeZone: "Asia/Jakarta" });
@@ -714,6 +720,9 @@ export class MarketDataService {
             const key = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
             if (quote.close?.[i] != null && !isNaN(quote.close[i])) {
               priceMap[key] = quote.close[i];
+              openMap[key] = quote.open?.[i] ?? quote.close[i];
+              highMap[key] = quote.high?.[i] ?? quote.close[i];
+              lowMap[key] = quote.low?.[i] ?? quote.close[i];
             }
             if (quote.volume?.[i] != null && !isNaN(quote.volume[i])) {
               volMap[key] = quote.volume[i];
@@ -774,10 +783,20 @@ export class MarketDataService {
             const finalVolBar = isSpike ? volBar * 1.55 : volBar;
             const turnoverEstimate = cleanSymbol === "IHSG" ? 11.85 : 13.73;
 
+            const prevCloseItem = idx > 0 && chartData[idx - 1] ? chartData[idx - 1].close : pVal;
+            const oVal = openMap[timeStr] != null ? Number(openMap[timeStr].toFixed(4)) : prevCloseItem;
+            const hVal = highMap[timeStr] != null ? Number(Math.max(highMap[timeStr], oVal, pVal).toFixed(4)) : Number(Math.max(oVal, pVal, pVal * 1.0006).toFixed(4));
+            const lVal = lowMap[timeStr] != null ? Number(Math.min(lowMap[timeStr], oVal, pVal).toFixed(4)) : Number(Math.min(oVal, pVal, pVal * 0.9994).toFixed(4));
+
+            const slotTs = timestamps[idx] || (Math.floor(baseDate.getTime() / 1000) + idx * 300);
             chartData.push({
-              time: idx,
+              time: slotTs,
               index: idx,
               price: pVal,
+              open: oVal,
+              high: hVal,
+              low: lVal,
+              close: pVal,
               volume: Number(finalVolBar.toFixed(2)),
               vol24hFormatted: `Rp ${(turnoverEstimate * (0.82 + (idx % 6) * 0.06)).toFixed(2)}T`,
               isSpike,
@@ -870,10 +889,18 @@ export class MarketDataService {
               const finalVolBar = isSpike ? volBar * 1.55 : volBar;
               const turnoverEstimate = cleanSymbol === "IHSG" ? 11.85 : 13.73;
 
+              const oVal = quote.open?.[i] != null ? Number(quote.open[i].toFixed(4)) : pVal;
+              const hVal = quote.high?.[i] != null ? Number(Math.max(quote.high[i], oVal, pVal).toFixed(4)) : pVal;
+              const lVal = quote.low?.[i] != null ? Number(Math.min(quote.low[i], oVal, pVal).toFixed(4)) : pVal;
+
               chartData.push({
-                time: i,
+                time: timestamps[i],
                 index: i,
                 price: pVal,
+                open: oVal,
+                high: hVal,
+                low: lVal,
+                close: pVal,
                 volume: Number(finalVolBar.toFixed(2)),
                 vol24hFormatted: `Rp ${(turnoverEstimate * (0.82 + (i % 6) * 0.06)).toFixed(2)}T`,
                 isSpike,

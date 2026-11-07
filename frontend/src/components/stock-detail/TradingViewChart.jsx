@@ -15,6 +15,7 @@ export default function TradingViewChart({
   isDarkMode = false,
   symbol = "BBCA",
 }) {
+  const chartWrapperRef = useRef(null);
   const chartContainerRef = useRef(null);
   const chartInstanceRef = useRef(null);
   const mainSeriesRef = useRef(null);
@@ -315,8 +316,27 @@ export default function TradingViewChart({
 
     window.addEventListener("resize", handleResize);
 
+    // Listener Fullscreen API untuk resize chart otomatis ke tinggi layar penuh
+    const handleFsChange = () => {
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      setIsFullscreen(isFs);
+      if (chart && container) {
+        setTimeout(() => {
+          const newWidth = container.clientWidth;
+          const newHeight = isFs ? Math.max(window.innerHeight - 150, 520) : 460;
+          chart.applyOptions({ width: newWidth, height: newHeight });
+          chart.timeScale().fitContent();
+        }, 80);
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFsChange);
+    document.addEventListener("webkitfullscreenchange", handleFsChange);
+
     return () => {
       window.removeEventListener("resize", handleResize);
+      document.removeEventListener("fullscreenchange", handleFsChange);
+      document.removeEventListener("webkitfullscreenchange", handleFsChange);
       if (chartInstanceRef.current) {
         chartInstanceRef.current.remove();
         chartInstanceRef.current = null;
@@ -325,13 +345,21 @@ export default function TradingViewChart({
   }, [activeCandles, isDarkMode, chartType, range]);
 
   const toggleFullscreen = () => {
-    const el = chartContainerRef.current?.parentElement;
+    const el = chartWrapperRef.current;
     if (!el) return;
 
-    if (!document.fullscreenElement) {
-      el.requestFullscreen?.().then(() => setIsFullscreen(true)).catch(() => {});
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      if (el.requestFullscreen) {
+        el.requestFullscreen().catch(() => {});
+      } else if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
+      }
     } else {
-      document.exitFullscreen?.().then(() => setIsFullscreen(false)).catch(() => {});
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
     }
   };
 
@@ -349,9 +377,16 @@ export default function TradingViewChart({
       : activeCandle?.close ?? 0;
 
   return (
-    <div className="space-y-3">
+    <div
+      ref={chartWrapperRef}
+      className={
+        isFullscreen
+          ? "fixed inset-0 z-50 bg-white dark:bg-[#080808] p-6 overflow-y-auto space-y-4"
+          : "w-full space-y-3 bg-transparent p-0 border-0"
+      }
+    >
       {/* 1. TOP CONTROLS BAR: Timeframe Pills on Left & Chart Type Toggles on Right */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800/80 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-white/[0.08] pb-3">
         {/* Left: Timeframe Range Buttons (1, 2, 3, 4 Jam, 1 Hari, 1 Minggu, 1 Bulan, 3, 6 Bulan, 1 Tahun) */}
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl overflow-x-auto max-w-full scrollbar-none">
           {ranges.map((r) => (
@@ -359,9 +394,9 @@ export default function TradingViewChart({
               key={r.value}
               onClick={() => onRangeChange && onRangeChange(r.value)}
               title={r.title}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                 range === r.value
-                  ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm font-bold"
+                  ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs font-bold"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
               }`}
             >
@@ -371,15 +406,15 @@ export default function TradingViewChart({
           ))}
         </div>
 
-        {/* Right: Chart Type Toggles */}
+        {/* Right: Chart Type Toggles & Fullscreen */}
         <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
           {/* Mode Area / Line Chart */}
           <button
             onClick={() => setChartType("area")}
             title="Tampilan Grafik Garis / Area (Gradient)"
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               chartType === "area"
-                ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm"
+                ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs"
                 : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
             }`}
           >
@@ -390,22 +425,36 @@ export default function TradingViewChart({
           <button
             onClick={() => setChartType("candle")}
             title="Tampilan Grafik Candlestick Lilin (OHLC)"
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               chartType === "candle"
-                ? "bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
+                ? "bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs"
                 : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
             }`}
           >
             Candlestick
           </button>
 
-          {/* Fullscreen */}
+          {/* Fullscreen Toggle */}
           <button
             onClick={toggleFullscreen}
-            title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
-            className="px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors"
+            title={isFullscreen ? "Keluar Layar Penuh (Esc)" : "Mode Layar Penuh"}
+            className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
-            {isFullscreen ? "Kecilkan" : "Layar Penuh"}
+            {isFullscreen ? (
+              <>
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M4 14h6m0 0v6m0-6l-7 7m17-11h-6m0 0V4m0 6l7-7m-7 17l7-7m0 0v6m0-6h-6M4 4l7 7m0 0V4m0 7H4" />
+                </svg>
+                <span>Kecilkan</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+                <span>Layar Penuh</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -481,9 +530,9 @@ export default function TradingViewChart({
         )}
       </div>
 
-      {/* 3. CHART CANVAS CONTAINER */}
-      <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
-        <div ref={chartContainerRef} className="w-full" style={{ minHeight: "460px" }} />
+      {/* 3. CHART CANVAS CONTAINER (TANPA CONTAINER LATAR DI BELAKANG) */}
+      <div className="relative overflow-hidden bg-transparent border-0 shadow-none">
+        <div ref={chartContainerRef} className="w-full" style={{ minHeight: isFullscreen ? "calc(100vh - 160px)" : "460px" }} />
       </div>
     </div>
   );

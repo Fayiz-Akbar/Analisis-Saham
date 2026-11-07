@@ -90,6 +90,45 @@ export function PublisherLogo({ source, className = "w-4 h-4" }) {
     );
   }
 
+  if (s.includes("bisnis")) {
+    return (
+      <div
+        className={`${className} rounded-full bg-[#1e3a8a] inline-flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-blue-500/30`}
+        title="Bisnis.com"
+      >
+        <span className="text-[7.5px] font-bold text-white font-serif leading-none">
+          B
+        </span>
+      </div>
+    );
+  }
+
+  if (s.includes("kompas")) {
+    return (
+      <div
+        className={`${className} rounded-full bg-[#ea580c] inline-flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-orange-400/30`}
+        title="Kompas.com"
+      >
+        <span className="text-[8px] font-black text-white font-serif leading-none">
+          K
+        </span>
+      </div>
+    );
+  }
+
+  if (s.includes("emiten")) {
+    return (
+      <div
+        className={`${className} rounded-full bg-[#059669] inline-flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-emerald-400/30`}
+        title="Emitennews"
+      >
+        <span className="text-[6.5px] font-bold text-white font-sans leading-none">
+          EN
+        </span>
+      </div>
+    );
+  }
+
   // Fallback untuk media lainnya
   return (
     <div

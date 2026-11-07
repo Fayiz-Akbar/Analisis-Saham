@@ -144,7 +144,7 @@ export default function App() {
     <AuthProvider>
       <div
         className={`min-h-screen ${
-          darkMode ? "dark bg-[#080808] text-[#F5F5F5]" : "bg-slate-50 text-slate-900"
+          darkMode ? "dark bg-[#080808] text-[#F5F5F5]" : "bg-white text-slate-900"
         } transition-colors duration-200 flex flex-col`}
       >
         {/* Header Utama Aplikasi Sesuai 9 Menu PRD + Pintasan Portal Admin */}

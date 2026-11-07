@@ -124,7 +124,7 @@ export default function StockDetailCard({
   const effectiveFundamentals = fundamentalData || stock?.fundamentals;
 
   return (
-    <div className="p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#080808] space-y-6">
+    <div className="w-full bg-transparent p-0 border-0 shadow-none space-y-6">
       {/* ========================================================
           1. STOCK OVERVIEW HEADER
           Logo, Ticker, Nama Perusahaan, Badges, Harga Live, & Perubahan
@@ -219,42 +219,42 @@ export default function StockDetailCard({
       </div>
 
       {/* ========================================================
-          3. RINGKASAN DATA PASAR (MARKET SNAPSHOT)
+          3. RINGKASAN DATA PASAR (MARKET SNAPSHOT - TANPA CONTAINER BELAKANG)
           ======================================================== */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-4 border-t border-slate-200 dark:border-slate-850 text-xs">
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0c0e14] border border-slate-200/60 dark:border-slate-800">
-          <span className="text-slate-400 block mb-1">Penutupan Kemarin</span>
-          <span className="font-mono font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-4 border-t border-slate-200 dark:border-white/[0.08] text-xs">
+        <div className="bg-transparent border-0 shadow-none p-1 flex flex-col justify-between">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Penutupan Kemarin</span>
+          <span className="font-mono font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">
             Rp {Number(quote.chartPreviousClose).toLocaleString("id-ID")}
           </span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0c0e14] border border-slate-200/60 dark:border-slate-800">
-          <span className="text-slate-400 block mb-1">Rentang Hari Ini</span>
-          <span className="font-mono font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200">
+        <div className="bg-transparent border-0 shadow-none p-1 flex flex-col justify-between">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Rentang Hari Ini</span>
+          <span className="font-mono font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">
             {quote.regularMarketDayLow ? `Rp ${Number(quote.regularMarketDayLow).toLocaleString("id-ID")}` : "-"} -{" "}
             {quote.regularMarketDayHigh ? `Rp ${Number(quote.regularMarketDayHigh).toLocaleString("id-ID")}` : "-"}
           </span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0c0e14] border border-slate-200/60 dark:border-slate-800">
-          <span className="text-slate-400 block mb-1">Rentang 52 Minggu</span>
-          <span className="font-mono font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200">
+        <div className="bg-transparent border-0 shadow-none p-1 flex flex-col justify-between">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Rentang 52 Minggu</span>
+          <span className="font-mono font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">
             {quote.fiftyTwoWeekLow ? `Rp ${Number(quote.fiftyTwoWeekLow).toLocaleString("id-ID")}` : "-"} -{" "}
             {quote.fiftyTwoWeekHigh ? `Rp ${Number(quote.fiftyTwoWeekHigh).toLocaleString("id-ID")}` : "-"}
           </span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0c0e14] border border-slate-200/60 dark:border-slate-800">
-          <span className="text-slate-400 block mb-1">Volume Perdagangan</span>
-          <span className="font-mono font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200">
+        <div className="bg-transparent border-0 shadow-none p-1 flex flex-col justify-between">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Volume Perdagangan</span>
+          <span className="font-mono font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">
             {quote.regularMarketVolume ? Number(quote.regularMarketVolume).toLocaleString("id-ID") : "-"}
           </span>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0c0e14] border border-slate-200/60 dark:border-slate-800 col-span-2 sm:col-span-1">
-          <span className="text-slate-400 block mb-1">Kapitalisasi Pasar</span>
-          <span className="font-mono font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200">
+        <div className="bg-transparent border-0 shadow-none p-1 flex flex-col justify-between col-span-2 sm:col-span-1">
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block mb-0.5">Kapitalisasi Pasar</span>
+          <span className="font-mono font-bold text-xs sm:text-sm text-slate-900 dark:text-slate-100">
             {formatMarketCap(effectiveFundamentals?.marketCap)}
           </span>
         </div>

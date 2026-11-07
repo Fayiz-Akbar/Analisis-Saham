@@ -5,17 +5,22 @@ import {
 import TopMoversSection from "../dashboard/TopMoversSection";
 import LatestNewsSection from "../dashboard/LatestNewsSection";
 
-// Generate smooth cubic bezier spline SVG path
-function generateSmoothCurve(values, width = 280, height = 110, padding = 12) {
-  if (!values || values.length < 2) {
-    values = [50, 48, 55, 42, 60, 52, 65, 58, 70];
-  }
+// Generate smooth cubic bezier spline SVG path persis tampilan Watchlist (Garis Glow Hijau/Merah + Area Gradien + Grid Sumbu Y)
+function generateWatchlistStyleChart(values, width = 280, height = 110) {
+  const padLeft = 38;
+  const padRight = 8;
+  const padTop = 12;
+  const padBottom = 12;
 
-  let activeValues = [...values];
+  const innerW = width - padLeft - padRight;
+  const innerH = height - padTop - padBottom;
+
+  let activeValues = Array.isArray(values) && values.length >= 2 ? [...values] : [4900, 4920, 4890, 4910, 4930, 4900];
+
   const minVal = Math.min(...activeValues);
   const maxVal = Math.max(...activeValues);
 
-  // Jika harga stagnan tanpa fluktuasi, berikan gelombang halus agar tidak menjadi garis datar mati
+  // Jika harga stagnan tanpa fluktuasi, berikan gelombang halus
   if (minVal === maxVal) {
     activeValues = [
       minVal * 0.995,
@@ -31,9 +36,15 @@ function generateSmoothCurve(values, width = 280, height = 110, padding = 12) {
   const max = Math.max(...activeValues);
   const range = max - min || 1;
 
+  // Margin vertikal 8% agar kurva tidak menempel di batas atas / bawah
+  const padV = range * 0.08;
+  const domainMin = min - padV;
+  const domainMax = max + padV;
+  const domainRange = domainMax - domainMin || 1;
+
   const points = activeValues.map((val, idx) => {
-    const x = padding + (idx / (values.length - 1)) * (width - 2 * padding);
-    const y = height - padding - ((val - min) / range) * (height - 2 * padding);
+    const x = padLeft + (idx / (activeValues.length - 1)) * innerW;
+    const y = padTop + innerH - ((val - domainMin) / domainRange) * innerH;
     return { x: Number(x.toFixed(1)), y: Number(y.toFixed(1)) };
   });
 
@@ -52,9 +63,17 @@ function generateSmoothCurve(values, width = 280, height = 110, padding = 12) {
     linePath += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
   }
 
-  const areaPath = `${linePath} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
+  const baselineY = padTop + innerH;
+  const areaPath = `${linePath} L ${points[points.length - 1].x} ${baselineY} L ${points[0].x} ${baselineY} Z`;
 
-  return { linePath, areaPath, lastPoint: points[points.length - 1] };
+  // 3 level grid horizontal dengan label harga persis Watchlist
+  const gridLevels = [
+    { val: max, y: padTop + innerH - ((max - domainMin) / domainRange) * innerH },
+    { val: (min + max) / 2, y: padTop + innerH - (((min + max) / 2 - domainMin) / domainRange) * innerH },
+    { val: min, y: padTop + innerH - ((min - domainMin) / domainRange) * innerH },
+  ];
+
+  return { linePath, areaPath, gridLevels, padLeft, innerW };
 }
 
 export default function DashboardView({ onSelectStock }) {
@@ -331,11 +350,12 @@ export default function DashboardView({ onSelectStock }) {
                 </div>
               ))
             : filteredStocks.map((stock) => {
-                const { linePath, areaPath, lastPoint } = generateSmoothCurve(stock.sparkline);
+                const { linePath, areaPath, gridLevels, padLeft, innerW } = generateWatchlistStyleChart(stock.sparkline);
                 const changeSign = stock.changeAmount > 0 ? "+" : (stock.changeAmount < 0 ? "-" : "");
                 const formattedPrice = `Rp ${stock.price.toLocaleString("id-ID")}`;
                 const formattedNominal = `${changeSign}${Math.abs(stock.changeAmount).toLocaleString("id-ID")}`;
                 const formattedPercent = `(${changeSign}${Math.abs(stock.changePercent).toFixed(2)}%)`;
+                const isPositive = stock.isUp || stock.changePercent >= 0;
 
                 return (
                   <div
@@ -371,39 +391,67 @@ export default function DashboardView({ onSelectStock }) {
                       </div>
                     </div>
 
-                    {/* BAGIAN TENGAH: Gelombang Sparkline Halus */}
+                    {/* BAGIAN TENGAH: Kurva Finansial Watchlist Style (Garis Glow Hijau/Merah + Area Gradien + Grid Sumbu Y) */}
                     <div className="my-auto py-2 z-10 w-full overflow-hidden">
                       <svg
                         viewBox="0 0 280 110"
                         className="w-full h-28 overflow-visible"
                       >
                         <defs>
-                          <linearGradient id={`area-glow-${stock.symbol}`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.15" />
-                            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
+                          <linearGradient id={`area-grad-${stock.symbol}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity="0.28" />
+                            <stop offset="65%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity="0.06" />
+                            <stop offset="100%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity="0.00" />
                           </linearGradient>
+
+                          <filter id={`stockCardGlow-${stock.symbol}`} x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="2.2" result="coloredBlur" />
+                            <feMerge>
+                              <feMergeNode in="coloredBlur" />
+                              <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                          </filter>
                         </defs>
 
+                        {/* Garis Grid Horizontal & Label Harga Sumbu Y Persis Watchlist */}
+                        {gridLevels.map((g, idx) => (
+                          <g key={idx}>
+                            <line
+                              x1={padLeft}
+                              y1={g.y}
+                              x2={padLeft + innerW}
+                              y2={g.y}
+                              className="stroke-slate-200/50 dark:stroke-slate-800/60"
+                              strokeDasharray="2 3"
+                              strokeWidth="1"
+                            />
+                            <text
+                              x={padLeft - 6}
+                              y={g.y + 3}
+                              textAnchor="end"
+                              className="fill-slate-400 dark:fill-slate-500 text-[9px] font-mono select-none"
+                            >
+                              {g.val >= 1000 ? Math.round(g.val) : g.val.toFixed(1)}
+                            </text>
+                          </g>
+                        ))}
+
+                        {/* Area Gradien Halus di Bawah Kurva */}
                         <path
                           d={areaPath}
-                          fill={`url(#area-glow-${stock.symbol})`}
+                          fill={`url(#area-grad-${stock.symbol})`}
+                          stroke="none"
                         />
 
+                        {/* Garis Kurva Saham Halus Glowing Hijau/Merah */}
                         <path
                           d={linePath}
                           fill="none"
-                          stroke="currentColor"
-                          strokeWidth="3"
+                          stroke={isPositive ? "#10b981" : "#ef4444"}
+                          strokeWidth="2.4"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          className="text-slate-800 dark:text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.15)] dark:drop-shadow-[0_2px_8px_rgba(255,255,255,0.35)]"
-                        />
-
-                        <circle
-                          cx={lastPoint.x}
-                          cy={lastPoint.y}
-                          r="3.5"
-                          className="fill-slate-800 dark:fill-white drop-shadow-[0_0_6px_rgba(0,0,0,0.3)] dark:drop-shadow-[0_0_6px_rgba(255,255,255,0.8)]"
+                          filter={`url(#stockCardGlow-${stock.symbol})`}
                         />
                       </svg>
                     </div>

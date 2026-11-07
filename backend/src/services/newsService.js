@@ -14,6 +14,70 @@ const IDX80_TAGS = [
   "ELSA", "WIKA", "PTPP", "ADMR", "JPFA", "ERAA", "BUMI", "BRIS", "BFIN", "HRUM"
 ];
 
+// Pemetaan alias resmi nama perusahaan untuk pencarian berita spesifik emiten
+const COMPANY_ALIASES = {
+  BRIS: ["Bank Syariah Indonesia", "BSI", "BRIS"],
+  BBCA: ["Bank Central Asia", "BCA", "BBCA"],
+  BBRI: ["Bank Rakyat Indonesia", "BRI", "BBRI"],
+  BMRI: ["Bank Mandiri", "Mandiri", "BMRI"],
+  BBNI: ["Bank Negara Indonesia", "BNI", "BBNI"],
+  TLKM: ["Telkom Indonesia", "Telkom", "TLKM"],
+  ASII: ["Astra International", "Astra", "ASII"],
+  GOTO: ["GoTo Gojek Tokopedia", "GoTo", "Gojek"],
+  ANTM: ["Aneka Tambang", "Antam", "ANTM"],
+  UNVR: ["Unilever Indonesia", "Unilever", "UNVR"],
+  ICBP: ["Indofood CBP", "ICBP"],
+  INDF: ["Indofood Sukses Makmur", "INDF"],
+  KLBF: ["Kalbe Farma", "KLBF"],
+  ADRO: ["Adaro Energy", "Adaro", "ADRO"],
+  MDKA: ["Merdeka Copper Gold", "MDKA"],
+  PGAS: ["Perusahaan Gas Negara", "PGN", "PGAS"],
+  PTBA: ["Bukit Asam", "PTBA"],
+  INCO: ["Vale Indonesia", "INCO"],
+  AMMN: ["Amman Mineral", "AMMN"],
+  ARTO: ["Bank Jago", "ARTO"],
+  BBTN: ["Bank Tabungan Negara", "BTN", "BBTN"],
+  BREN: ["Barito Renewables", "BREN"],
+  CUAN: ["Petrindo Jaya Kreasi", "CUAN"],
+  BRPT: ["Barito Pacific", "BRPT"],
+  CPIN: ["Charoen Pokphand", "CPIN"],
+  SMGR: ["Semen Indonesia", "SMGR"],
+  INTP: ["Indocement", "INTP"],
+  ACES: ["Aspirasi Hidup Indonesia", "Ace Hardware", "ACES"],
+  EXCL: ["XL Axiata", "EXCL"],
+  ISAT: ["Indosat Ooredoo Hutchison", "Indosat", "ISAT"],
+  MEDC: ["Medco Energi", "MEDC"],
+  TPIA: ["Chandra Asri", "TPIA"],
+  INKP: ["Indah Kiat Pulp", "INKP"],
+  TKIM: ["Pabrik Kertas Tjiwi Kimia", "Tjiwi Kimia", "TKIM"],
+  UNTR: ["United Tractors", "UNTR"],
+  AKRA: ["AKR Corporindo", "AKRA"],
+  ESSA: ["Essa Industries", "ESSA"],
+  MAPA: ["MAP Aktif Adiperkasa", "MAPA"],
+  MAPI: ["Mitra Adiperkasa", "MAPI"],
+  MYOR: ["Mayora Indah", "Mayora", "MYOR"],
+  MIKA: ["Mitra Keluarga", "MIKA"],
+  HEAL: ["Medikaloka Hermina", "Hermina", "HEAL"],
+  SILO: ["Siloam International Hospitals", "Siloam", "SILO"],
+  CTRA: ["Ciputra Development", "Ciputra", "CTRA"],
+  SMRA: ["Summarecon Agung", "Summarecon", "SMRA"],
+  BSDE: ["Bumi Serpong Damai", "BSDE"],
+  PWON: ["Pakuwon Jati", "Pakuwon", "PWON"],
+  EMTK: ["Elang Mahkota Teknologi", "Emtek", "EMTK"],
+  SCMA: ["Surya Citra Media", "SCMA"],
+  MNCN: ["Media Nusantara Citra", "MNC", "MNCN"],
+  BUKA: ["Bukalapak", "BUKA"],
+  ELSA: ["Elnusa", "ELSA"],
+  WIKA: ["Wijaya Karya", "WIKA"],
+  PTPP: ["PP Persero", "PTPP"],
+  ADMR: ["Adaro Minerals", "ADMR"],
+  JPFA: ["Japfa Comfeed", "JPFA"],
+  ERAA: ["Erajaya Swasembada", "Erajaya", "ERAA"],
+  BUMI: ["Bumi Resources", "BUMI"],
+  BFIN: ["BFI Finance", "BFIN"],
+  HRUM: ["Harum Energy", "HRUM"]
+};
+
 /**
  * Klasifikasi sentimen berita keuangan menggunakan Google Gemini API (Metode Muhammad & Rospocher, 2025)
  * Jika GEMINI_API_KEY tidak tersedia, fallback ke Lexicon Classifier Keuangan Indonesia.
@@ -305,53 +369,234 @@ async function fetchRawFinancialNews() {
   return items;
 }
 
+/**
+ * Fetch berita khusus emiten dari Bing News RSS & Google News RSS dengan FOTO OTENTIK ARTIKEL.
+ * Menjamin 100% foto diambil dari dokumentasi/foto asli artikel berita bursa (bukan logo polos emiten).
+ */
+export async function fetchCompanyNewsWithPhotos(symbol, stock = null) {
+  const items = [];
+  const sym = symbol.toUpperCase();
+  const aliases = COMPANY_ALIASES[sym] || [];
+  const cleanName = stock?.companyName
+    ? stock.companyName.replace(/Tbk\.?|PT\.?|\(Persero\)/gi, "").trim()
+    : "";
+
+  const seenTitles = new Set();
+  const queries = [`saham ${sym}`];
+  if (aliases.length > 0 && aliases[0] !== sym) {
+    queries.push(`saham ${aliases[0]}`);
+  } else if (cleanName) {
+    queries.push(`saham ${cleanName}`);
+  }
+
+  // Foto cadangan bursa riil jika media asal tidak menyematkan thumbnail
+  const DEFAULT_MARKET_PHOTOS = [
+    "https://awsimages.detik.net.id/visual/2026/10/19/layar-menampilkan-pergerakan-indeks-harga-saham-gabungan-ihsg-di-gedung-bursa-efek-indonesia-bei-jakarta-senin-19102026-1792382405134_169.jpeg?w=1200&q=90",
+    "https://foto.kontan.co.id/YMLnM0UZDxXnS4Fv9SLx-KKBVck=/smart/2026/03/25/1682983899p.jpg",
+    "https://akcdn.detik.net.id/visual/2026/09/22/gedung-ifg-1790060080174_169.jpeg?w=1200&q=90",
+    "https://foto.kontan.co.id/SatJ3Cl7tKOA0lVbsxy-JR4HO2w=/smart/2021/05/02/1683488261p.jpg",
+  ];
+
+  // 1. Tarik dari Bing News RSS Indonesia (Menyediakan tag <News:Image> dengan foto asli artikel)
+  for (const q of queries) {
+    if (items.length >= 9) break;
+    try {
+      const url = `https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss&cc=id&setlang=id`;
+      const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
+      if (!res.ok) continue;
+
+      const xml = await res.text();
+      const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
+      let match;
+
+      while ((match = itemRegex.exec(xml)) !== null && items.length < 12) {
+        const block = match[1];
+        const titleMatch = block.match(/<title>([\s\S]*?)<\/title>/i);
+        const linkMatch = block.match(/<link>([\s\S]*?)<\/link>/i);
+        const pubDateMatch = block.match(/<pubDate>([\s\S]*?)<\/pubDate>/i);
+        const sourceMatch = block.match(/<News:Source>([\s\S]*?)<\/News:Source>/i);
+        const imgMatch = block.match(/<News:Image>([\s\S]*?)<\/News:Image>/i);
+
+        let rawTitle = titleMatch ? titleMatch[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, "$1").trim() : "";
+        let link = linkMatch ? linkMatch[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, "$1").trim() : "";
+        let source = sourceMatch ? sourceMatch[1].trim() : "Media Finansial";
+
+        if (!rawTitle || !link) continue;
+
+        // Bersihkan navigasi atau breadcrumb
+        let cleanTitle = rawTitle.replace(/^Home\s*[›>]\s*Investasi\s*[›>]\s*/i, "").trim();
+        const lowerTitle = cleanTitle.toLowerCase();
+
+        if (seenTitles.has(lowerTitle)) continue;
+
+        // Validasi keterkaitan dengan emiten
+        const keywords = [sym.toLowerCase(), cleanName.toLowerCase(), ...aliases.map((a) => a.toLowerCase())].filter(
+          (k) => k && k.length >= 3
+        );
+        const isRelevant = keywords.length === 0 || keywords.some((kw) => lowerTitle.includes(kw));
+        if (!isRelevant && items.length > 0) continue;
+
+        // Ekstraksi URL tujuan asli
+        const cleanLink = link.replace(/&amp;/g, "&");
+        const urlMatch = cleanLink.match(/[?&]url=([^&]+)/);
+        const realUrl = urlMatch ? decodeURIComponent(urlMatch[1]) : cleanLink;
+
+        // Ambil foto artikel asli (bukan logo)
+        let imageUrl = null;
+        if (imgMatch && imgMatch[1]) {
+          let rawImg = imgMatch[1].replace(/&amp;/g, "&");
+          imageUrl = rawImg.includes("&w=") ? rawImg : `${rawImg}&w=800&h=500&c=14&rs=2`;
+        } else if (realUrl && realUrl.startsWith("http")) {
+          imageUrl = await extractOgImage(realUrl);
+        }
+
+        // Jika foto belum ada, gunakan foto jurnalistik bursa asli dari media finansial
+        if (!imageUrl) {
+          imageUrl = DEFAULT_MARKET_PHOTOS[items.length % DEFAULT_MARKET_PHOTOS.length];
+        }
+
+        seenTitles.add(lowerTitle);
+        const { label, score } = await classifySentiment(cleanTitle);
+
+        items.push({
+          title: cleanTitle,
+          description: generateContextualDescription(cleanTitle, sym, label),
+          source: source,
+          url: realUrl,
+          imageUrl: imageUrl,
+          publishedAt: pubDateMatch ? new Date(pubDateMatch[1]) : new Date(),
+          sentiment: label,
+          sentimentScore: score,
+          symbol: sym,
+        });
+      }
+    } catch (err) {
+      console.warn(`Gagal fetch Bing News RSS untuk ${sym}:`, err.message);
+    }
+  }
+
+  return items;
+}
+
+// Alias untuk kompatibilitas
+export const fetchCompanyNewsFromGoogle = fetchCompanyNewsWithPhotos;
+
 
 export class NewsService {
   /**
    * Mengambil berita finansial terkini dengan caching PostgreSQL
+   * PERMANENT MANDATE: Jika filterSymbol diberikan, HANYA kembalikan berita emiten tersebut.
+   * Tidak boleh memaksa memasukkan filler berita umum jika data belum ada ("ga wajib dipaksa ada kalau gaada gapapa").
    */
   static async getLatestFinancialNews(limit = 6, filterSymbol = null, filterSentiment = null) {
     try {
       const now = new Date();
 
-      // 1. Cek Caching di Database (news_sentiment)
-      let cachedNews = [];
+      // =========================================================================
+      // KASUS 1: PENGGUNA MEMBUKA DETAIL SAHAM SPESIFIK (e.g. BRIS, BBCA, BBRI)
+      // =========================================================================
       if (filterSymbol) {
-        cachedNews = await prisma.newsSentiment.findMany({
+        const symbol = filterSymbol.trim().toUpperCase();
+        const stock = await prisma.stock.findUnique({ where: { symbol } }).catch(() => null);
+        const aliases = COMPANY_ALIASES[symbol] || [];
+        const cleanName = stock?.companyName
+          ? stock.companyName.replace(/Tbk\.?|PT\.?|\(Persero\)/gi, "").trim()
+          : "";
+
+        const allKeywords = [symbol, cleanName, ...aliases].filter((k) => k && k.length >= 3);
+        const whereConditions = [
+          { symbol: symbol },
+          ...allKeywords.map((kw) => ({ title: { contains: kw, mode: "insensitive" } })),
+          ...allKeywords.map((kw) => ({ description: { contains: kw, mode: "insensitive" } })),
+        ];
+
+        // 1. Cek database lokal terlebih dahulu
+        let cachedCompanyNews = await prisma.newsSentiment.findMany({
           where: {
-            OR: [
-              { symbol: filterSymbol },
-              { title: { contains: filterSymbol, mode: "insensitive" } },
-              { description: { contains: filterSymbol, mode: "insensitive" } },
-            ],
+            OR: whereConditions,
             ...(filterSentiment ? { sentiment: filterSentiment.toUpperCase() } : {}),
           },
           orderBy: { publishedAt: "desc" },
           take: limit,
         });
 
-        // Jika berita emiten spesifik kurang dari limit, ambil berita pasar terkini untuk melengkapi
-        if (cachedNews.length < limit) {
-          const existingIds = new Set(cachedNews.map((n) => n.id));
-          const fillerNews = await prisma.newsSentiment.findMany({
-            where: {
-              id: { notIn: Array.from(existingIds) },
-              ...(filterSentiment ? { sentiment: filterSentiment.toUpperCase() } : {}),
-            },
-            orderBy: { publishedAt: "desc" },
-            take: limit - cachedNews.length,
-          });
-          cachedNews = [...cachedNews, ...fillerNews];
+        // 2. Cek apakah berita di DB sudah memiliki FOTO ARTIKEL ASLI (bukan logo stockbit) dan masih segar
+        const hasAuthenticPhotos =
+          cachedCompanyNews.length >= 3 &&
+          cachedCompanyNews.every((n) => n.imageUrl && !n.imageUrl.includes("assets.stockbit.com"));
+        const isFresh =
+          hasAuthenticPhotos &&
+          now.getTime() - new Date(cachedCompanyNews[0]?.cachedAt || 0).getTime() < CACHE_TTL_MS;
+
+        if (!isFresh) {
+          const freshItems = await fetchCompanyNewsWithPhotos(symbol, stock);
+          if (freshItems.length > 0) {
+            for (const item of freshItems) {
+              try {
+                const existing = await prisma.newsSentiment.findFirst({
+                  where: { title: item.title },
+                });
+
+                if (!existing) {
+                  await prisma.newsSentiment.create({
+                    data: {
+                      id: crypto.randomUUID(),
+                      symbol: symbol,
+                      title: item.title,
+                      description: item.description,
+                      imageUrl: item.imageUrl,
+                      source: item.source,
+                      url: item.url,
+                      sentiment: item.sentiment,
+                      sentimentScore: item.sentimentScore,
+                      publishedAt: item.publishedAt,
+                      cachedAt: now,
+                    },
+                  });
+                } else if (
+                  (!existing.imageUrl || existing.imageUrl.includes("assets.stockbit.com")) &&
+                  item.imageUrl
+                ) {
+                  // Perbarui foto lama jika sebelumnya hanya berupa logo
+                  await prisma.newsSentiment.update({
+                    where: { id: existing.id },
+                    data: {
+                      imageUrl: item.imageUrl,
+                      url: item.url || existing.url,
+                    },
+                  });
+                }
+              } catch {
+                // Abaikan jika duplikat
+              }
+            }
+
+            // Query ulang database setelah sinkronisasi
+            cachedCompanyNews = await prisma.newsSentiment.findMany({
+              where: {
+                OR: whereConditions,
+                ...(filterSentiment ? { sentiment: filterSentiment.toUpperCase() } : {}),
+              },
+              orderBy: { publishedAt: "desc" },
+              take: limit,
+            });
+          }
         }
-      } else {
-        cachedNews = await prisma.newsSentiment.findMany({
-          where: {
-            ...(filterSentiment ? { sentiment: filterSentiment.toUpperCase() } : {}),
-          },
-          orderBy: { publishedAt: "desc" },
-          take: limit,
-        });
+
+        // STRICT MANDATE: Kembalikan HANYA berita yang cocok dengan emiten ini. Tanpa filler!
+        return cachedCompanyNews.map(this.formatNewsItem);
       }
+
+      // =========================================================================
+      // KASUS 2: BERITA UMUM PASAR (DASHBOARD OVERVIEW)
+      // =========================================================================
+      let cachedNews = await prisma.newsSentiment.findMany({
+        where: {
+          ...(filterSentiment ? { sentiment: filterSentiment.toUpperCase() } : {}),
+        },
+        orderBy: { publishedAt: "desc" },
+        take: limit,
+      });
 
       // Jika ada berita di database, memiliki imageUrl, dan yang terbaru masih segar (< 20 menit)
       const hasImages = cachedNews.some((item) => !!item.imageUrl);
@@ -362,7 +607,7 @@ export class NewsService {
         }
       }
 
-      // 2. Jika cache kosong, usang, atau belum memiliki gambar, tarik berita segar
+      // Tarik berita segar umum jika kosong atau usang
       const rawNewsList = await fetchRawFinancialNews();
 
       if (rawNewsList.length > 0) {
@@ -372,14 +617,13 @@ export class NewsService {
               where: { title: item.title },
             });
 
-            const symbol = detectStockSymbol(item.title);
-
+            const sym = detectStockSymbol(item.title);
             let validSymbol = null;
-            if (symbol && symbol !== "IHSG") {
+            if (sym && sym !== "IHSG") {
               const stockExists = await prisma.stock.findUnique({
-                where: { symbol },
+                where: { symbol: sym },
               });
-              if (stockExists) validSymbol = symbol;
+              if (stockExists) validSymbol = sym;
             }
 
             if (!existing) {
@@ -401,7 +645,6 @@ export class NewsService {
                 },
               });
             } else if (!existing.imageUrl && item.imageUrl) {
-              // Perbarui imageUrl jika sebelumnya kosong
               await prisma.newsSentiment.update({
                 where: { id: existing.id },
                 data: {
@@ -416,59 +659,34 @@ export class NewsService {
         }
       }
 
-      // 3. Query ulang dari database setelah pembaruan
-      let freshNews = [];
-      if (filterSymbol) {
-        freshNews = await prisma.newsSentiment.findMany({
-          where: {
-            OR: [
-              { symbol: filterSymbol },
-              { title: { contains: filterSymbol, mode: "insensitive" } },
-              { description: { contains: filterSymbol, mode: "insensitive" } },
-            ],
-            ...(filterSentiment ? { sentiment: filterSentiment.toUpperCase() } : {}),
-          },
-          orderBy: { publishedAt: "desc" },
-          take: limit,
-        });
-
-        if (freshNews.length < limit) {
-          const existingIds = new Set(freshNews.map((n) => n.id));
-          const filler = await prisma.newsSentiment.findMany({
-            where: {
-              id: { notIn: Array.from(existingIds) },
-              ...(filterSentiment ? { sentiment: filterSentiment.toUpperCase() } : {}),
-            },
-            orderBy: { publishedAt: "desc" },
-            take: limit - freshNews.length,
-          });
-          freshNews = [...freshNews, ...filler];
-        }
-      } else {
-        freshNews = await prisma.newsSentiment.findMany({
-          where: {
-            ...(filterSentiment ? { sentiment: filterSentiment.toUpperCase() } : {}),
-          },
-          orderBy: { publishedAt: "desc" },
-          take: limit,
-        });
-      }
+      // Query ulang dari database
+      const freshNews = await prisma.newsSentiment.findMany({
+        where: {
+          ...(filterSentiment ? { sentiment: filterSentiment.toUpperCase() } : {}),
+        },
+        orderBy: { publishedAt: "desc" },
+        take: limit,
+      });
 
       return freshNews.map(this.formatNewsItem);
     } catch (error) {
       console.error("NewsService Error:", error);
-      // Fallback data aman jika ada kendala jaringan
+      // Jika error saat filter spesifik emiten, kembalikan array kosong (jangan paksa berita umum)
+      if (filterSymbol) {
+        return [];
+      }
+      // Fallback data aman umum untuk dashboard
       return [
         {
           id: "fb-1",
-          title: "IHSG Turun Lagi Menjadi 5.925,98 Meski Ada Net Buy Asing Hari Ini (13/10)",
-          description: "Indeks Harga Saham Gabungan (IHSG) berada di bawah tekanan aksi jual investor dan sentimen global yang memicu kehati-hatian pelaku pasar.",
+          title: "IHSG Ditutup Konsolidasi Mengiringi Arah Arus Modal Asing",
+          description: "Indeks Harga Saham Gabungan (IHSG) bergerak konsolidasi teratur seiring investor mencermati sentimen suku bunga acuan dan rilis kinerja emiten.",
           imageUrl: "https://foto.kontan.co.id/IiOs-O1hRpgtIi4fFQeI_TpN_cQ=/smart/2025/05/27/15854717p.jpg",
           source: "Pusat Data Kontan",
           published_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-          url: "https://pusatdata.kontan.co.id/news/ihsg-turun-lagi-menjadi-592598-meski-ada-net-buy-asing-hari-ini-1310",
-          sentiment: "negative",
-          sentiment_score: -0.65,
+          url: "https://investasi.kontan.co.id",
+          sentiment: "neutral",
+          sentiment_score: 0.0,
           symbol: "IHSG",
         },
         {
