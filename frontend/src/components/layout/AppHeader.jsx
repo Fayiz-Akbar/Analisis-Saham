@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import { LogOut, ShieldCheck, UserCheck, UserPlus } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 export default function AppHeader({
   activeTab,
@@ -7,6 +9,7 @@ export default function AppHeader({
   darkMode,
   toggleDarkMode,
 }) {
+  const { user, isAuthenticated, isAdmin, logout, openAuthModal } = useAuth();
   const [showAuthMenu, setShowAuthMenu] = useState(false);
   const authRef = useRef(null);
 
@@ -34,11 +37,17 @@ export default function AppHeader({
     { id: "ai", label: "AI Assistant" },
   ];
 
+  const roleBadgeLabel = isAdmin
+    ? "Administrator"
+    : user?.investorProfile === "EXPERIENCED"
+      ? "Investor (Expert)"
+      : "Investor (Pemula)";
+
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/95 dark:bg-[#080808]/95 border-b border-slate-200 dark:border-[#272727] backdrop-blur-md transition-colors shadow-xs dark:shadow-none">
+    <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-[#080808]/95 border-b border-slate-200 dark:border-[#272727] backdrop-blur-md transition-colors shadow-xs dark:shadow-none">
       <div className="max-w-[98%] mx-auto px-3 sm:px-4 lg:px-6 h-16 flex items-center justify-between gap-3">
         {/* ========================================================
-            KIRI: Logo Investpedia Resmi
+            KIRI: Logo Investpedia Resmi (Dukungan Light & Dark Mode)
             ======================================================== */}
         <div
           onClick={() => setActiveTab("dashboard")}
@@ -76,9 +85,29 @@ export default function AppHeader({
         </nav>
 
         {/* ========================================================
-            KANAN: Global Search Bar + User Profile / Auth + Theme
+            KANAN: Portal Admin Pill + Global Search + User Auth + Theme
             ======================================================== */}
         <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
+          {/* Pintasan Switch Admin <-> Sistem Utama (HANYA TAMPIL KETIKA SUDAH LOGIN SEBAGAI ADMIN) */}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setActiveTab(activeTab === "admin" ? "dashboard" : "admin")}
+              className={`h-9 px-3 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                activeTab === "admin"
+                  ? "bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-500 shadow-xs"
+                  : "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/25"
+              }`}
+              title={activeTab === "admin" ? "Beralih ke Sistem Utama (Publik)" : "Beralih ke Portal Administrator"}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">
+                {activeTab === "admin" ? "Ke Sistem Utama" : "Portal Admin"}
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            </button>
+          )}
+
           {/* 1. Global Stock Search Bar Button */}
           <button
             onClick={onOpenSearch}
@@ -95,51 +124,138 @@ export default function AppHeader({
             </svg>
           </button>
 
-          {/* 2. User Profile / Auth Button (Login, Register, Logout) */}
+          {/* 2. User Profile / Auth Button (Login, Register, Logout, Role Badge) */}
           <div ref={authRef} className="relative">
             <button
               onClick={() => setShowAuthMenu(!showAuthMenu)}
-              className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center text-slate-700 dark:text-white transition-all cursor-pointer shadow-xs dark:shadow-2xs"
+              className={`h-9 px-2.5 rounded-xl border flex items-center gap-2 transition-all cursor-pointer shadow-xs dark:shadow-2xs ${
+                isAuthenticated
+                  ? isAdmin
+                    ? "bg-indigo-500/15 border-indigo-500/40 text-indigo-700 dark:text-indigo-200 hover:bg-indigo-500/25"
+                    : "bg-emerald-500/15 border-emerald-500/40 text-emerald-700 dark:text-emerald-200 hover:bg-emerald-500/25"
+                  : "w-9 justify-center bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-white"
+              }`}
               title="Profil Pengguna & Autentikasi"
               aria-label="Akun Pengguna"
             >
               <svg
-                className="w-4 h-4 stroke-slate-700 dark:stroke-white stroke-2 fill-none"
+                className="w-4 h-4 stroke-current stroke-2 fill-none shrink-0"
                 viewBox="0 0 24 24"
               >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" strokeLinecap="round" strokeLinejoin="round" />
-                <circle cx="12" cy="7" r="4" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle
+                  cx="12"
+                  cy="7"
+                  r="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
+              {isAuthenticated && (
+                <span className="hidden md:inline text-[11px] font-bold tracking-tight max-w-[110px] truncate">
+                  {user?.name?.split(" ")[0]}
+                </span>
+              )}
             </button>
 
             {/* Auth Dropdown Popover */}
             {showAuthMenu && (
-              <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/98 dark:bg-[#12151e]/98 shadow-2xl p-4 z-50 text-xs space-y-3 backdrop-blur-md">
-                <div className="border-b border-slate-200 dark:border-slate-800 pb-2.5">
-                  <span className="font-bold text-slate-900 dark:text-white text-sm block">Autentikasi Pengguna</span>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">Sesi Investor Aktif</span>
-                </div>
+              <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/98 dark:bg-[#12151e]/98 shadow-2xl p-4 z-50 text-xs space-y-3 backdrop-blur-md">
+                {isAuthenticated ? (
+                  <>
+                    <div className="border-b border-slate-200 dark:border-slate-800 pb-3 space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-bold text-slate-900 dark:text-white text-sm truncate">
+                          {user?.name}
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${
+                            isAdmin
+                              ? "bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30"
+                              : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
+                          }`}
+                        >
+                          {roleBadgeLabel}
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 block truncate">
+                        {user?.email}
+                      </span>
+                    </div>
 
-                <div className="space-y-1.5">
-                  <button
-                    onClick={() => {
-                      alert("Fitur login pengguna berbasis JWT aktif.");
-                      setShowAuthMenu(false);
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 transition-opacity cursor-pointer"
-                  >
-                    Masuk (Login)
-                  </button>
-                  <button
-                    onClick={() => {
-                      alert("Fitur pendaftaran akun baru terbuka.");
-                      setShowAuthMenu(false);
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-                  >
-                    Daftar Akun Baru
-                  </button>
-                </div>
+                    <div className="space-y-1.5">
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveTab(activeTab === "admin" ? "dashboard" : "admin");
+                            setShowAuthMenu(false);
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-200 border border-indigo-500/30 transition-colors flex items-center justify-between cursor-pointer"
+                        >
+                          <span className="flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                            {activeTab === "admin" ? "Beralih ke Sistem Utama" : "Buka Portal Administrator"}
+                          </span>
+                          <span>→</span>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          logout();
+                          setShowAuthMenu(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/25 transition-colors flex items-center gap-2 cursor-pointer"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        Keluar (Logout Sesi)
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="border-b border-slate-200 dark:border-slate-800 pb-2.5">
+                      <span className="font-bold text-slate-900 dark:text-white text-sm block">
+                        Autentikasi Pengguna
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                        Masuk ke akun investor Anda
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          openAuthModal("login");
+                          setShowAuthMenu(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer"
+                      >
+                        <UserCheck className="w-3.5 h-3.5" />
+                        Masuk (Login Investor)
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          openAuthModal("register");
+                          setShowAuthMenu(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-2 cursor-pointer"
+                      >
+                        <UserPlus className="w-3.5 h-3.5" />
+                        Daftar Akun Investor Baru
+                      </button>
+                    </div>
+                  </>
+                )}
 
                 <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] text-slate-400 dark:text-slate-500 block leading-tight">

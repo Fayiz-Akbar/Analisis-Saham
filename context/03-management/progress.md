@@ -9,7 +9,8 @@ Overall Progress: **25%** (Seluruh Dokumen SSOT, PRD, dan Modul Teknis 100% Sele
 | Fase / Sprint | Modul / Fitur Utama | Status | Progres |
 |---|---|---|---|
 | **Fase 0** | **Architecture, PRD & Knowledge Base**: Dokumen SSOT, ERD, API specs, Setup guide, 13 Modul | **Completed** | 100% |
-| **Sprint 1 (Fayiz)** | **Foundation & Stock Analysis**: Auth JWT, DB Prisma, Seeding IDX80, Stock Search, Detail, Candlestick Chart, Dashboard | **Ready** | 0% |
+| **Sprint 1 (Fayiz)** | **Foundation & Stock Analysis**: Auth JWT, DB Prisma, Seeding IDX80, Stock Search, Detail, Candlestick Chart, Dashboard | **Completed** | 100% |
+| **Sprint 1 (Firman)** | **Admin Portal & Content Management**: RBAC JWT Admin, CRUD Modul Pembelajaran, CRUD Bank Soal Kuis Deterministik (`feat/admin-portal-manajemen-konten`) | **Completed** | 100% |
 | **Sprint 2 (Fayiz)** | **Screener & Comparison**: Stock Screener IDX80, Stock Comparison side-by-side 2–4 emiten | Planned | 0% |
 | **Sprint 3 (Fayiz)** | **News, Sentiment, Market**: News API, Sentimen Berita ([Positif]/[Netral]/[Negatif]), Global Market & Commodities | Planned | 0% |
 | **Sprint 4 (Fayiz)** | **AI Financial Assistant**: Context Builder, Gemini API Grounding, Profil Pemula vs Berpengalaman, Evaluasi Skripsi | Planned | 0% |
@@ -35,6 +36,10 @@ Overall Progress: **25%** (Seluruh Dokumen SSOT, PRD, dan Modul Teknis 100% Sele
 - [x] Implementasi modul Autentikasi lengkap (`/api/auth/register`, `/api/auth/login`, `/api/auth/me`) dengan JWT dan bcrypt.
 - [x] Implementasi `MarketDataService` integrasi Yahoo Finance API dengan akselerasi cache PostgreSQL JSONB.
 - [x] Implementasi endpoint REST API Saham (`/api/stocks/search`, `/api/stocks/:symbol/quote`, `/api/stocks/:symbol/history`).
+- [x] Implementasi Role-Based Access Control (RBAC) pemisahan peran `INVESTOR` vs `ADMIN` dengan middleware `verifyAdmin`.
+- [x] Implementasi backend API manajemen modul kurikulum edukasi 3 level (`/api/admin/modules`).
+- [x] Implementasi backend API bank soal kuis evaluasi deterministik (`/api/admin/quizzes` & `/api/admin/modules/:id/quizzes`).
+- [x] Implementasi antarmuka frontend Portal Admin (`/admin`), dasbor metrik kurikulum, editor modul, pratinjau markdown, dan editor bank soal.
 
 ---
 

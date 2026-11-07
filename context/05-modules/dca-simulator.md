@@ -54,6 +54,8 @@ Melakukan *backtesting* kuantitatif strategi akumulasi jangka panjang (6, 12, 24
 - **BR-DCA-001**: Dalam *Realistic Lot Mode*, pembelian saham hanya dapat bernilai bilangan bulat non-negatif ($0, 1, 2, \dots$ lot). Jika dana tersedia kurang dari harga 1 lot, jumlah lot dibeli adalah 0, dan seluruh dana menjadi sisa kas yang diteruskan ke bulan berikutnya.
 - **BR-DCA-002**: Jika tanggal eksekusi jatuh pada hari libur bursa (Sabtu, Minggu, atau hari libur nasional), sistem menggunakan harga penutupan hari bursa aktif berikutnya (*next trading day*).
 - **BR-DCA-003**: Nilai akhir portofolio wajib memasukkan sisa saldo kas yang belum terpakai secara akuntabel.
+- **BR-DCA-004**: **Isolasi Saldo Virtual (KF-15 & KF-18)**: Eksekusi simulasi DCA dan simulasi investasi historis murni bersifat komputasi analitik skenario dan **SAMA SEKALI TIDAK MENGUBAH** saldo modal virtual awal, kepemilikan saham aktif (*holdings*), atau riwayat transaksi virtual utama pengguna.
+- **BR-DCA-005**: Seluruh tampilan hasil simulasi wajib menyertakan label penanda bahwa hasil merupakan simulasi historis dan bukan jaminan imbal hasil di masa depan.
 
 ---
 
