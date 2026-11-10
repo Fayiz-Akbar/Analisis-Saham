@@ -48,6 +48,20 @@ enum DifficultyLevel {
   ADVANCED
 }
 
+// Status publikasi konten CMS pembelajaran
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// Status progres materi per pengguna
+enum LessonProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
 // Kunci jawaban resmi kuis pilihan ganda (deterministik A-D)
 enum QuizOptionKey {
   A
@@ -75,6 +89,8 @@ model User {
   aiAnalysisLogs        AiAnalysisLog[]
   portfolioTransactions PortfolioTransaction[]
   learningProgresses    LearningProgress[]
+  lessonProgresses      LearningLessonProgress[]
+  learningNotes         LearningNote[]
   quizAttempts          QuizAttempt[]
 
   @@index([role])
@@ -200,17 +216,17 @@ model Watchlist {
 }
 
 model AiAnalysisLog {
-  id                     String          @id @default(uuid()) @db.Uuid
-  userId                 String?         @map("user_id") @db.Uuid
-  symbol                 String?         @db.VarChar(10)
-  investorProfile        InvestorProfile @map("investor_profile")
-  userQuestion           String          @map("user_question") @db.Text
-  groundedContext        Json            @map("grounded_context")
-  aiResponse             String          @map("ai_response") @db.Text
-  factualConsistencyScore Decimal?       @map("factual_consistency_score") @db.Decimal(5, 2)
-  hallucinationFlag      Boolean         @default(false) @map("hallucination_flag")
-  latencyMs              Int             @map("latency_ms")
-  createdAt              DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  id                      String          @id @default(uuid()) @db.Uuid
+  userId                  String?         @map("user_id") @db.Uuid
+  symbol                  String?         @db.VarChar(10)
+  investorProfile         InvestorProfile @map("investor_profile")
+  userQuestion            String          @map("user_question") @db.Text
+  groundedContext         Json            @map("grounded_context")
+  aiResponse              String          @map("ai_response") @db.Text
+  factualConsistencyScore Decimal?        @map("factual_consistency_score") @db.Decimal(5, 2)
+  hallucinationFlag       Boolean         @default(false) @map("hallucination_flag")
+  latencyMs               Int             @map("latency_ms")
+  createdAt               DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
 
   user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
   stock Stock? @relation(fields: [symbol], references: [symbol], onDelete: SetNull)
@@ -255,27 +271,126 @@ model PortfolioTransaction {
   @@map("portfolio_transactions")
 }
 
-// Modul materi pembelajaran kurikulum 3 level (KF-02, KF-16, PB-12)
-model LearningModule {
-  id               String          @id @default(uuid()) @db.Uuid
-  title            String          @db.VarChar(200)
-  slug             String          @unique @db.VarChar(200)
-  level            DifficultyLevel
-  summary          String?         @db.VarChar(500)
-  contentBody      String          @map("content_body") @db.Text
-  estimatedMinutes Int             @default(5) @map("estimated_minutes")
-  orderIndex       Int             @default(1) @map("order_index")
-  isPublished      Boolean         @default(true) @map("is_published")
-  createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+// Course / Kelas Pembelajaran Terstruktur (CMS Hierarchy Level 1)
+model LearningCourse {
+  id                 String          @id @default(uuid()) @db.Uuid
+  title              String          @db.VarChar(200)
+  slug               String          @unique @db.VarChar(200)
+  description        String?         @db.Text
+  learningLevel      DifficultyLevel @default(BEGINNER) @map("learning_level")
+  learningObjectives Json            @default("[]") @map("learning_objectives")
+  tags               Json            @default("[]")
+  thumbnail          String?         @db.Text
+  status             ContentStatus   @default(PUBLISHED)
+  orderIndex         Int             @default(1) @map("order_index")
+  createdAt          DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
+  modules          LearningModule[]
+  lessonProgresses LearningLessonProgress[]
+
+  @@index([learningLevel, orderIndex])
+  @@index([status])
+  @@map("learning_courses")
+}
+
+// Modul materi pembelajaran kurikulum 3 level (KF-02, KF-16, PB-12 & CMS Hierarchy Level 2)
+model LearningModule {
+  id                 String          @id @default(uuid()) @db.Uuid
+  courseId           String?         @map("course_id") @db.Uuid
+  submoduleTitle     String?         @map("submodule_title") @db.VarChar(200)
+  title              String          @db.VarChar(200)
+  slug               String          @unique @db.VarChar(200)
+  level              DifficultyLevel
+  summary            String?         @db.VarChar(500)
+  contentBody        String          @map("content_body") @db.Text
+  contentBlocks      Json?           @map("content_blocks")
+  plainTextContent   String?         @map("plain_text_content") @db.Text
+  contentChunks      Json?           @map("content_chunks")
+  learningObjectives Json            @default("[]") @map("learning_objectives")
+  keywords           Json            @default("[]")
+  tags               Json            @default("[]")
+  references         Json            @default("[]")
+  estimatedMinutes   Int             @default(5) @map("estimated_minutes")
+  orderIndex         Int             @default(1) @map("order_index")
+  status             ContentStatus   @default(PUBLISHED)
+  version            Int             @default(1)
+  isPublished        Boolean         @default(true) @map("is_published")
+  publishedAt        DateTime?       @map("published_at") @db.Timestamptz(6)
+  createdAt          DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  course             LearningCourse?          @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  lessons            LearningLesson[]
   quizQuestions      QuizQuestion[]
   learningProgresses LearningProgress[]
+  lessonProgresses   LearningLessonProgress[]
+  learningNotes      LearningNote[]
   quizAttempts       QuizAttempt[]
 
+  @@index([courseId, orderIndex])
   @@index([level, orderIndex])
   @@index([isPublished])
+  @@index([status])
   @@map("learning_modules")
+}
+
+// Materi / Lesson Pembelajaran Berbasis Blok (CMS Hierarchy Level 3 & LLM-Ready Content)
+model LearningLesson {
+  id                 String          @id @default(uuid()) @db.Uuid
+  moduleId           String          @map("module_id") @db.Uuid
+  submoduleTitle     String?         @map("submodule_title") @db.VarChar(200)
+  title              String          @db.VarChar(200)
+  slug               String          @unique @db.VarChar(200)
+  summary            String?         @db.VarChar(500)
+  learningObjectives Json            @default("[]") @map("learning_objectives")
+  estimatedDuration  Int             @default(5) @map("estimated_duration")
+  keywords           Json            @default("[]")
+  tags               Json            @default("[]")
+  difficultyLevel    DifficultyLevel @default(BEGINNER) @map("difficulty_level")
+  contentBlocks      Json            @default("{\"schemaVersion\":1,\"blocks\":[]}") @map("content_blocks")
+  contentBody        String          @default("") @map("content_body") @db.Text
+  plainTextContent   String          @default("") @map("plain_text_content") @db.Text
+  contentChunks      Json            @default("[]") @map("content_chunks")
+  references         Json            @default("[]")
+  accessLevel        String          @default("PUBLIC") @map("access_level") @db.VarChar(30)
+  status             ContentStatus   @default(PUBLISHED)
+  version            Int             @default(1)
+  orderIndex         Int             @default(1) @map("order_index")
+  publishedAt        DateTime?       @map("published_at") @db.Timestamptz(6)
+  createdAt          DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  module           LearningModule           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  revisions        LearningLessonRevision[]
+  lessonProgresses LearningLessonProgress[]
+  notes            LearningNote[]
+
+  @@index([moduleId, orderIndex])
+  @@index([status])
+  @@index([difficultyLevel])
+  @@map("learning_lessons")
+}
+
+// Riwayat Versi & Perubahan Materi (Revision History)
+model LearningLessonRevision {
+  id               String        @id @default(uuid()) @db.Uuid
+  lessonId         String        @map("lesson_id") @db.Uuid
+  version          Int
+  title            String        @db.VarChar(200)
+  summary          String?       @db.VarChar(500)
+  contentBlocks    Json          @map("content_blocks")
+  plainTextContent String        @map("plain_text_content") @db.Text
+  changeSummary    String        @default("Pembaruan materi") @map("change_summary") @db.VarChar(300)
+  status           ContentStatus
+  changedById      String?       @map("changed_by_id") @db.Uuid
+  changedByName    String        @default("Administrator") @map("changed_by_name") @db.VarChar(100)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  lesson LearningLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId, version])
+  @@map("learning_lesson_revisions")
 }
 
 // Progres belajar pengguna per modul, terpisah dari nilai kuis (KF-03)
@@ -291,6 +406,49 @@ model LearningProgress {
 
   @@unique([userId, moduleId], map: "uq_user_learning_module")
   @@map("learning_progress")
+}
+
+// Progres belajar granular per materi/lesson (Course -> Module -> Lesson)
+model LearningLessonProgress {
+  id              String               @id @default(uuid()) @db.Uuid
+  userId          String               @map("user_id") @db.Uuid
+  courseId        String?              @map("course_id") @db.Uuid
+  moduleId        String               @map("module_id") @db.Uuid
+  lessonId        String               @map("lesson_id") @db.Uuid
+  status          LessonProgressStatus @default(IN_PROGRESS)
+  progressPercent Int                  @default(0) @map("progress_percent")
+  startedAt       DateTime             @default(now()) @map("started_at") @db.Timestamptz(6)
+  completedAt     DateTime?            @map("completed_at") @db.Timestamptz(6)
+  lastAccessedAt  DateTime             @default(now()) @map("last_accessed_at") @db.Timestamptz(6)
+
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course LearningCourse? @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  module LearningModule  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  lesson LearningLesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId], map: "uq_user_learning_lesson")
+  @@index([userId, moduleId])
+  @@index([userId, courseId])
+  @@map("learning_lesson_progress")
+}
+
+// Catatan belajar pengguna per materi/lesson (Study Notes)
+model LearningNote {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  lessonId  String   @map("lesson_id") @db.Uuid
+  moduleId  String?  @map("module_id") @db.Uuid
+  title     String   @default("Catatan Belajar") @db.VarChar(200)
+  content   String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson LearningLesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  module LearningModule? @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+
+  @@index([userId, lessonId])
+  @@map("learning_notes")
 }
 
 // Bank soal kuis evaluasi pilihan ganda A-D (KF-04, KF-16, PB-13)

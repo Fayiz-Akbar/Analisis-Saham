@@ -2,6 +2,14 @@ import prisma from "../lib/prisma.js";
 import { ConflictError, NotFoundError, ValidationError } from "../utils/appError.js";
 import { sanitizeText, slugify } from "../utils/textSanitizer.js";
 import { SLUG_REGEX } from "../validators/adminContentValidators.js";
+import {
+  blocksToMarkdown,
+  buildLessonContentChunks,
+  extractStructuredPlainText,
+  normalizeContentBlocks,
+  parseMarkdownToBlocks,
+} from "../utils/structuredContentEngine.js";
+import { ensureCmsHierarchyInitialized } from "./cmsLearningService.js";
 
 const LEVEL_SORT_ORDER = {
   BEGINNER: 1,
@@ -11,31 +19,49 @@ const LEVEL_SORT_ORDER = {
 
 /**
  * Format entitas LearningModule agar konsisten (menyediakan camelCase & snake_case alias
- * sesuai spesifikasi daftar-branch-simulasi-edukasi.md dan context/05-modules/investment-learning.md).
+ * serta menyertakan contentBlocks, learningObjectives, keywords, references, dan lessons).
  */
 export const formatModuleResponse = (mod) => {
   const quizCount = mod._count?.quizQuestions ?? mod.quizQuestions?.length ?? 0;
   const completedUsersCount = mod._count?.learningProgresses ?? 0;
   const attemptsCount = mod._count?.quizAttempts ?? 0;
+  const primaryLesson = Array.isArray(mod.lessons) && mod.lessons.length > 0 ? mod.lessons[0] : null;
+  const contentBlocks =
+    mod.contentBlocks ||
+    primaryLesson?.contentBlocks ||
+    parseMarkdownToBlocks(mod.contentBody || "");
 
   return {
     id: mod.id,
+    courseId: mod.courseId || null,
+    submoduleTitle: mod.submoduleTitle || primaryLesson?.submoduleTitle || "Materi Utama",
     title: mod.title,
     slug: mod.slug,
     level: mod.level,
     summary: mod.summary || "",
     contentBody: mod.contentBody,
     content_body: mod.contentBody,
+    contentBlocks,
+    content_blocks: contentBlocks,
+    plainTextContent: mod.plainTextContent || primaryLesson?.plainTextContent || "",
+    learningObjectives: Array.isArray(mod.learningObjectives)
+      ? mod.learningObjectives
+      : primaryLesson?.learningObjectives || [],
+    keywords: Array.isArray(mod.keywords) ? mod.keywords : primaryLesson?.keywords || [],
+    references: Array.isArray(mod.references) ? mod.references : primaryLesson?.references || [],
     estimatedMinutes: mod.estimatedMinutes,
     estimated_minutes: mod.estimatedMinutes,
     orderIndex: mod.orderIndex,
     order_index: mod.orderIndex,
+    status: mod.status || (mod.isPublished ? "PUBLISHED" : "DRAFT"),
+    version: mod.version || 1,
     isPublished: mod.isPublished,
     is_published: mod.isPublished,
     quizCount,
     quiz_count: quizCount,
     completedUsersCount,
     attemptsCount,
+    lessons: Array.isArray(mod.lessons) ? mod.lessons : [],
     createdAt: mod.createdAt,
     created_at: mod.createdAt,
     updatedAt: mod.updatedAt,
@@ -76,21 +102,26 @@ export const formatQuizResponse = (quiz) => ({
  * Hitung ringkasan metrik kurikulum & kuis untuk kartu KPI Dashboard Admin.
  */
 export const getCurriculumStats = async () => {
-  const [allModules, totalQuizQuestions, totalInvestors] = await Promise.all([
-    prisma.learningModule.findMany({
-      select: {
-        level: true,
-        isPublished: true,
-        estimatedMinutes: true,
-        _count: { select: { quizQuestions: true } },
-      },
-    }),
-    prisma.quizQuestion.count(),
-    prisma.user.count({ where: { role: "INVESTOR" } }),
-  ]);
+  const [allModules, totalQuizQuestions, totalInvestors, totalCourses, totalLessons] =
+    await Promise.all([
+      prisma.learningModule.findMany({
+        select: {
+          level: true,
+          isPublished: true,
+          estimatedMinutes: true,
+          _count: { select: { quizQuestions: true } },
+        },
+      }),
+      prisma.quizQuestion.count(),
+      prisma.user.count({ where: { role: "INVESTOR" } }),
+      prisma.learningCourse.count(),
+      prisma.learningLesson.count(),
+    ]);
 
   const stats = {
+    totalCourses,
     totalModules: allModules.length,
+    totalLessons,
     publishedModules: 0,
     draftModules: 0,
     totalEstimatedMinutes: 0,
@@ -126,6 +157,8 @@ export const getCurriculumStats = async () => {
  * Ambil daftar seluruh modul pembelajaran (beserta jumlah soal kuis & statistik kurikulum).
  */
 export const listModules = async ({ level, status, search } = {}) => {
+  await ensureCmsHierarchyInitialized();
+
   const where = {};
 
   if (level) {
@@ -150,6 +183,9 @@ export const listModules = async ({ level, status, search } = {}) => {
     prisma.learningModule.findMany({
       where,
       include: {
+        lessons: {
+          orderBy: { orderIndex: "asc" },
+        },
         _count: {
           select: {
             quizQuestions: true,
@@ -163,7 +199,6 @@ export const listModules = async ({ level, status, search } = {}) => {
     getCurriculumStats(),
   ]);
 
-  // Urutkan berdasarkan jenjang kurikulum (BEGINNER -> INTERMEDIATE -> ADVANCED), lalu orderIndex
   modules.sort((a, b) => {
     const levelDiff = (LEVEL_SORT_ORDER[a.level] || 99) - (LEVEL_SORT_ORDER[b.level] || 99);
     if (levelDiff !== 0) return levelDiff;
@@ -179,13 +214,19 @@ export const listModules = async ({ level, status, search } = {}) => {
 
 /**
  * Tambah modul pembelajaran baru (POST /api/admin/modules)
+ * Otomatis membuatkan LearningLesson terstruktur dan menghubungkan ke LearningCourse sesuai level.
  */
 export const createModule = async (payload) => {
+  await ensureCmsHierarchyInitialized();
+
   const title = sanitizeText(payload.title);
   const summary = payload.summary ? sanitizeText(payload.summary) : null;
-  const contentBody = sanitizeText(payload.contentBody);
+  const contentBlocks = normalizeContentBlocks(payload.contentBlocks, payload.contentBody);
+  const contentBody =
+    blocksToMarkdown(contentBlocks) || sanitizeText(payload.contentBody || title);
 
-  const rawSlug = payload.slug && payload.slug.trim() ? payload.slug.trim().toLowerCase() : slugify(title);
+  const rawSlug =
+    payload.slug && payload.slug.trim() ? payload.slug.trim().toLowerCase() : slugify(title);
   if (!rawSlug || !SLUG_REGEX.test(rawSlug)) {
     throw new ValidationError("Slug modul tidak valid", [
       {
@@ -201,12 +242,17 @@ export const createModule = async (payload) => {
   });
 
   if (existingSlug) {
-    throw new ConflictError("Slug modul sudah digunakan oleh materi lain. Gunakan judul atau slug berbeda.", [
-      { field: "slug", message: `Slug "${rawSlug}" sudah terdaftar` },
-    ]);
+    throw new ConflictError(
+      "Slug modul sudah digunakan oleh materi lain. Gunakan judul atau slug berbeda.",
+      [{ field: "slug", message: `Slug "${rawSlug}" sudah terdaftar` }]
+    );
   }
 
-  // Jika orderIndex tidak ditentukan, tempatkan di urutan terakhir pada level terkait
+  // Cari course yang sesuai dengan level
+  const course = payload.courseId
+    ? await prisma.learningCourse.findUnique({ where: { id: payload.courseId } })
+    : await prisma.learningCourse.findFirst({ where: { learningLevel: payload.level } });
+
   let orderIndex = payload.orderIndex;
   if (orderIndex === undefined || orderIndex === null) {
     const maxOrder = await prisma.learningModule.aggregate({
@@ -216,16 +262,51 @@ export const createModule = async (payload) => {
     orderIndex = (maxOrder._max.orderIndex || 0) + 1;
   }
 
+  const isPublished = payload.isPublished ?? true;
+  const status = isPublished ? "PUBLISHED" : "DRAFT";
+  const learningObjectives = Array.isArray(payload.learningObjectives)
+    ? payload.learningObjectives.map((o) => sanitizeText(String(o))).filter(Boolean)
+    : [];
+  const keywords = Array.isArray(payload.keywords)
+    ? payload.keywords.map((k) => sanitizeText(String(k))).filter(Boolean)
+    : [];
+  const references = Array.isArray(payload.references) ? payload.references : [];
+
+  const plainTextContent = extractStructuredPlainText({
+    courseTitle: course?.title || "Kurikulum InvestPedia",
+    moduleTitle: title,
+    lessonTitle: title,
+    difficultyLevel: payload.level,
+    summary: summary || "",
+    learningObjectives,
+    keywords,
+    references,
+    contentBlocks,
+  });
+
   const created = await prisma.learningModule.create({
     data: {
+      courseId: course?.id || null,
+      submoduleTitle: payload.submoduleTitle
+        ? sanitizeText(payload.submoduleTitle)
+        : "Materi Utama",
       title,
       slug: rawSlug,
       level: payload.level,
       summary,
       contentBody,
+      contentBlocks,
+      plainTextContent,
+      learningObjectives,
+      keywords,
+      tags: keywords,
+      references,
       estimatedMinutes: payload.estimatedMinutes ?? 5,
       orderIndex,
-      isPublished: payload.isPublished ?? true,
+      status,
+      version: 1,
+      isPublished,
+      publishedAt: isPublished ? new Date() : null,
     },
     include: {
       _count: {
@@ -238,15 +319,95 @@ export const createModule = async (payload) => {
     },
   });
 
-  return formatModuleResponse(created);
+  // Buat Lesson pertama di dalam modul tersebut
+  let lessonSlug = rawSlug;
+  const existingLessonSlug = await prisma.learningLesson.findUnique({
+    where: { slug: lessonSlug },
+  });
+  if (existingLessonSlug) {
+    lessonSlug = `${rawSlug}-${Math.floor(100 + Math.random() * 900)}`;
+  }
+
+  const createdLesson = await prisma.learningLesson.create({
+    data: {
+      moduleId: created.id,
+      submoduleTitle: created.submoduleTitle,
+      title,
+      slug: lessonSlug,
+      summary: summary || "",
+      learningObjectives,
+      estimatedDuration: created.estimatedMinutes,
+      keywords,
+      tags: keywords,
+      difficultyLevel: created.level,
+      contentBlocks,
+      contentBody,
+      plainTextContent,
+      references,
+      status,
+      version: 1,
+      orderIndex: 1,
+      publishedAt: isPublished ? new Date() : null,
+    },
+  });
+
+  const chunks = buildLessonContentChunks({
+    courseId: course?.id || null,
+    courseTitle: course?.title || "",
+    moduleId: created.id,
+    moduleTitle: created.title,
+    lessonId: createdLesson.id,
+    lessonTitle: createdLesson.title,
+    lessonSlug: createdLesson.slug,
+    keywords,
+    references,
+    version: 1,
+    status,
+    contentBlocks,
+  });
+
+  await Promise.all([
+    prisma.learningLesson.update({
+      where: { id: createdLesson.id },
+      data: { contentChunks: chunks },
+    }),
+    prisma.learningModule.update({
+      where: { id: created.id },
+      data: { contentChunks: chunks },
+    }),
+    prisma.learningLessonRevision.create({
+      data: {
+        lessonId: createdLesson.id,
+        version: 1,
+        title: createdLesson.title,
+        summary: createdLesson.summary,
+        contentBlocks,
+        plainTextContent,
+        changeSummary: "Pembuatan modul & materi baru",
+        status,
+      },
+    }),
+  ]);
+
+  return formatModuleResponse({
+    ...created,
+    lessons: [{ ...createdLesson, contentChunks: chunks }],
+  });
 };
 
 /**
  * Perbarui modul pembelajaran (PUT /api/admin/modules/:id)
+ * Sekaligus menyinkronkan Lesson utama dan regenerasi plainTextContent + contentChunks.
  */
 export const updateModule = async (id, payload) => {
+  await ensureCmsHierarchyInitialized();
+
   const existing = await prisma.learningModule.findUnique({
     where: { id },
+    include: {
+      course: true,
+      lessons: { orderBy: { orderIndex: "asc" } },
+    },
   });
 
   if (!existing) {
@@ -291,14 +452,40 @@ export const updateModule = async (id, payload) => {
 
   if (payload.level !== undefined) {
     updateData.level = payload.level;
+    const targetCourse = await prisma.learningCourse.findFirst({
+      where: { learningLevel: payload.level },
+    });
+    if (targetCourse) updateData.courseId = targetCourse.id;
   }
 
   if (payload.summary !== undefined) {
     updateData.summary = payload.summary ? sanitizeText(payload.summary) : null;
   }
 
-  if (payload.contentBody !== undefined) {
-    updateData.contentBody = sanitizeText(payload.contentBody);
+  if (payload.contentBlocks !== undefined || payload.contentBody !== undefined) {
+    const nextBlocks = normalizeContentBlocks(payload.contentBlocks, payload.contentBody);
+    const nextBody =
+      blocksToMarkdown(nextBlocks) ||
+      (payload.contentBody ? sanitizeText(payload.contentBody) : existing.contentBody);
+    updateData.contentBlocks = nextBlocks;
+    updateData.contentBody = nextBody;
+  }
+
+  if (payload.learningObjectives !== undefined && Array.isArray(payload.learningObjectives)) {
+    updateData.learningObjectives = payload.learningObjectives
+      .map((o) => sanitizeText(String(o)))
+      .filter(Boolean);
+  }
+
+  if (payload.keywords !== undefined && Array.isArray(payload.keywords)) {
+    updateData.keywords = payload.keywords
+      .map((k) => sanitizeText(String(k)))
+      .filter(Boolean);
+    updateData.tags = updateData.keywords;
+  }
+
+  if (payload.references !== undefined && Array.isArray(payload.references)) {
+    updateData.references = payload.references;
   }
 
   if (payload.estimatedMinutes !== undefined) {
@@ -311,12 +498,65 @@ export const updateModule = async (id, payload) => {
 
   if (payload.isPublished !== undefined) {
     updateData.isPublished = payload.isPublished;
+    updateData.status = payload.isPublished ? "PUBLISHED" : "DRAFT";
+    if (payload.isPublished && !existing.publishedAt) {
+      updateData.publishedAt = new Date();
+    }
   }
+
+  const nextVersion = (existing.version || 1) + 1;
+  updateData.version = nextVersion;
+
+  const finalTitle = updateData.title || existing.title;
+  const finalLevel = updateData.level || existing.level;
+  const finalSummary =
+    updateData.summary !== undefined ? updateData.summary || "" : existing.summary || "";
+  const finalBlocks =
+    updateData.contentBlocks ||
+    existing.contentBlocks ||
+    parseMarkdownToBlocks(updateData.contentBody || existing.contentBody);
+  const finalObjectives = updateData.learningObjectives || existing.learningObjectives || [];
+  const finalKeywords = updateData.keywords || existing.keywords || [];
+  const finalRefs = updateData.references || existing.references || [];
+  const finalStatus =
+    updateData.status || existing.status || (existing.isPublished ? "PUBLISHED" : "DRAFT");
+
+  const plainTextContent = extractStructuredPlainText({
+    courseTitle: existing.course?.title || "Kurikulum InvestPedia",
+    moduleTitle: finalTitle,
+    lessonTitle: finalTitle,
+    difficultyLevel: finalLevel,
+    summary: finalSummary,
+    learningObjectives: finalObjectives,
+    keywords: finalKeywords,
+    references: finalRefs,
+    contentBlocks: finalBlocks,
+  });
+
+  const primaryLesson = existing.lessons?.[0];
+  const contentChunks = buildLessonContentChunks({
+    courseId: updateData.courseId || existing.courseId || null,
+    courseTitle: existing.course?.title || "",
+    moduleId: existing.id,
+    moduleTitle: finalTitle,
+    lessonId: primaryLesson?.id || existing.id,
+    lessonTitle: finalTitle,
+    lessonSlug: updateData.slug || existing.slug,
+    keywords: finalKeywords,
+    references: finalRefs,
+    version: nextVersion,
+    status: finalStatus,
+    contentBlocks: finalBlocks,
+  });
+
+  updateData.plainTextContent = plainTextContent;
+  updateData.contentChunks = contentChunks;
 
   const updated = await prisma.learningModule.update({
     where: { id },
     data: updateData,
     include: {
+      lessons: { orderBy: { orderIndex: "asc" } },
       _count: {
         select: {
           quizQuestions: true,
@@ -326,6 +566,29 @@ export const updateModule = async (id, payload) => {
       },
     },
   });
+
+  // Sinkronkan juga ke Lesson utama di modul ini
+  if (primaryLesson) {
+    await prisma.learningLesson.update({
+      where: { id: primaryLesson.id },
+      data: {
+        title: finalTitle,
+        summary: finalSummary,
+        estimatedDuration: updated.estimatedMinutes,
+        difficultyLevel: finalLevel,
+        learningObjectives: finalObjectives,
+        keywords: finalKeywords,
+        tags: finalKeywords,
+        references: finalRefs,
+        contentBlocks: finalBlocks,
+        contentBody: updated.contentBody,
+        plainTextContent,
+        contentChunks,
+        status: finalStatus,
+        version: nextVersion,
+      },
+    });
+  }
 
   return formatModuleResponse(updated);
 };
@@ -500,4 +763,3 @@ export const deleteQuiz = async (id) => {
     questionText: existing.questionText,
   };
 };
-

@@ -1,230 +1,418 @@
-import React, { useState } from "react";
-import {
-  AlertTriangle,
-  ArrowLeft,
-  CheckCircle2,
-  Eye,
-  EyeOff,
-  KeyRound,
-  Lock,
-  Mail,
-  ShieldAlert,
-  ShieldCheck,
-} from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "../../context/AuthContext";
 
-export default function AdminLoginPage({ onLoginSuccess, onBackToDashboard }) {
-  const { user, isAuthenticated, isAdmin, loginAdmin, logout } = useAuth();
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  const [email, setEmail] = useState("admin.investai@example.com");
-  const [password, setPassword] = useState("Password123!");
+const VERTEX_SHADER_SOURCE = `
+  attribute vec2 a_position;
+  void main() {
+    gl_Position = vec4(a_position, 0.0, 1.0);
+  }
+`;
+
+const FRAGMENT_SHADER_SOURCE = `
+  precision highp float;
+  uniform vec2 u_resolution;
+  uniform float u_time;
+  uniform float u_dpr;
+
+  void main() {
+    vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+    float aspect = u_resolution.x / max(u_resolution.y, 1.0);
+
+    // Koordinat ternormalisasi untuk domain-warped wave
+    vec2 p = vec2((uv.x - 0.15) * aspect, uv.y - 0.1) * 2.15;
+    float t = u_time * 0.28;
+
+    // Iterasi lipatan gelombang organik (folded silk wave)
+    for (int i = 1; i < 5; i++) {
+      float fi = float(i);
+      p.x += (0.58 / fi) * sin(fi * 1.85 * p.y + t + 0.45 * fi);
+      p.y += (0.58 / fi) * cos(fi * 1.85 * p.x - t * 0.85 + 0.65 * fi);
+    }
+
+    // Intensitas gelombang dan punggung lipatan (ridge)
+    float waveA = 0.5 + 0.5 * sin(p.x * 2.1 - p.y * 1.7 + t * 0.4);
+    float waveB = 0.5 + 0.5 * cos(p.y * 2.6 + p.x * 1.4 - t * 0.3);
+    float ridge = pow(1.0 - abs(sin(p.x * 1.45 + p.y * 1.25)), 2.2);
+
+    float intensity = clamp(waveA * 0.52 + waveB * 0.28 + ridge * 0.48, 0.0, 1.0);
+
+    // Ruang tenang di sudut kiri bawah agar headline memiliki kontras optimal
+    float bottomLeftFade = smoothstep(0.05, 0.68, length(vec2(uv.x * 0.95, uv.y * 1.15)));
+    intensity *= mix(0.22, 1.0, bottomLeftFade);
+
+    // Matriks rotasi grid halftone (sudut klasik 20 derajat)
+    float angle = 0.35;
+    float s = sin(angle);
+    float c = cos(angle);
+    mat2 rot = mat2(c, -s, s, c);
+
+    // Ukuran sel dot proporsional terhadap layar (HiDPI aware)
+    float cellSize = 4.6 * u_dpr;
+    vec2 gridCoord = (rot * gl_FragCoord.xy) / cellSize;
+    vec2 cellUv = fract(gridCoord) - 0.5;
+    float dist = length(cellUv);
+
+    // Radius dot berdasarkan intensitas gelombang
+    float radius = clamp(pow(intensity, 1.25) * 0.66, 0.03, 0.62);
+    float aa = 0.14;
+    float dotMask = 1.0 - smoothstep(radius - aa, radius + aa, dist);
+
+    // Palet warna: permukaan putih bersih dengan dot merah (Investpedia Red)
+    vec3 bgLight = vec3(0.988, 0.984, 0.985);
+    vec3 bgShade = vec3(0.955, 0.925, 0.930);
+    vec3 baseBg = mix(bgLight, bgShade, intensity * 0.40);
+
+    vec3 redBright = vec3(0.890, 0.145, 0.185);
+    vec3 redDeep = vec3(0.710, 0.075, 0.115);
+    vec3 dotColor = mix(redBright, redDeep, smoothstep(0.55, 0.95, intensity));
+
+    vec3 finalColor = mix(baseBg, dotColor, dotMask * smoothstep(0.08, 0.92, intensity));
+    gl_FragColor = vec4(finalColor, 1.0);
+  }
+`;
+
+function HalftoneWaveCanvas() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return undefined;
+
+    const gl =
+      canvas.getContext("webgl", { antialias: true, alpha: false }) ||
+      canvas.getContext("experimental-webgl");
+
+    if (!gl) return undefined;
+
+    const compileShader = (type, source) => {
+      const shader = gl.createShader(type);
+      if (!shader) return null;
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        gl.deleteShader(shader);
+        return null;
+      }
+      return shader;
+    };
+
+    const vertexShader = compileShader(gl.VERTEX_SHADER, VERTEX_SHADER_SOURCE);
+    const fragmentShader = compileShader(gl.FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE);
+    if (!vertexShader || !fragmentShader) return undefined;
+
+    const program = gl.createProgram();
+    if (!program) return undefined;
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      gl.deleteProgram(program);
+      return undefined;
+    }
+
+    gl.useProgram(program);
+
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+      gl.STATIC_DRAW
+    );
+
+    const positionLocation = gl.getAttribLocation(program, "a_position");
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+    const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+    const timeLocation = gl.getUniformLocation(program, "u_time");
+    const dprLocation = gl.getUniformLocation(program, "u_dpr");
+
+    let animationFrameId = null;
+    const startTime = performance.now();
+
+    const resizeCanvas = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const width = Math.max(1, Math.floor(canvas.clientWidth * dpr));
+      const height = Math.max(1, Math.floor(canvas.clientHeight * dpr));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+        gl.viewport(0, 0, width, height);
+      }
+      gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+      gl.uniform1f(dprLocation, dpr);
+    };
+
+    resizeCanvas();
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(resizeCanvas) : null;
+    if (resizeObserver) {
+      resizeObserver.observe(canvas);
+    } else {
+      window.addEventListener("resize", resizeCanvas);
+    }
+
+    const render = (now) => {
+      const elapsedSeconds = (now - startTime) * 0.001;
+      gl.uniform1f(timeLocation, elapsedSeconds);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      animationFrameId = window.requestAnimationFrame(render);
+    };
+
+    animationFrameId = window.requestAnimationFrame(render);
+
+    return () => {
+      if (animationFrameId) window.cancelAnimationFrame(animationFrameId);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      } else {
+        window.removeEventListener("resize", resizeCanvas);
+      }
+      gl.deleteBuffer(positionBuffer);
+      gl.deleteProgram(program);
+      gl.deleteShader(vertexShader);
+      gl.deleteShader(fragmentShader);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      aria-hidden="true"
+      className="absolute inset-0 w-full h-full block pointer-events-none"
+    />
+  );
+}
+
+export default function AdminLoginPage({ onLoginSuccess }) {
+  const { loginAdmin } = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const validateForm = () => {
+    const errors = {};
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      errors.email = "Email wajib diisi.";
+    } else if (!EMAIL_REGEX.test(trimmedEmail)) {
+      errors.email = "Format email tidak valid.";
+    }
+
+    if (!password) {
+      errors.password = "Password wajib diisi.";
+    } else if (password.length < 6) {
+      errors.password = "Password minimal 6 karakter.";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+    if (fieldErrors.email) {
+      setFieldErrors((prev) => ({ ...prev, email: "" }));
+    }
+    if (errorMessage) setErrorMessage("");
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+    if (fieldErrors.password) {
+      setFieldErrors((prev) => ({ ...prev, password: "" }));
+    }
+    if (errorMessage) setErrorMessage("");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
 
+    if (!validateForm()) return;
+
     try {
       setIsSubmitting(true);
-      const adminUser = await loginAdmin({ email, password });
+      const adminUser = await loginAdmin({
+        email: email.trim(),
+        password,
+      });
       if (onLoginSuccess) onLoginSuccess(adminUser);
     } catch (err) {
+      if (Array.isArray(err.details) && err.details.length > 0) {
+        const mapped = {};
+        for (const item of err.details) {
+          if (item.field) mapped[item.field] = item.message;
+        }
+        setFieldErrors((prev) => ({ ...prev, ...mapped }));
+      }
       setErrorMessage(
-        err.message || "Gagal masuk ke Portal Administrator. Periksa kredensial Anda."
+        err.message || "Autentikasi gagal. Periksa kembali email dan password Anda."
       );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleFillDemoAdmin = () => {
-    setErrorMessage("");
-    setEmail("admin.investai@example.com");
-    setPassword("Password123!");
-  };
-
   return (
-    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center py-8 px-3 sm:px-6">
-      <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 rounded-2xl overflow-hidden border border-slate-200 dark:border-[#272727] bg-white dark:bg-[#101010]">
-        {/* Panel Kiri: Informasi Otorisasi RBAC & Penjelasan Fitur */}
-        <div className="lg:col-span-5 p-6 sm:p-8 bg-slate-900 dark:bg-[#0c0e14] border-b lg:border-b-0 lg:border-r border-slate-800 dark:border-[#272727] flex flex-col justify-between text-white">
-          <div className="space-y-5">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-bold uppercase tracking-wider font-mono">
-              <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
-              RBAC Protected Portal
-            </div>
+    <section
+      aria-labelledby="admin-login-heading"
+      className="min-h-screen w-full flex items-center justify-center py-6 sm:py-10 px-3 sm:px-6 bg-slate-50 dark:bg-[#080808]"
+    >
+      <div className="w-full max-w-5xl lg:min-h-[600px] grid grid-cols-1 lg:grid-cols-2 rounded-2xl overflow-hidden border border-slate-200 dark:border-[#1f1f22] bg-[#09090b]">
+        {/* Bagian Kiri: Halftone Wave Visual & Brand Identity (React Bits Auth 2 Style) */}
+        <div className="relative min-h-[220px] sm:min-h-[260px] lg:min-h-full bg-[#fbf9f9] p-6 sm:p-10 lg:p-11 flex flex-col justify-between overflow-hidden">
+          <HalftoneWaveCanvas />
 
-            <div className="space-y-2">
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white leading-snug">
-                Portal Administrator Kurikulum & Evaluasi
-              </h1>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Antarmuka khusus pengelola sistem untuk memelihara materi pasar modal 3 jenjang serta bank soal kuis deterministik dan indikator konsep.
+          <div className="relative z-10 flex items-center">
+            <img
+              src="/investpedia-full.png"
+              alt="Investpedia"
+              className="h-7 sm:h-8 w-auto object-contain select-none"
+            />
+          </div>
+
+          <div className="relative z-10 mt-10 lg:mt-0 max-w-xs sm:max-w-sm">
+            <h1 className="text-2xl sm:text-3xl lg:text-[32px] font-bold tracking-tight text-[#111315] leading-[1.16]">
+              Administrator
+            </h1>
+          </div>
+        </div>
+
+        {/* Bagian Kanan: Form Login */}
+        <div className="bg-white dark:bg-[#09090b] p-6 sm:p-10 lg:p-12 flex flex-col justify-center border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-[#1f1f22]">
+          <div className="w-full max-w-[360px] mx-auto space-y-6">
+            <div className="space-y-1.5">
+              <h2
+                id="admin-login-heading"
+                className="text-2xl sm:text-[28px] font-bold tracking-tight text-slate-900 dark:text-white"
+              >
+                Selamat Datang
+              </h2>
+              <p className="text-sm text-slate-500 dark:text-zinc-400">
+                Masuk untuk melanjutkan.
               </p>
             </div>
 
-            <div className="space-y-2.5 pt-2">
-              <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-1">
-                <span className="text-xs font-bold text-white block">
-                  Manajemen Kurikulum Materi (PB-12)
-                </span>
-                <span className="text-[11px] text-slate-400 leading-relaxed block">
-                  Kelola judul, slug URL, tingkat kesulitan (Pemula, Menengah, Mahir), estimasi baca, urutan tampil, dan status terbit.
-                </span>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-1">
-                <span className="text-xs font-bold text-white block">
-                  Manajemen Bank Soal & Kunci Kuis (PB-13)
-                </span>
-                <span className="text-[11px] text-slate-400 leading-relaxed block">
-                  Pilihan ganda A–D, penetapan kunci jawaban resmi deterministik, teks pembahasan, serta pemetaan indikator materi.
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-6 mt-6 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between font-mono">
-            <span>Middleware: verifyAdmin (JWT)</span>
-            <span className="text-slate-300 font-bold">KNF-01 • KF-16</span>
-          </div>
-        </div>
-
-        {/* Panel Kanan: Form Autentikasi Administrator */}
-        <div className="lg:col-span-7 p-6 sm:p-8 flex flex-col justify-between">
-          <div className="space-y-5">
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block font-mono">
-                  Otorisasi Administrator
-                </span>
-                <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white mt-0.5">
-                  Masuk ke Portal Manajemen Konten
-                </h2>
-              </div>
-
-              {onBackToDashboard && (
-                <button
-                  type="button"
-                  onClick={onBackToDashboard}
-                  className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-[#151822] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1e2330] transition-colors flex items-center gap-1.5 cursor-pointer"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  Sistem Utama
-                </button>
-              )}
-            </div>
-
-            {/* Peringatan RBAC jika saat ini sedang login sebagai INVESTOR */}
-            {isAuthenticated && !isAdmin && (
-              <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-[#261c0c] border border-amber-200 dark:border-[#523d18] flex items-start gap-2.5">
-                <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                <div className="flex-1 text-xs space-y-1">
-                  <div className="font-bold text-amber-900 dark:text-amber-200">
-                    Akses Dibatasi (RBAC Role: INVESTOR)
-                  </div>
-                  <p className="text-amber-800/90 dark:text-amber-200/80 leading-relaxed text-[11px]">
-                    Anda saat ini masuk sebagai <span className="font-mono font-bold">{user?.email}</span> (Investor). Akses modul admin memerlukan hak akses <span className="font-mono font-bold">ADMIN</span>.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={logout}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-300 underline cursor-pointer pt-0.5"
-                  >
-                    Keluar dari sesi Investor saat ini
-                  </button>
-                </div>
-              </div>
-            )}
-
             {errorMessage && (
-              <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-[#2a0e12] border border-rose-200 dark:border-[#4c151c] flex items-start gap-2.5 text-xs text-rose-700 dark:text-[#f87171] font-semibold">
-                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
-                <span>{errorMessage}</span>
+              <div
+                role="alert"
+                aria-live="polite"
+                className="px-3.5 py-2.5 rounded-xl bg-rose-50 dark:bg-[#2a0e12] border border-rose-200 dark:border-[#4c151c] text-xs text-rose-700 dark:text-[#f87171]"
+              >
+                {errorMessage}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-3.5">
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Email Administrator
+                <label
+                  htmlFor="admin-email"
+                  className="block text-xs font-medium text-slate-700 dark:text-zinc-300 mb-1.5"
+                >
+                  Email
                 </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin.investai@example.com"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-slate-50 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
-                  />
-                </div>
+                <input
+                  id="admin-email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  disabled={isSubmitting}
+                  value={email}
+                  onChange={handleEmailChange}
+                  placeholder="Email"
+                  aria-invalid={Boolean(fieldErrors.email)}
+                  aria-describedby={fieldErrors.email ? "admin-email-error" : undefined}
+                  className={`w-full h-11 px-4 rounded-xl text-sm bg-slate-100 dark:bg-[#18181b] border text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 transition-colors focus-visible:outline-none disabled:opacity-50 ${
+                    fieldErrors.email
+                      ? "border-rose-500 dark:border-[#f87171] focus:border-rose-600 dark:focus:border-[#f87171]"
+                      : "border-slate-200 dark:border-[#27272a] focus:border-slate-900 dark:focus:border-zinc-400"
+                  }`}
+                />
+                {fieldErrors.email && (
+                  <p
+                    id="admin-email-error"
+                    className="mt-1.5 text-xs text-rose-600 dark:text-[#f87171]"
+                  >
+                    {fieldErrors.email}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Kata Sandi Administrator
+                <label
+                  htmlFor="admin-password"
+                  className="block text-xs font-medium text-slate-700 dark:text-zinc-300 mb-1.5"
+                >
+                  Password
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
+                    id="admin-password"
+                    name="password"
                     type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
                     required
+                    disabled={isSubmitting}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Masukkan kata sandi administrator"
-                    className="w-full pl-9 pr-9 py-2 rounded-xl text-xs font-medium bg-slate-50 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
+                    onChange={handlePasswordChange}
+                    placeholder="Password"
+                    aria-invalid={Boolean(fieldErrors.password)}
+                    aria-describedby={fieldErrors.password ? "admin-password-error" : undefined}
+                    className={`w-full h-11 pl-4 pr-10 rounded-xl text-sm bg-slate-100 dark:bg-[#18181b] border text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 transition-colors focus-visible:outline-none disabled:opacity-50 ${
+                      fieldErrors.password
+                        ? "border-rose-500 dark:border-[#f87171] focus:border-rose-600 dark:focus:border-[#f87171]"
+                        : "border-slate-200 dark:border-[#27272a] focus:border-slate-900 dark:focus:border-zinc-400"
+                    }`}
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                    tabIndex={-1}
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? (
+                      <Eye className="w-4 h-4" />
+                    ) : (
+                      <EyeOff className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
+                {fieldErrors.password && (
+                  <p
+                    id="admin-password-error"
+                    className="mt-1.5 text-xs text-rose-600 dark:text-[#f87171]"
+                  >
+                    {fieldErrors.password}
+                  </p>
+                )}
               </div>
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-slate-200 disabled:opacity-50 transition-colors cursor-pointer flex items-center justify-center gap-2 mt-2"
-              >
-                <KeyRound className="w-3.5 h-3.5" />
-                {isSubmitting ? "Memverifikasi..." : "Masuk ke Portal Administrator"}
-              </button>
+              <div className="pt-1.5">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-11 rounded-xl text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-950 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 dark:active:bg-zinc-300 transition-colors cursor-pointer"
+                >
+                  {isSubmitting ? "Memproses..." : "Masuk"}
+                </Button>
+              </div>
             </form>
-          </div>
-
-          {/* Kredensial Demo Seeder */}
-          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-[#272727]">
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <div className="space-y-0.5">
-                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 block">
-                  Kredensial Administrator Seeder:
-                </span>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                  Email: <strong className="text-slate-800 dark:text-white">admin.investai@example.com</strong> • Pass:{" "}
-                  <strong className="text-slate-800 dark:text-white">Password123!</strong>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleFillDemoAdmin}
-                className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors cursor-pointer shrink-0 inline-flex items-center gap-1"
-              >
-                <CheckCircle2 className="w-3 h-3 text-slate-400" />
-                Isi Otomatis
-              </button>
-            </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

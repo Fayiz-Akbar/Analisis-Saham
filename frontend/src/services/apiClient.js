@@ -94,7 +94,7 @@ export const authApi = {
 };
 
 // ==========================================
-// ADMIN PORTAL API (Modul & Kuis Evaluasi)
+// ADMIN PORTAL & LEARNING CONTENT STUDIO API
 // ==========================================
 
 export const adminApi = {
@@ -114,5 +114,61 @@ export const adminApi = {
   createQuiz: (data) => apiRequest("/admin/quizzes", { method: "POST", body: data }),
   updateQuiz: (id, data) => apiRequest(`/admin/quizzes/${id}`, { method: "PUT", body: data }),
   deleteQuiz: (id) => apiRequest(`/admin/quizzes/${id}`, { method: "DELETE" }),
+
+  // Learning Content Studio (Hierarchy, Block Editor, Versioning, Reorder)
+  getCmsTree: () => apiRequest("/admin/cms/tree"),
+  createCourse: (data) => apiRequest("/admin/cms/courses", { method: "POST", body: data }),
+  updateCourse: (id, data) =>
+    apiRequest(`/admin/cms/courses/${id}`, { method: "PUT", body: data }),
+  deleteCourse: (id) => apiRequest(`/admin/cms/courses/${id}`, { method: "DELETE" }),
+
+  getLessonDetail: (id) => apiRequest(`/admin/cms/lessons/${id}`),
+  createLesson: (data) => apiRequest("/admin/cms/lessons", { method: "POST", body: data }),
+  updateLesson: (id, data) =>
+    apiRequest(`/admin/cms/lessons/${id}`, { method: "PUT", body: data }),
+  duplicateLesson: (id) =>
+    apiRequest(`/admin/cms/lessons/${id}/duplicate`, { method: "POST" }),
+  deleteLesson: (id) => apiRequest(`/admin/cms/lessons/${id}`, { method: "DELETE" }),
+  restoreLessonRevision: (lessonId, revisionId) =>
+    apiRequest(`/admin/cms/lessons/${lessonId}/revisions/${revisionId}/restore`, {
+      method: "POST",
+    }),
+  reorderCms: (data) => apiRequest("/admin/cms/reorder", { method: "PATCH", body: data }),
 };
 
+// ==========================================
+// USER LEARNING EXPERIENCE API
+// ==========================================
+
+export const learningApi = {
+  getCatalog: () => apiRequest("/learning/courses"),
+  getLessonDetail: (idOrSlug) => apiRequest(`/learning/lessons/${encodeURIComponent(idOrSlug)}`),
+  updateLessonProgress: (lessonId, data = { status: "COMPLETED", progressPercent: 100 }) =>
+    apiRequest(`/learning/lessons/${lessonId}/progress`, { method: "POST", body: data }),
+
+  getNotes: (lessonId) =>
+    apiRequest(`/learning/notes${lessonId ? `?lessonId=${encodeURIComponent(lessonId)}` : ""}`),
+  createNote: (data) => apiRequest("/learning/notes", { method: "POST", body: data }),
+  updateNote: (noteId, data) =>
+    apiRequest(`/learning/notes/${noteId}`, { method: "PUT", body: data }),
+  deleteNote: (noteId) => apiRequest(`/learning/notes/${noteId}`, { method: "DELETE" }),
+
+  getModuleQuiz: (moduleId) => apiRequest(`/learning/modules/${moduleId}/quiz`),
+  submitModuleQuiz: (moduleId, answers) =>
+    apiRequest(`/learning/modules/${moduleId}/quiz/submit`, {
+      method: "POST",
+      body: { answers },
+    }),
+};
+
+// ==========================================
+// AI INVESTMENT TUTOR & LLM KNOWLEDGE API
+// ==========================================
+
+export const aiTutorApi = {
+  getLessonKnowledge: (lessonId) =>
+    apiRequest(`/ai/knowledge/lessons/${encodeURIComponent(lessonId)}`),
+  searchKnowledge: (query) =>
+    apiRequest(`/ai/knowledge/search?q=${encodeURIComponent(query || "")}`),
+  askTutor: (data) => apiRequest("/ai/tutor", { method: "POST", body: data }),
+};

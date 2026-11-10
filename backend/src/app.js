@@ -5,6 +5,9 @@ import morgan from "morgan";
 
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import learningRoutes from "./routes/learningRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
+import swaggerRoutes from "./routes/swaggerRoutes.js";
 import stockRoutes from "./routes/stockRoutes.js";
 import newsRoutes from "./routes/newsRoutes.js";
 
@@ -19,7 +22,6 @@ app.use(
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Izinkan seluruh request dari localhost di port berapapun (5173, 5174, dll.)
       if (!origin || /^http:\/\/localhost(:\d+)?$/.test(origin)) {
         return callback(null, true);
       }
@@ -28,7 +30,7 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: "2mb" }));
+app.use(express.json({ limit: "5mb" }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 // Silence Chrome DevTools probe
@@ -45,35 +47,37 @@ app.get("/", (req, res) => {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>InvestAI Backend API</title>
+        <title>InvestPedia Backend API</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0b0e17; color: #f1f5f9; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-          .card { background: #141824; border: 1px solid #1e2436; border-radius: 20px; padding: 32px; max-width: 540px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
-          .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; background: rgba(16, 185, 129, 0.15); color: #34d399; font-size: 12px; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3); }
-          .badge-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; }
-          h1 { font-size: 24px; margin: 16px 0 8px; font-weight: 800; }
-          p { color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 24px; }
-          .btn-primary { display: block; text-align: center; background: #6366f1; color: #fff; text-decoration: none; padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 14px; margin-bottom: 20px; transition: background 0.2s; }
-          .btn-primary:hover { background: #4f46e5; }
-          .list { border-top: 1px solid #1e2436; padding-top: 20px; }
-          .list-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 12px; }
-          .endpoint { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #0f131d; border-radius: 10px; font-size: 13px; margin-bottom: 8px; font-family: monospace; border: 1px solid #1e2436; }
-          .endpoint a { color: #818cf8; text-decoration: none; }
-          .endpoint a:hover { text-decoration: underline; }
-          .method { color: #10b981; font-weight: 700; }
+          .card { background: #141824; border: 1px solid #1e2436; border-radius: 16px; padding: 32px; max-width: 560px; width: 100%; }
+          .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 6px; background: rgba(16, 185, 129, 0.12); color: #34d399; font-size: 12px; font-weight: 600; border: 1px solid rgba(16, 185, 129, 0.25); }
+          h1 { font-size: 22px; margin: 16px 0 8px; font-weight: 700; }
+          p { color: #94a3b8; font-size: 14px; line-height: 1.6; margin: 0 0 20px; }
+          .btn-row { display: flex; gap: 10px; margin-bottom: 20px; }
+          .btn-primary { flex: 1; text-align: center; background: #e3252f; color: #fff; text-decoration: none; padding: 11px 16px; border-radius: 10px; font-weight: 600; font-size: 13px; }
+          .btn-secondary { flex: 1; text-align: center; background: #1e293b; color: #f1f5f9; text-decoration: none; padding: 11px 16px; border-radius: 10px; font-weight: 600; font-size: 13px; border: 1px solid #334155; }
+          .list { border-top: 1px solid #1e2436; padding-top: 16px; }
+          .list-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 10px; }
+          .endpoint { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; background: #0f131d; border-radius: 8px; font-size: 12px; margin-bottom: 6px; font-family: monospace; border: 1px solid #1e2436; }
+          .endpoint a { color: #93c5fd; text-decoration: none; }
+          .method { color: #34d399; font-weight: 700; }
         </style>
       </head>
       <body>
         <div class="card">
-          <div class="badge"><span class="badge-dot"></span> Backend API Berjalan Normal</div>
-          <h1>InvestAI Backend Server</h1>
-          <p>Port ini (<strong>5000</strong>) adalah server API backend. Untuk menggunakan antarmuka web visual pengguna, silakan buka aplikasi frontend pada port <strong>5173</strong>.</p>
-          <a href="http://localhost:5173/" class="btn-primary">Buka Aplikasi Web (Frontend Port 5173) &rarr;</a>
+          <div class="badge">Backend API Aktif</div>
+          <h1>InvestPedia Backend Server</h1>
+          <p>Server API untuk Manajemen Konten Pembelajaran (CMS), Pengalaman Belajar Pengguna, Analisis Saham IDX80, dan AI Investment Tutor.</p>
+          <div class="btn-row">
+            <a href="http://localhost:5173/" class="btn-primary">Buka Aplikasi Web (5173) &rarr;</a>
+            <a href="/api/docs" class="btn-secondary">Swagger API Docs</a>
+          </div>
           <div class="list">
-            <div class="list-title">Endpoint API Aktif:</div>
-            <div class="endpoint"><span><span class="method">GET</span> /api/news/latest</span> <a href="/api/news/latest" target="_blank">Lihat Berita</a></div>
-            <div class="endpoint"><span><span class="method">GET</span> /api/stocks</span> <a href="/api/stocks" target="_blank">Daftar Saham</a></div>
-            <div class="endpoint"><span><span class="method">GET</span> /api/health</span> <a href="/api/health" target="_blank">Health Check</a></div>
+            <div class="list-title">Endpoint Utama:</div>
+            <div class="endpoint"><span><span class="method">GET</span> /api/learning/courses</span> <a href="/api/learning/courses" target="_blank">Katalog Belajar</a></div>
+            <div class="endpoint"><span><span class="method">GET</span> /api/ai/knowledge/search</span> <a href="/api/ai/knowledge/search" target="_blank">LLM Knowledge</a></div>
+            <div class="endpoint"><span><span class="method">GET</span> /api/docs</span> <a href="/api/docs" target="_blank">Swagger UI</a></div>
           </div>
         </div>
       </body>
@@ -82,15 +86,11 @@ app.get("/", (req, res) => {
   }
 
   res.status(200).json({
-    service: "InvestAI Backend API",
+    service: "InvestPedia Backend API",
     status: "online",
     frontend_url: "http://localhost:5173",
+    docs_url: "http://localhost:5000/api/docs",
     timestamp: new Date().toISOString(),
-    endpoints: {
-      health: "/api/health",
-      news: "/api/news/latest",
-      stocks: "/api/stocks",
-    },
   });
 });
 
@@ -99,15 +99,20 @@ app.get("/api/health", (_req, res) => {
   res.status(200).json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    service: "AI-Powered Fundamental Investment Analyzer API",
+    service: "InvestPedia Learning CMS & Fundamental Investment Analyzer API",
     runtime: "Node.js (JavaScript ES6+)",
-    version: "1.0.0",
+    version: "2.0.0",
   });
 });
 
 // Routes
+app.use("/api", swaggerRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/learning", learningRoutes);
+app.use("/api/v1/learning", learningRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/v1/ai", aiRoutes);
 app.use("/api/stocks", stockRoutes);
 app.use("/api/news", newsRoutes);
 

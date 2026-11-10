@@ -1,6 +1,8 @@
 import * as adminContentService from "../services/adminContentService.js";
+import * as cmsLearningService from "../services/cmsLearningService.js";
 import { AppError, formatZodIssues } from "../utils/appError.js";
 import { sendError, sendSuccess } from "../utils/response.js";
+import { blocksToMarkdown } from "../utils/structuredContentEngine.js";
 import {
   createModuleSchema,
   createQuizSchema,
@@ -12,10 +14,12 @@ import {
 
 /**
  * Normalisasi body modul: menerima baik camelCase maupun snake_case
- * sesuai context/05-modules/investment-learning.md & conventions.md.
+ * serta contentBlocks terstruktur.
  */
 const normalizeModuleInput = (body = {}) => {
   const out = {};
+  if (body.courseId !== undefined) out.courseId = body.courseId;
+  if (body.submoduleTitle !== undefined) out.submoduleTitle = body.submoduleTitle;
   if (body.title !== undefined) out.title = body.title;
   if (body.slug !== undefined) out.slug = body.slug;
   if (body.level !== undefined) {
@@ -23,8 +27,20 @@ const normalizeModuleInput = (body = {}) => {
   }
   if (body.summary !== undefined) out.summary = body.summary;
 
-  const contentBody = body.contentBody ?? body.content_body ?? body.content;
+  const contentBlocks = body.contentBlocks ?? body.content_blocks;
+  if (contentBlocks !== undefined) out.contentBlocks = contentBlocks;
+
+  let contentBody = body.contentBody ?? body.content_body ?? body.content;
+  if ((!contentBody || String(contentBody).trim() === "") && contentBlocks) {
+    contentBody = blocksToMarkdown(contentBlocks) || body.title || "Materi Pembelajaran";
+  }
   if (contentBody !== undefined) out.contentBody = contentBody;
+
+  if (body.learningObjectives !== undefined || body.learning_objectives !== undefined) {
+    out.learningObjectives = body.learningObjectives ?? body.learning_objectives;
+  }
+  if (body.keywords !== undefined) out.keywords = body.keywords;
+  if (body.references !== undefined) out.references = body.references;
 
   const estimatedMinutes = body.estimatedMinutes ?? body.estimated_minutes;
   if (estimatedMinutes !== undefined) out.estimatedMinutes = estimatedMinutes;
@@ -62,9 +78,11 @@ const normalizeQuizInput = (body = {}) => {
   const optionD = body.optionD ?? body.option_d;
   if (optionD !== undefined) out.optionD = optionD;
 
-  const correctKey = body.correctKey ?? body.correct_key ?? body.correctAnswer ?? body.correct_answer;
+  const correctKey =
+    body.correctKey ?? body.correct_key ?? body.correctAnswer ?? body.correct_answer;
   if (correctKey !== undefined) {
-    out.correctKey = typeof correctKey === "string" ? correctKey.trim().toUpperCase() : correctKey;
+    out.correctKey =
+      typeof correctKey === "string" ? correctKey.trim().toUpperCase() : correctKey;
   }
 
   const explanationText = body.explanationText ?? body.explanation_text ?? body.explanation;
@@ -91,9 +109,6 @@ const handleControllerError = (res, error, fallbackMessage) => {
 // MANAJEMEN MODUL PEMBELAJARAN (PB-12)
 // ==========================================
 
-/**
- * GET /api/admin/modules
- */
 export const getModules = async (req, res) => {
   try {
     const rawQuery = {
@@ -104,7 +119,12 @@ export const getModules = async (req, res) => {
 
     const queryResult = moduleListQuerySchema.safeParse(rawQuery);
     if (!queryResult.success) {
-      return sendError(res, 400, "Parameter filter modul tidak valid", formatZodIssues(queryResult.error));
+      return sendError(
+        res,
+        400,
+        "Parameter filter modul tidak valid",
+        formatZodIssues(queryResult.error)
+      );
     }
 
     const result = await adminContentService.listModules(queryResult.data);
@@ -114,15 +134,17 @@ export const getModules = async (req, res) => {
   }
 };
 
-/**
- * POST /api/admin/modules
- */
 export const createModule = async (req, res) => {
   try {
     const normalized = normalizeModuleInput(req.body);
     const parseResult = createModuleSchema.safeParse(normalized);
     if (!parseResult.success) {
-      return sendError(res, 400, "Validasi modul pembelajaran gagal", formatZodIssues(parseResult.error));
+      return sendError(
+        res,
+        400,
+        "Validasi modul pembelajaran gagal",
+        formatZodIssues(parseResult.error)
+      );
     }
 
     const created = await adminContentService.createModule(parseResult.data);
@@ -134,9 +156,6 @@ export const createModule = async (req, res) => {
   }
 };
 
-/**
- * PUT /api/admin/modules/:id
- */
 export const updateModule = async (req, res) => {
   try {
     const paramResult = idParamSchema.safeParse(req.params);
@@ -147,7 +166,12 @@ export const updateModule = async (req, res) => {
     const normalized = normalizeModuleInput(req.body);
     const bodyResult = updateModuleSchema.safeParse(normalized);
     if (!bodyResult.success) {
-      return sendError(res, 400, "Validasi perubahan modul gagal", formatZodIssues(bodyResult.error));
+      return sendError(
+        res,
+        400,
+        "Validasi perubahan modul gagal",
+        formatZodIssues(bodyResult.error)
+      );
     }
 
     const updated = await adminContentService.updateModule(paramResult.data.id, bodyResult.data);
@@ -159,9 +183,6 @@ export const updateModule = async (req, res) => {
   }
 };
 
-/**
- * DELETE /api/admin/modules/:id
- */
 export const deleteModule = async (req, res) => {
   try {
     const paramResult = idParamSchema.safeParse(req.params);
@@ -182,9 +203,6 @@ export const deleteModule = async (req, res) => {
 // MANAJEMEN BANK SOAL KUIS (PB-13)
 // ==========================================
 
-/**
- * GET /api/admin/modules/:id/quizzes
- */
 export const getModuleQuizzes = async (req, res) => {
   try {
     const paramResult = idParamSchema.safeParse(req.params);
@@ -199,15 +217,17 @@ export const getModuleQuizzes = async (req, res) => {
   }
 };
 
-/**
- * POST /api/admin/quizzes
- */
 export const createQuiz = async (req, res) => {
   try {
     const normalized = normalizeQuizInput(req.body);
     const parseResult = createQuizSchema.safeParse(normalized);
     if (!parseResult.success) {
-      return sendError(res, 400, "Validasi butir soal kuis gagal", formatZodIssues(parseResult.error));
+      return sendError(
+        res,
+        400,
+        "Validasi butir soal kuis gagal",
+        formatZodIssues(parseResult.error)
+      );
     }
 
     const created = await adminContentService.createQuiz(parseResult.data);
@@ -219,9 +239,6 @@ export const createQuiz = async (req, res) => {
   }
 };
 
-/**
- * PUT /api/admin/quizzes/:id
- */
 export const updateQuiz = async (req, res) => {
   try {
     const paramResult = idParamSchema.safeParse(req.params);
@@ -232,7 +249,12 @@ export const updateQuiz = async (req, res) => {
     const normalized = normalizeQuizInput(req.body);
     const bodyResult = updateQuizSchema.safeParse(normalized);
     if (!bodyResult.success) {
-      return sendError(res, 400, "Validasi perubahan soal kuis gagal", formatZodIssues(bodyResult.error));
+      return sendError(
+        res,
+        400,
+        "Validasi perubahan soal kuis gagal",
+        formatZodIssues(bodyResult.error)
+      );
     }
 
     const updated = await adminContentService.updateQuiz(paramResult.data.id, bodyResult.data);
@@ -244,9 +266,6 @@ export const updateQuiz = async (req, res) => {
   }
 };
 
-/**
- * DELETE /api/admin/quizzes/:id
- */
 export const deleteQuiz = async (req, res) => {
   try {
     const paramResult = idParamSchema.safeParse(req.params);
@@ -263,3 +282,109 @@ export const deleteQuiz = async (req, res) => {
   }
 };
 
+// ==========================================
+// LEARNING CONTENT STUDIO (CMS HIERARCHY & BLOCK EDITOR)
+// ==========================================
+
+export const getCmsTree = async (_req, res) => {
+  try {
+    const tree = await cmsLearningService.getAdminCmsTree();
+    return sendSuccess(res, 200, "Struktur hierarki CMS berhasil dimuat.", tree);
+  } catch (error) {
+    return handleControllerError(res, error, "Gagal memuat pohon hierarki CMS.");
+  }
+};
+
+export const createCmsCourse = async (req, res) => {
+  try {
+    const course = await cmsLearningService.createCourse(req.body || {});
+    return sendSuccess(res, 201, "Kelas pembelajaran baru berhasil dibuat.", { course });
+  } catch (error) {
+    return handleControllerError(res, error, "Gagal membuat kelas pembelajaran.");
+  }
+};
+
+export const updateCmsCourse = async (req, res) => {
+  try {
+    const course = await cmsLearningService.updateCourse(req.params.id, req.body || {});
+    return sendSuccess(res, 200, "Kelas pembelajaran berhasil diperbarui.", { course });
+  } catch (error) {
+    return handleControllerError(res, error, "Gagal memperbarui kelas pembelajaran.");
+  }
+};
+
+export const deleteCmsCourse = async (req, res) => {
+  try {
+    const deleted = await cmsLearningService.deleteCourse(req.params.id);
+    return sendSuccess(res, 200, "Kelas pembelajaran berhasil dihapus.", { deleted });
+  } catch (error) {
+    return handleControllerError(res, error, "Gagal menghapus kelas pembelajaran.");
+  }
+};
+
+export const getCmsLessonDetail = async (req, res) => {
+  try {
+    const data = await cmsLearningService.getLessonDetailAdmin(req.params.id);
+    return sendSuccess(res, 200, "Detail materi berhasil dimuat.", data);
+  } catch (error) {
+    return handleControllerError(res, error, "Gagal memuat detail materi.");
+  }
+};
+
+export const createCmsLesson = async (req, res) => {
+  try {
+    const lesson = await cmsLearningService.createLesson(req.body || {}, req.user);
+    return sendSuccess(res, 201, "Materi pembelajaran baru berhasil dibuat.", { lesson });
+  } catch (error) {
+    return handleControllerError(res, error, "Gagal membuat materi pembelajaran.");
+  }
+};
+
+export const updateCmsLesson = async (req, res) => {
+  try {
+    const lesson = await cmsLearningService.updateLesson(req.params.id, req.body || {}, req.user);
+    return sendSuccess(res, 200, "Materi pembelajaran berhasil disimpan.", { lesson });
+  } catch (error) {
+    return handleControllerError(res, error, "Gagal menyimpan perubahan materi.");
+  }
+};
+
+export const duplicateCmsLesson = async (req, res) => {
+  try {
+    const lesson = await cmsLearningService.duplicateLesson(req.params.id, req.user);
+    return sendSuccess(res, 201, "Materi pembelajaran berhasil diduplikasi.", { lesson });
+  } catch (error) {
+    return handleControllerError(res, error, "Gagal menduplikasi materi pembelajaran.");
+  }
+};
+
+export const deleteCmsLesson = async (req, res) => {
+  try {
+    const deleted = await cmsLearningService.deleteLesson(req.params.id);
+    return sendSuccess(res, 200, "Materi pembelajaran berhasil dihapus.", { deleted });
+  } catch (error) {
+    return handleControllerError(res, error, "Gagal menghapus materi pembelajaran.");
+  }
+};
+
+export const reorderCms = async (req, res) => {
+  try {
+    const result = await cmsLearningService.reorderCmsItems(req.body || {});
+    return sendSuccess(res, 200, "Urutan konten berhasil diperbarui.", result);
+  } catch (error) {
+    return handleControllerError(res, error, "Gagal mengubah urutan konten.");
+  }
+};
+
+export const restoreCmsLessonRevision = async (req, res) => {
+  try {
+    const lesson = await cmsLearningService.restoreLessonRevision(
+      req.params.id,
+      req.params.revisionId,
+      req.user
+    );
+    return sendSuccess(res, 200, "Versi materi berhasil dipulihkan.", { lesson });
+  } catch (error) {
+    return handleControllerError(res, error, "Gagal memulihkan versi materi.");
+  }
+};

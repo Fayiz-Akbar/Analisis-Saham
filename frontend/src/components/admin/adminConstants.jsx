@@ -8,32 +8,23 @@ export const LEVEL_META = {
   BEGINNER: {
     id: "BEGINNER",
     label: "Pemula",
-    fullLabel: "Level 1 • Pemula (Beginner)",
-    dotClass: "bg-emerald-500",
+    fullLabel: "Pemula",
     badgeClass:
-      "bg-emerald-50 dark:bg-[#062c19]/70 text-emerald-700 dark:text-[#34d399] border border-emerald-200 dark:border-[#0e4429]",
-    pillActiveClass:
-      "bg-emerald-600 text-white dark:bg-[#062c19] dark:text-[#34d399] dark:border-[#0e4429]",
+      "bg-slate-100 dark:bg-[#18181b] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#27272a]",
   },
   INTERMEDIATE: {
     id: "INTERMEDIATE",
     label: "Menengah",
-    fullLabel: "Level 2 • Menengah (Intermediate)",
-    dotClass: "bg-blue-500",
+    fullLabel: "Menengah",
     badgeClass:
-      "bg-blue-50 dark:bg-[#0c2340]/70 text-blue-700 dark:text-[#60a5fa] border border-blue-200 dark:border-[#1e3a8a]",
-    pillActiveClass:
-      "bg-blue-600 text-white dark:bg-[#0c2340] dark:text-[#60a5fa] dark:border-[#1e3a8a]",
+      "bg-slate-100 dark:bg-[#18181b] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#27272a]",
   },
   ADVANCED: {
     id: "ADVANCED",
     label: "Mahir",
-    fullLabel: "Level 3 • Mahir (Advanced)",
-    dotClass: "bg-rose-500",
+    fullLabel: "Mahir",
     badgeClass:
-      "bg-rose-50 dark:bg-[#2a0e12]/70 text-rose-700 dark:text-[#f87171] border border-rose-200 dark:border-[#4c151c]",
-    pillActiveClass:
-      "bg-rose-600 text-white dark:bg-[#2a0e12] dark:text-[#f87171] dark:border-[#4c151c]",
+      "bg-slate-100 dark:bg-[#18181b] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#27272a]",
   },
 };
 
@@ -50,14 +41,15 @@ export const toSlugClient = (text) =>
     .slice(0, 200)
     .replace(/-+$/g, "");
 
+export const slugifyTitle = toSlugClient;
+
 export function LevelBadge({ level, showFull = false }) {
   const meta = LEVEL_META[level] || LEVEL_META.BEGINNER;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${meta.badgeClass}`}
+      className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${meta.badgeClass}`}
     >
-      <span className={`w-1.5 h-1.5 rounded-full ${meta.dotClass} shrink-0`} />
-      <span>{showFull ? meta.fullLabel : meta.label}</span>
+      {showFull ? meta.fullLabel : meta.label}
     </span>
   );
 }

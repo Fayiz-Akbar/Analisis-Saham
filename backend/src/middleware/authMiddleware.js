@@ -42,10 +42,43 @@ export const authenticateToken = async (req, res, next) => {
 };
 
 /**
+ * Middleware Autentikasi Opsional (untuk endpoint katalog pembelajaran publik
+ * yang menyertakan progres personal apabila pengguna sedang login).
+ */
+export const optionalAuthenticateToken = async (req, _res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      req.user = null;
+      return next();
+    }
+
+    const token = authHeader.split(" ")[1];
+    const secret = process.env.JWT_SECRET || "dev_secret_fayiz_investment_analyzer_2026_skripsi";
+    const decoded = jwt.verify(token, secret);
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        investorProfile: true,
+      },
+    });
+
+    req.user = user || null;
+    return next();
+  } catch {
+    req.user = null;
+    return next();
+  }
+};
+
+/**
  * Middleware Otorisasi Role Administrator (RBAC - KF-01, KNF-01)
- * Wajib dipasang SETELAH authenticateToken. Peran dibaca dari basis data
- * (req.user hasil query), bukan dari klaim token, sehingga pencabutan hak
- * akses Administrator langsung berlaku tanpa menunggu token kedaluwarsa.
+ * Wajib dipasang SETELAH authenticateToken.
  */
 export const verifyAdmin = (req, res, next) => {
   if (!req.user) {

@@ -1,12 +1,12 @@
 import { z } from "zod";
 
 /**
- * Skema Validasi Zod - Portal Administrator (KF-16, PB-12, PB-13)
- * Manajemen Modul Pembelajaran & Bank Soal Kuis Evaluasi.
+ * Skema Validasi Zod - Portal Administrator & Learning Content Studio (KF-16, PB-12, PB-13)
  */
 
 export const LEARNING_LEVELS = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
 export const QUIZ_OPTION_KEYS = ["A", "B", "C", "D"];
+export const CONTENT_STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"];
 export const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 const requiredText = (label, min, max) =>
@@ -55,6 +55,8 @@ const slugField = z.union([
 ]);
 
 const moduleShape = {
+  courseId: z.string().uuid().nullable().optional(),
+  submoduleTitle: z.string().trim().max(200).optional(),
   title: requiredText("Judul modul", 3, 200),
   slug: slugField.optional(),
   level: z.enum(LEARNING_LEVELS, {
@@ -66,7 +68,11 @@ const moduleShape = {
     .max(500, "Ringkasan maksimal 500 karakter")
     .nullable()
     .optional(),
-  contentBody: requiredText("Isi materi", 20, 100000),
+  contentBody: requiredText("Isi materi", 10, 200000),
+  contentBlocks: z.any().optional(),
+  learningObjectives: z.array(z.string()).optional(),
+  keywords: z.array(z.string()).optional(),
+  references: z.array(z.any()).optional(),
   estimatedMinutes: integerField("Estimasi waktu baca", 1, 180),
   orderIndex: integerField("Urutan tampil", 1, 999).optional(),
   isPublished: z.boolean({ invalid_type_error: "Status terbit harus bernilai boolean" }).optional(),
@@ -109,4 +115,3 @@ export const updateQuizSchema = z
   .refine((data) => Object.keys(data).length > 0, {
     message: "Tidak ada data soal yang dikirim untuk diperbarui",
   });
-

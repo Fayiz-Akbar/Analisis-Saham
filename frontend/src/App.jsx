@@ -17,11 +17,13 @@ import StockTableView from "./components/views/StockTableView";
 import WatchlistView from "./components/views/WatchlistView";
 import PlaceholderView from "./components/views/PlaceholderView";
 import AdminDashboardPage from "./components/admin/AdminDashboardPage";
+import UserLearningPage from "./components/learning/UserLearningPage";
 
 const getInitialTabFromLocation = () => {
   if (typeof window === "undefined") return "dashboard";
   const path = window.location.pathname.toLowerCase();
   if (path.startsWith("/admin")) return "admin";
+  if (path.startsWith("/learning")) return "learning";
   return "dashboard";
 };
 
@@ -37,11 +39,16 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState(null);
 
-  // Sinkronisasi tab dengan URL /admin agar akses langsung http://localhost:5173/admin berfungsi mulus
+  // Sinkronisasi tab dengan URL /admin & /learning agar akses langsung berfungsi mulus
   const setActiveTab = useCallback((nextTab) => {
     setActiveTabState(nextTab);
     if (typeof window !== "undefined") {
-      const targetPath = nextTab === "admin" ? "/admin" : "/";
+      const targetPath =
+        nextTab === "admin"
+          ? "/admin"
+          : nextTab === "learning"
+          ? "/learning"
+          : "/";
       if (window.location.pathname !== targetPath) {
         window.history.pushState({ tab: nextTab }, "", targetPath);
       }
@@ -147,156 +154,144 @@ export default function App() {
           darkMode ? "dark bg-[#080808] text-[#F5F5F5]" : "bg-slate-50 text-slate-900"
         } transition-colors duration-200 flex flex-col`}
       >
-        {/* Header Utama Aplikasi Sesuai 9 Menu PRD + Pintasan Portal Admin */}
-        <AppHeader
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          onOpenSearch={() => setShowSearchModal(true)}
-          darkMode={darkMode}
-          toggleDarkMode={toggleDarkMode}
-        />
-
-        {/* Running Ticker Tape IDX80 Lebar Penuh dari Ujung Kiri sampai Kanan Tepat di Bawah Header */}
-        <Idx80TickerTapeBar className="w-full" />
-
-        {/* Konten Halaman */}
-        <main className="flex-1 max-w-[98%] mx-auto w-full px-3 sm:px-4 lg:px-6 py-6">
-          {/* ========================================================
-              1. DASHBOARD: Kartu Geser Saham (Carousel / Slider)
-              ======================================================== */}
-          {activeTab === "dashboard" && (
-            <DashboardView
-              onSelectStock={handleSelectFromAnywhere}
-              onOpenCategoryTable={handleOpenCategoryTable}
+        {activeTab === "admin" ? (
+          <AdminDashboardPage
+            onBackToDashboard={() => setActiveTab("dashboard")}
+            darkMode={darkMode}
+            toggleDarkMode={toggleDarkMode}
+          />
+        ) : (
+          <>
+            {/* Header Utama Aplikasi Sesuai 9 Menu PRD + Pintasan Portal Admin */}
+            <AppHeader
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              onOpenSearch={() => setShowSearchModal(true)}
+              darkMode={darkMode}
+              toggleDarkMode={toggleDarkMode}
             />
-          )}
 
-          {/* ========================================================
-              2. STOCK DETAIL: Analisis Mendalam Emiten Terpilih
-              ======================================================== */}
-          {activeTab === "stock-detail" && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-                <div>
-                  <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-                    Stock Detail ({selectedSymbol})
-                  </h1>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Halaman analisis mendalam emiten: grafik candlestick TradingView, 4 pilar rasio fundamental, dan metrik harga pasar.
-                  </p>
+            {/* Running Ticker Tape IDX80 Lebar Penuh dari Ujung Kiri sampai Kanan Tepat di Bawah Header */}
+            <Idx80TickerTapeBar className="w-full" />
+
+            {/* Konten Halaman */}
+            <main className="flex-1 max-w-[98%] mx-auto w-full px-3 sm:px-4 lg:px-6 py-6">
+              {/* ========================================================
+                  1. DASHBOARD: Kartu Geser Saham (Carousel / Slider)
+                  ======================================================== */}
+              {activeTab === "dashboard" && (
+                <DashboardView
+                  onSelectStock={handleSelectFromAnywhere}
+                  onOpenCategoryTable={handleOpenCategoryTable}
+                />
+              )}
+
+              {/* ========================================================
+                  2. STOCK DETAIL: Analisis Mendalam Emiten Terpilih
+                  ======================================================== */}
+              {activeTab === "stock-detail" && (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+                    <div>
+                      <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+                        Stock Detail ({selectedSymbol})
+                      </h1>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Halaman analisis mendalam emiten: grafik candlestick TradingView, 4 pilar rasio fundamental, dan metrik harga pasar.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setActiveTab("dashboard")}
+                        className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                      >
+                        ← Kembali ke Dashboard
+                      </button>
+                      <button
+                        onClick={() => setShowSearchModal(true)}
+                        className="px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-950 dark:bg-white dark:text-slate-950 hover:bg-slate-200 transition-colors cursor-pointer shadow-xs"
+                      >
+                        Cari Saham Lain
+                      </button>
+                    </div>
+                  </div>
+
+                  <StockDetailCard
+                    stockData={stockData}
+                    candles={candles}
+                    range={timeRange}
+                    onRangeChange={setTimeRange}
+                    isDarkMode={darkMode}
+                    isLoading={isLoading}
+                    error={loadError}
+                    onRetry={() => setSelectedSymbol((prev) => prev)}
+                  />
                 </div>
+              )}
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setActiveTab("dashboard")}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                  >
-                    ← Kembali ke Dashboard
-                  </button>
-                  <button
-                    onClick={() => setShowSearchModal(true)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-950 dark:bg-white dark:text-slate-950 hover:bg-slate-200 transition-colors cursor-pointer shadow-xs"
-                  >
-                    Cari Saham Lain
-                  </button>
-                </div>
-              </div>
+              {/* ========================================================
+                  4. STOCK TABLE VIEW / SCREENER
+                  ======================================================== */}
+              {(activeTab === "category-table" || activeTab === "screener") && (
+                <StockTableView
+                  initialSector={tableSector}
+                  onSelectStock={handleSelectFromAnywhere}
+                  onBackToDashboard={() => setActiveTab("dashboard")}
+                />
+              )}
 
-              <StockDetailCard
-                stockData={stockData}
-                candles={candles}
-                range={timeRange}
-                onRangeChange={setTimeRange}
-                isDarkMode={darkMode}
-                isLoading={isLoading}
-                error={loadError}
-                onRetry={() => setSelectedSymbol((prev) => prev)}
-              />
-            </div>
-          )}
+              {/* ========================================================
+                  5. WATCHLIST VIEW
+                  ======================================================== */}
+              {activeTab === "watchlist" && (
+                <WatchlistView
+                  onSelectStock={handleSelectFromAnywhere}
+                  onBrowseCatalog={() => handleOpenCategoryTable("ALL")}
+                />
+              )}
 
-          {/* ========================================================
-              3. PORTAL ADMINISTRATOR (Sprint 1: feat/admin-portal-manajemen-konten)
-              Autentikasi RBAC, CRUD Modul Materi 3 Level, & CRUD Bank Soal Kuis
-              ======================================================== */}
-          {activeTab === "admin" && (
-            <AdminDashboardPage onBackToDashboard={() => setActiveTab("dashboard")} />
-          )}
+              {/* ========================================================
+                  HALAMAN LAIN (Sprint Mendatang)
+                  ======================================================== */}
+              {activeTab === "market" && (
+                <PlaceholderView
+                  title="Market & Sentiment"
+                  description="Dasbor makroekonomi pergerakan IHSG, bursa global, komoditas, dan sentimen berita pasar akan diimplementasikan pada sprint mendatang."
+                  onBackToDashboard={() => setActiveTab("dashboard")}
+                />
+              )}
 
-          {/* ========================================================
-              4. STOCK TABLE VIEW / SCREENER
-              ======================================================== */}
-          {(activeTab === "category-table" || activeTab === "screener") && (
-            <StockTableView
-              initialSector={tableSector}
-              onSelectStock={handleSelectFromAnywhere}
-              onBackToDashboard={() => setActiveTab("dashboard")}
-            />
-          )}
+              {activeTab === "komparasi" && (
+                <PlaceholderView
+                  title="Stock Comparison"
+                  description="Komparasi multi-emiten (2–4 saham) secara side-by-side akan diimplementasikan pada sprint mendatang."
+                  onBackToDashboard={() => setActiveTab("dashboard")}
+                />
+              )}
 
-          {/* ========================================================
-              5. WATCHLIST VIEW
-              ======================================================== */}
-          {activeTab === "watchlist" && (
-            <WatchlistView
-              onSelectStock={handleSelectFromAnywhere}
-              onBrowseCatalog={() => handleOpenCategoryTable("ALL")}
-            />
-          )}
+              {activeTab === "portofolio" && (
+                <PlaceholderView
+                  title="Portfolio"
+                  description="Pelacak portofolio berbasis lot bursa, kalkulasi weighted average price, dan audit risiko akan diimplementasikan pada sprint mendatang."
+                  onBackToDashboard={() => setActiveTab("dashboard")}
+                />
+              )}
 
-          {/* ========================================================
-              HALAMAN LAIN (Sprint Mendatang)
-              ======================================================== */}
-          {activeTab === "market" && (
-            <PlaceholderView
-              title="Market & Sentiment"
-              description="Dasbor makroekonomi pergerakan IHSG, bursa global, komoditas, dan sentimen berita pasar akan diimplementasikan pada sprint mendatang."
-              onBackToDashboard={() => setActiveTab("dashboard")}
-            />
-          )}
+              {(activeTab === "simulasi" || activeTab === "dca") && (
+                <PlaceholderView
+                  title="Simulasi"
+                  description="Modul simulasi investasi pasar modal (termasuk DCA Simulator mode lot realistis) akan diimplementasikan pada sprint mendatang."
+                  onBackToDashboard={() => setActiveTab("dashboard")}
+                />
+              )}
 
-          {activeTab === "komparasi" && (
-            <PlaceholderView
-              title="Stock Comparison"
-              description="Komparasi multi-emiten (2–4 saham) secara side-by-side akan diimplementasikan pada sprint mendatang."
-              onBackToDashboard={() => setActiveTab("dashboard")}
-            />
-          )}
+              {activeTab === "learning" && <UserLearningPage defaultOpenAi={false} />}
 
-          {activeTab === "portofolio" && (
-            <PlaceholderView
-              title="Portfolio"
-              description="Pelacak portofolio berbasis lot bursa, kalkulasi weighted average price, dan audit risiko akan diimplementasikan pada sprint mendatang."
-              onBackToDashboard={() => setActiveTab("dashboard")}
-            />
-          )}
-
-          {(activeTab === "simulasi" || activeTab === "dca") && (
-            <PlaceholderView
-              title="Simulasi"
-              description="Modul simulasi investasi pasar modal (termasuk DCA Simulator mode lot realistis) akan diimplementasikan pada sprint mendatang."
-              onBackToDashboard={() => setActiveTab("dashboard")}
-            />
-          )}
-
-          {activeTab === "learning" && (
-            <div className="space-y-4">
-              <PlaceholderView
-                title="Learning & Quiz (Investor Reader — Sprint 2)"
-                description="Antarmuka pembaca kurikulum 3 level untuk Investor akan diimplementasikan pada branch Sprint 2 (feat/edukasi-kurikulum-materi). Pengelolaan konten kurikulum & bank soal kuis untuk Administrator telah aktif di Portal Admin."
-                onBackToDashboard={() => setActiveTab("dashboard")}
-              />
-            </div>
-          )}
-
-          {activeTab === "ai" && (
-            <PlaceholderView
-              title="AI Assistant"
-              description="Asisten finansial anti-halusinasi Google Gemini dengan context-grounding akan diimplementasikan pada sprint mendatang."
-              onBackToDashboard={() => setActiveTab("dashboard")}
-            />
-          )}
-        </main>
+              {activeTab === "ai" && <UserLearningPage defaultOpenAi={true} />}
+            </main>
+          </>
+        )}
 
         {/* Modal Login & Registrasi Investor */}
         <AuthModal />
