@@ -173,7 +173,7 @@ export default function FundamentalPillars({ fundamentals, stock, quote }) {
           </p>
         </div>
         <div className="text-[11px] font-mono px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 w-fit">
-          Basis: {f.financialPeriod || "FY2024 Audit (Konsolidasian)"}{isForeignCurrency ? " • Laporan Resmi USD" : ""}
+          Basis: {f.financialPeriod || "Audit Resmi Terkini"}{isForeignCurrency ? " • Laporan Resmi USD" : ""}
         </div>
       </div>
 

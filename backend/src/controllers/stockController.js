@@ -361,7 +361,7 @@ export async function fetchFinancialDataFromSource(symbol) {
     const cached = await prisma.apiCache.findUnique({
       where: { endpointKey },
     });
-    if (cached && new Date(cached.expiresAt) > new Date() && cached.responseData?.financialCurrency !== undefined) {
+    if (cached && new Date(cached.expiresAt) > new Date() && cached.responseData?.financialCurrency !== undefined && cached.responseData?.ttm !== undefined) {
       return { ...cached.responseData, fromCache: true };
     }
   } catch (cacheErr) {
@@ -412,10 +412,10 @@ export async function fetchFinancialDataFromSource(symbol) {
       },
     });
 
-    // 4. Sinkronisasi otomatis ke table stock_fundamentals agar kartu 4 Pilar & Detail Saham 100% konsisten dengan data audit resmi
+    // 4. Sinkronisasi otomatis ke table stock_fundamentals agar kartu 4 Pilar & Detail Saham 100% konsisten dengan data audit resmi terbaru
     if (parsedResult.annual && Array.isArray(parsedResult.annual) && parsedResult.annual.length > 0) {
-      const audit = parsedResult.annual.find((a) => a.period === "FY2024") || parsedResult.annual[parsedResult.annual.length - 1];
-      const auditIdx = parsedResult.annual.indexOf(audit);
+      const audit = parsedResult.annual[parsedResult.annual.length - 1];
+      const auditIdx = parsedResult.annual.length - 1;
       const prevAudit = auditIdx > 0 ? parsedResult.annual[auditIdx - 1] : null;
 
       let revGrowth = null;
@@ -485,8 +485,8 @@ export async function fetchFinancialDataFromSource(symbol) {
  */
 export function buildRealFundamentalObject(realData, sym) {
   if (!realData) return null;
-  const audit = realData?.annual?.find((a) => a.period === "FY2024") || realData?.annual?.[realData.annual.length - 1];
-  const auditIdx = realData?.annual ? realData.annual.indexOf(audit) : -1;
+  const audit = realData?.annual?.[realData.annual.length - 1];
+  const auditIdx = realData?.annual ? realData.annual.length - 1 : -1;
   const prevAudit = auditIdx > 0 ? realData.annual[auditIdx - 1] : null;
 
   let revGrowth = null;

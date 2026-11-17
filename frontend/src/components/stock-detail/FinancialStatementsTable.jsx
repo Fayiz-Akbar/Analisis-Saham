@@ -119,14 +119,26 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
   // Tidak ada data dummy / mock / countdown seed
   // =========================================================================
   const activePeriods = useMemo(() => {
+    let list = [];
     if (periodMode === "annual") {
-      return (apiHistory?.annual && Array.isArray(apiHistory.annual)) ? apiHistory.annual : [];
+      list = (apiHistory?.annual && Array.isArray(apiHistory.annual)) ? [...apiHistory.annual] : [];
     } else {
-      return (apiHistory?.quarterly && Array.isArray(apiHistory.quarterly)) ? apiHistory.quarterly : [];
+      list = (apiHistory?.quarterly && Array.isArray(apiHistory.quarterly)) ? [...apiHistory.quarterly] : [];
     }
+    // Sisipkan kolom TTM (Trailing Twelve Months) dari data resmi Yahoo Finance
+    if (apiHistory?.ttm) {
+      list.push({
+        ...apiHistory.ttm,
+        label: "TTM",
+        isTTM: true,
+      });
+    }
+    return list;
   }, [periodMode, apiHistory]);
 
-  const currentSnapshot = activePeriods[activePeriods.length - 1] || activePeriods[0] || {};
+  const currentSnapshot = useMemo(() => {
+    return apiHistory?.ttm || activePeriods[activePeriods.length - 1] || {};
+  }, [apiHistory, activePeriods]);
 
   // Deteksi outlier pos luar biasa (misalnya impairment goodwill Tokopedia -Rp 90T pada GOTO FY2023)
   const hasGoodwillOutlier = useMemo(() => {
@@ -138,7 +150,9 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
   // Data display bar chart dengan normalisasi visual outlier jika mode operasional aktif
   const chartDisplayPeriods = useMemo(() => {
     const isUsdMode = currencyMode === "ORIGINAL" && isForeignCurrency;
-    return activePeriods.map((p) => {
+    // Pada mode kuartalan, sembunyikan bar kumulatif TTM (~150T) agar batang kuartal individu (~37T) tidak gepeng
+    const chartSource = periodMode === "quarterly" ? activePeriods.filter((p) => !p.isTTM) : activePeriods;
+    return chartSource.map((p) => {
       const revVal = isUsdMode ? Number(p.revenueOriginalM || (p.revenue ? p.revenue / 1e6 : 0)) : Number(p.revenueT || 0);
       const netVal = isUsdMode ? Number(p.netIncomeOriginalM || (p.netIncome ? p.netIncome / 1e6 : 0)) : Number(p.netIncomeT || 0);
 
@@ -152,14 +166,14 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
         chartNetIncome: displayNet,
       };
     });
-  }, [activePeriods, scaleMode, hasGoodwillOutlier, currencyMode, isForeignCurrency]);
+  }, [activePeriods, scaleMode, hasGoodwillOutlier, currencyMode, isForeignCurrency, periodMode]);
 
-  // Perhitungan dinamis pertumbuhan YoY aktual antar periode berturut-turut
+  // Perhitungan dinamis pertumbuhan YoY aktual antar periode berturut-turut (abaikan TTM)
   const dynamicYoY = useMemo(() => {
-    if (activePeriods.length < 2) return { revYoY: null, netYoY: null };
-    const curr = activePeriods.find((p) => p.period === "FY2024") || activePeriods[activePeriods.length - 1];
-    const currIdx = activePeriods.indexOf(curr);
-    const prev = currIdx > 0 ? activePeriods[currIdx - 1] : null;
+    const regularPeriods = activePeriods.filter((p) => !p.isTTM);
+    if (regularPeriods.length < 2) return { revYoY: null, netYoY: null };
+    const curr = regularPeriods[regularPeriods.length - 1];
+    const prev = regularPeriods[regularPeriods.length - 2];
 
     if (!curr || !prev) return { revYoY: null, netYoY: null };
 
@@ -500,7 +514,7 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
               {/* Chart Container */}
               <div className="w-full h-64 pt-2">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={activePeriods} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                  <AreaChart data={activePeriods.filter((p) => !p.isTTM)} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                     <defs>
                       <linearGradient id="npmGrad" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4} />
@@ -653,8 +667,22 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
                   <tr className="border-b border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 font-semibold">
                     <th className="py-3 px-4 min-w-[220px]">Pos Laporan Keuangan</th>
                     {activePeriods.map((p) => (
-                      <th key={p.period} className="py-3 px-4 font-mono text-right min-w-[130px]">
-                        {p.label}
+                      <th
+                        key={p.period}
+                        className={`py-3 px-4 font-mono text-right min-w-[130px] ${
+                          p.isTTM
+                            ? "bg-emerald-500/[0.06] text-emerald-600 dark:text-[#2fe695] font-bold border-l border-emerald-500/20"
+                            : ""
+                        }`}
+                      >
+                        <div className="flex items-center justify-end gap-1.5">
+                          <span>{p.label}</span>
+                          {p.isTTM && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-[#2fe695] font-bold uppercase tracking-wider">
+                              TTM
+                            </span>
+                          )}
+                        </div>
                       </th>
                     ))}
                     <th className="py-3 px-4 text-right min-w-[100px]">Pertumbuhan</th>
@@ -675,7 +703,12 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
                       <span className="text-[11px] text-slate-400">Total penjualan dan penerimaan operasional</span>
                     </td>
                     {activePeriods.map((p) => (
-                      <td key={p.period} className="py-3 px-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-right">
+                      <td
+                        key={p.period}
+                        className={`py-3 px-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-right ${
+                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15 text-emerald-700 dark:text-emerald-300" : ""
+                        }`}
+                      >
                         {formatFinancialValue(p.revenue)}
                         {isForeignCurrency && (
                           <span className="block text-[10px] text-slate-400 font-normal">
@@ -697,7 +730,12 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
                       <span className="text-[11px] text-slate-400">Keuntungan final yang diatribusikan ke induk</span>
                     </td>
                     {activePeriods.map((p) => (
-                      <td key={p.period} className="py-3 px-4 font-mono font-bold text-emerald-600 dark:text-[#2fe695] text-right">
+                      <td
+                        key={p.period}
+                        className={`py-3 px-4 font-mono font-bold text-emerald-600 dark:text-[#2fe695] text-right ${
+                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15" : ""
+                        }`}
+                      >
                         {formatFinancialValue(p.netIncome)}
                         {isForeignCurrency && (
                           <span className="block text-[10px] text-slate-400 font-normal">
@@ -719,7 +757,12 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
                       <span className="text-[11px] text-slate-400">Rasio laba bersih terhadap omset penjualan</span>
                     </td>
                     {activePeriods.map((p) => (
-                      <td key={p.period} className="py-3 px-4 font-mono font-semibold text-slate-800 dark:text-slate-200 text-right">
+                      <td
+                        key={p.period}
+                        className={`py-3 px-4 font-mono font-semibold text-slate-800 dark:text-slate-200 text-right ${
+                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold" : ""
+                        }`}
+                      >
                         {p.netProfitMargin}%
                       </td>
                     ))}
@@ -734,7 +777,12 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
                       <span className="text-[11px] text-slate-400">Laba bersih per lembar saham yang beredar</span>
                     </td>
                     {activePeriods.map((p) => (
-                      <td key={p.period} className="py-3 px-4 font-mono font-semibold text-slate-800 dark:text-slate-200 text-right">
+                      <td
+                        key={p.period}
+                        className={`py-3 px-4 font-mono font-semibold text-slate-800 dark:text-slate-200 text-right ${
+                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold" : ""
+                        }`}
+                      >
                         {formatEpsValue(p.eps)}
                         {isForeignCurrency && (
                           <span className="block text-[10px] text-slate-400 font-normal">
@@ -761,7 +809,12 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
                       <span className="text-[11px] text-slate-400">Total kekayaan aset lancar & aset tidak lancar</span>
                     </td>
                     {activePeriods.map((p) => (
-                      <td key={p.period} className="py-3 px-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-right">
+                      <td
+                        key={p.period}
+                        className={`py-3 px-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-right ${
+                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15" : ""
+                        }`}
+                      >
                         {formatFinancialValue(p.totalAssets)}
                         {isForeignCurrency && (
                           <span className="block text-[10px] text-slate-400 font-normal">
@@ -781,7 +834,12 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
                       <span className="text-[11px] text-slate-400">Modal bersih pemegang saham dan saldo laba</span>
                     </td>
                     {activePeriods.map((p) => (
-                      <td key={p.period} className="py-3 px-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-right">
+                      <td
+                        key={p.period}
+                        className={`py-3 px-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-right ${
+                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15" : ""
+                        }`}
+                      >
                         {formatFinancialValue(p.totalEquity)}
                         {isForeignCurrency && (
                           <span className="block text-[10px] text-slate-400 font-normal">
@@ -801,7 +859,12 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
                       <span className="text-[11px] text-slate-400">Kewajiban jangka pendek dan jangka panjang</span>
                     </td>
                     {activePeriods.map((p) => (
-                      <td key={p.period} className="py-3 px-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-right">
+                      <td
+                        key={p.period}
+                        className={`py-3 px-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-right ${
+                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15" : ""
+                        }`}
+                      >
                         {formatFinancialValue(p.totalLiabilities)}
                         {isForeignCurrency && (
                           <span className="block text-[10px] text-slate-400 font-normal">
@@ -821,7 +884,12 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
                       <span className="text-[11px] text-slate-400">Cadangan likuiditas kas siap pakai</span>
                     </td>
                     {activePeriods.map((p) => (
-                      <td key={p.period} className="py-3 px-4 font-mono font-bold text-blue-600 dark:text-blue-400 text-right">
+                      <td
+                        key={p.period}
+                        className={`py-3 px-4 font-mono font-bold text-blue-600 dark:text-blue-400 text-right ${
+                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15" : ""
+                        }`}
+                      >
                         {formatFinancialValue(p.cashEquivalents)}
                         {isForeignCurrency && (
                           <span className="block text-[10px] text-slate-400 font-normal">
@@ -848,7 +916,12 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
                       <span className="text-[11px] text-slate-400">Efektivitas modal ekuitas mencetak laba</span>
                     </td>
                     {activePeriods.map((p) => (
-                      <td key={p.period} className="py-3 px-4 font-mono font-bold text-emerald-600 dark:text-[#2fe695] text-right">
+                      <td
+                        key={p.period}
+                        className={`py-3 px-4 font-mono font-bold text-emerald-600 dark:text-[#2fe695] text-right ${
+                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15" : ""
+                        }`}
+                      >
                         {p.roe}%
                       </td>
                     ))}

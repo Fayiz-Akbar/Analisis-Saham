@@ -249,7 +249,98 @@ def main():
                     "epsIdr": eps_idr,
                 })
 
-        # 3. Live Key Statistics & Market Summary from yfinance (100% Real API)
+        # 3. Construct TTM (Trailing Twelve Months) Item from 100% Real Disclosures
+        ttm_item = None
+        try:
+            info = ticker.info or {}
+
+            # TTM Revenue: prefer info.get('totalRevenue'), fallback to sum of last 4 quarters
+            ttm_rev = safe_float(info.get('totalRevenue'))
+            if ttm_rev is None and quarterly_items:
+                q_revs = [q['revenue'] for q in quarterly_items if q.get('revenue') is not None]
+                if q_revs:
+                    ttm_rev = sum(q_revs)
+
+            # TTM Net Income: prefer info.get('netIncomeToCommon'), fallback to sum of last 4 quarters
+            ttm_net_inc = safe_float(info.get('netIncomeToCommon'))
+            if ttm_net_inc is None and quarterly_items:
+                q_nets = [q['netIncome'] for q in quarterly_items if q.get('netIncome') is not None]
+                if q_nets:
+                    ttm_net_inc = sum(q_nets)
+
+            # Latest balance sheet snapshot (most recent reported quarter)
+            latest_q = quarterly_items[-1] if quarterly_items else (annual_items[-1] if annual_items else {})
+            ttm_assets = latest_q.get('totalAssets')
+            ttm_equity = latest_q.get('totalEquity')
+            ttm_liab = latest_q.get('totalLiabilities')
+            ttm_cash = latest_q.get('cashEquivalents')
+
+            # Trailing EPS
+            ttm_eps_raw = safe_float(info.get('trailingEps'))
+            if ttm_eps_raw is None and quarterly_items:
+                q_eps_list = [q['eps'] for q in quarterly_items if q.get('eps') is not None]
+                if q_eps_list:
+                    ttm_eps_raw = sum(q_eps_list)
+
+            ttm_eps = None
+            ttm_eps_idr = None
+            if ttm_eps_raw is not None:
+                if financial_currency == 'USD':
+                    ttm_eps = round(ttm_eps_raw, 4) if abs(ttm_eps_raw) < 1 else round(ttm_eps_raw, 2)
+                    ttm_eps_idr = round(ttm_eps_raw * usd_to_idr, 2)
+                else:
+                    ttm_eps = round(ttm_eps_raw, 2)
+                    ttm_eps_idr = ttm_eps
+
+            ttm_npm = round((ttm_net_inc / ttm_rev * 100), 2) if (ttm_rev and ttm_net_inc and ttm_rev > 0) else None
+            ttm_roe = round((ttm_net_inc / ttm_equity * 100), 2) if (ttm_equity and ttm_net_inc and ttm_equity > 0) else None
+            ttm_der = round((ttm_liab / ttm_equity), 2) if (ttm_equity and ttm_liab and ttm_equity > 0) else None
+
+            ttm_rev_idr = ttm_rev * usd_to_idr if (ttm_rev is not None and financial_currency == 'USD') else ttm_rev
+            ttm_net_inc_idr = ttm_net_inc * usd_to_idr if (ttm_net_inc is not None and financial_currency == 'USD') else ttm_net_inc
+            ttm_assets_idr = ttm_assets * usd_to_idr if (ttm_assets is not None and financial_currency == 'USD') else ttm_assets
+            ttm_equity_idr = ttm_equity * usd_to_idr if (ttm_equity is not None and financial_currency == 'USD') else ttm_equity
+            ttm_liab_idr = ttm_liab * usd_to_idr if (ttm_liab is not None and financial_currency == 'USD') else ttm_liab
+            ttm_cash_idr = ttm_cash * usd_to_idr if (ttm_cash is not None and financial_currency == 'USD') else ttm_cash
+
+            ttm_rev_t = round(ttm_rev_idr / 1e12, 2) if ttm_rev_idr is not None else 0
+            ttm_net_inc_t = round(ttm_net_inc_idr / 1e12, 2) if ttm_net_inc_idr is not None else 0
+            ttm_rev_orig_m = round(ttm_rev / 1e6, 2) if (ttm_rev is not None and financial_currency == 'USD') else (round(ttm_rev / 1e12, 2) if ttm_rev else 0)
+            ttm_net_inc_orig_m = round(ttm_net_inc / 1e6, 2) if (ttm_net_inc is not None and financial_currency == 'USD') else (round(ttm_net_inc / 1e12, 2) if ttm_net_inc else 0)
+
+            if ttm_rev is not None:
+                ttm_item = {
+                    "period": "TTM",
+                    "label": "TTM (12 Bulan)",
+                    "isTTM": True,
+                    "date": latest_q.get('date', 'TTM'),
+                    "currency": financial_currency,
+                    "revenue": ttm_rev,
+                    "netIncome": ttm_net_inc,
+                    "revenueIdr": ttm_rev_idr,
+                    "netIncomeIdr": ttm_net_inc_idr,
+                    "revenueT": ttm_rev_t,
+                    "netIncomeT": ttm_net_inc_t,
+                    "revenueOriginalM": ttm_rev_orig_m,
+                    "netIncomeOriginalM": ttm_net_inc_orig_m,
+                    "totalAssets": ttm_assets,
+                    "totalEquity": ttm_equity,
+                    "totalLiabilities": ttm_liab,
+                    "cashEquivalents": ttm_cash,
+                    "totalAssetsIdr": ttm_assets_idr,
+                    "totalEquityIdr": ttm_equity_idr,
+                    "totalLiabilitiesIdr": ttm_liab_idr,
+                    "cashEquivalentsIdr": ttm_cash_idr,
+                    "netProfitMargin": ttm_npm,
+                    "roe": ttm_roe,
+                    "der": ttm_der,
+                    "eps": ttm_eps,
+                    "epsIdr": ttm_eps_idr,
+                }
+        except Exception:
+            pass
+
+        # 4. Live Key Statistics & Market Summary from yfinance (100% Real API)
         key_stats = {}
         try:
             info = ticker.info or {}
@@ -351,6 +442,7 @@ def main():
             "keyStatistics": key_stats,
             "annual": annual_items,
             "quarterly": quarterly_items,
+            "ttm": ttm_item,
         }
         print(json.dumps(output))
 

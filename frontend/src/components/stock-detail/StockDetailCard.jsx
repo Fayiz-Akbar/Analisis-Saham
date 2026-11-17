@@ -36,8 +36,8 @@ export default function StockDetailCard({
         const annual = json.data.annual;
         if (!Array.isArray(annual) || annual.length === 0) return;
 
-        const audit = annual.find((a) => a.period === "FY2024") || annual[annual.length - 1];
-        const auditIdx = annual.indexOf(audit);
+        const audit = annual[annual.length - 1];
+        const auditIdx = annual.length - 1;
         const prevAudit = auditIdx > 0 ? annual[auditIdx - 1] : null;
 
         let revGrowth = null;
