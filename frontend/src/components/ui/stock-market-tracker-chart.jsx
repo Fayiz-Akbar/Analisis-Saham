@@ -963,21 +963,11 @@ export const HeroMarketChart = ({ className = "" }) => {
               >
                 IDX80
               </button>
-              <button
-                onClick={() => setSelectedIndex("LQ45")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                  selectedIndex === "LQ45"
-                    ? "bg-slate-200 text-slate-900 dark:bg-[#2a2e39] dark:text-white"
-                    : "text-slate-600 hover:text-slate-900 dark:text-[#787b86] dark:hover:text-white"
-                }`}
-              >
-                LQ45
-              </button>
             </div>
 
             {/* Judul Indeks */}
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight shrink-0">
-              {selectedIndex === "IHSG" ? "IHSG (Indeks Gabungan)" : selectedIndex === "IDX80" ? "IDX80 (80 Terlikuid)" : "IDX LQ45 (Bluechip)"}
+              {selectedIndex === "IHSG" ? "IHSG (Indeks Gabungan)" : "IDX80 (80 Terlikuid)"}
             </h1>
           </div>
 
@@ -1176,7 +1166,7 @@ export const HeroMarketChart = ({ className = "" }) => {
           </div>
         </div>
         <div className="text-[11px] text-slate-500 font-medium">
-          Total Konstituen Pasar: <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{isIHSG ? "945 Saham" : selectedIndex === "LQ45" ? "45 Saham" : "80 Saham"}</span>
+          Total Konstituen Pasar: <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{isIHSG ? "945 Saham" : "80 Saham"}</span>
         </div>
       </div>
 

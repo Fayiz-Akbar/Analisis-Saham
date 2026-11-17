@@ -379,20 +379,9 @@ export default function TradingViewChart({
     >
       {/* 1. TOP CONTROLS BAR: Candle/Garis Toggle & Timeframe Selector Sebelahan (Persis Seperti Dashboard) */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 dark:border-white/[0.08] pb-3">
-        {/* Sisi Kiri: Status Lilin Terkini */}
+        {/* Sisi Kiri: Simbol Saham */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-slate-900 dark:text-white">{symbol}</span>
-          {activeCandle && (
-            <span
-              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                isUp
-                  ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800/60"
-                  : "bg-rose-950/80 text-rose-400 border border-rose-800/60"
-              }`}
-            >
-              {isUp ? "BULLISH" : "BEARISH"}
-            </span>
-          )}
         </div>
 
         {/* Sisi Kanan: Toggle Candle/Garis + Timeframe Sebelahan (Tanpa Container Box di Belakang) */}

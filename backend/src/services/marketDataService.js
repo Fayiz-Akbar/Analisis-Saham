@@ -10,7 +10,6 @@ export const toYahooTicker = (symbol) => {
   const clean = symbol.trim().toUpperCase();
   if (clean === "IHSG" || clean === "^JKSE") return "^JKSE";
   if (clean === "IDX80" || clean === "IDX80.JK") return "IDX80.JK";
-  if (clean === "LQ45" || clean === "^JKLQ45") return "^JKLQ45";
   if (clean.includes(".")) return clean;
   return `${clean}.JK`;
 };
@@ -436,8 +435,6 @@ export class MarketDataService {
       yahooSymbol = "IDX80.JK";
     } else if (cleanSymbol === "IHSG") {
       yahooSymbol = "^JKSE";
-    } else if (cleanSymbol === "LQ45") {
-      yahooSymbol = "^JKLQ45";
     }
 
     // Mapping interval & range Yahoo Finance untuk opsi periode
@@ -537,14 +534,6 @@ export class MarketDataService {
       sourceName: cleanSymbol,
     };
 
-    const LQ45_SYMBOLS = [
-      "BBCA","BBRI","BMRI","BBNI","TLKM","ASII","ICBP","INDF","UNTR","UNVR",
-      "KLBF","CPIN","AMMN","BREN","GOTO","ADRO","PGAS","PTBA","ANTM","INCO",
-      "MDKA","BRPT","TPIA","EXCL","ISAT","TBIG","TOWR","MEDC","AKRA","SMGR",
-      "INTP","INKP","TKIM","ACES","MAPI","AMRT","MYOR","SIDO","MIKA","HEAL",
-      "ESSA","ARTO","BRIS","BUKA","HRUM"
-    ];
-
     try {
       if (cleanSymbol === "^JKSE" || cleanSymbol === "IHSG") {
         // Statistik agregat pasar reguler seluruh BEI (IHSG - 900+ emiten)
@@ -575,13 +564,8 @@ export class MarketDataService {
           sourceName: "Seluruh Pasar Reguler BEI (IHSG)",
         };
       } else {
-        // Query database lokal untuk IDX80 atau LQ45
-        const queryFilter =
-          cleanSymbol === "^JKLQ45" || cleanSymbol === "LQ45"
-            ? { where: { symbol: { in: LQ45_SYMBOLS } } }
-            : {};
-
-        const dailyPrices = await prisma.stockDailyPrice.findMany(queryFilter);
+        // Query database lokal untuk konstituen IDX80
+        const dailyPrices = await prisma.stockDailyPrice.findMany({});
         if (dailyPrices.length > 0) {
           let advancing = 0;
           let declining = 0;
@@ -601,14 +585,13 @@ export class MarketDataService {
             totalTurnover += vol * close;
           }
 
-          const isLQ45 = cleanSymbol === "^JKLQ45" || cleanSymbol === "LQ45";
           const count = dailyPrices.length;
 
           statistics = {
             turnover: totalTurnover > 0 ? totalTurnover : 13730681275700,
-            turnoverSubtext: isLQ45 ? "+14.1% vs rata-rata harian" : "+12.4% vs rata-rata harian",
+            turnoverSubtext: "+12.4% vs rata-rata harian",
             volume: totalVolume > 0 ? totalVolume : 8952507336,
-            volumeSubtext: isLQ45 ? "+10.5% vs sesi kemarin" : "+8.2% vs sesi kemarin",
+            volumeSubtext: "+8.2% vs sesi kemarin",
             frequency: null,
             marketCap: 8920300000000000, // Rp 8.920,30 Triliun IDR (Konstituen IDX80)
             netIncome: 385600000000000,  // Rp 385,60 Triliun IDR (FY IDX80)
@@ -627,8 +610,8 @@ export class MarketDataService {
             decliningSubtext: `−${((declining / count) * 100).toFixed(1)}% dari ${count} saham`,
             unchanged,
             trackedCount: count,
-            basisLabel: isLQ45 ? "Basis 45 Saham Likuid LQ45" : `Basis ${count} Saham IDX80 BEI`,
-            sourceName: isLQ45 ? "Konstituen LQ45" : "Konstituen IDX80",
+            basisLabel: `Basis ${count} Saham IDX80 BEI`,
+            sourceName: "Konstituen IDX80",
           };
         }
       }
@@ -985,12 +968,6 @@ export class MarketDataService {
         fullName: "Indeks Harga Saham Gabungan",
         displayName: "IHSG — Indeks Harga Saham Gabungan",
         subText: "IHSG • IDX Composite Index (^JKSE)",
-      },
-      "^JKLQ45": {
-        code: "LQ45",
-        fullName: "Indeks LQ45",
-        displayName: "LQ45 — 45 Saham Paling Likuid",
-        subText: "LQ45 • 45 Saham Likuid Terpilih (^JKLQ45)",
       },
       "^JKII": {
         code: "JKII",
