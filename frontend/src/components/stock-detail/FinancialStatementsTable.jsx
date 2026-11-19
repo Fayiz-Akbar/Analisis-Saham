@@ -1,22 +1,41 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  ResponsiveContainer,
   BarChart,
   Bar,
+  AreaChart,
+  Area,
+  LineChart,
+  Line,
+  Cell,
   XAxis,
   YAxis,
-  Tooltip,
-  Legend,
   CartesianGrid,
   ReferenceLine,
 } from "recharts";
 import { RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
 /**
- * Laporan Keuangan Konsolidasian & Ringkasan Visual
- * - Panel Kiri (7 kolom): Grafik Batang Pendapatan Usaha vs Laba Bersih Multi-Periode
- * - Panel Kanan (5 kolom): Struktur Neraca Proporsional (Aset = Ekuitas + Liabilitas), Kas, & Rasio Efisiensi
- * - Tabel Komparatif: Data historis tahunan/kuartalan + TTM dengan kalkulasi Perubahan YoY/QoQ nyata di setiap baris
+ * Laporan Keuangan Konsolidasian & 5 Grafik Insight Multi-Periode
+ * Palet monokrom obsidian (#0f1014) + aksen pasar TradingView (#26a69a / #ef5350):
+ * - Baris 1: Grafik Penjualan & Laba Bersih (8 col) + Bento Struktur Neraca & Rasio (4 col)
+ * - Baris 2: Grafik Tren Profitabilitas ROE/ROA/NPM (6 col) + Grafik Perkembangan Harta, Modal, Utang & Kas (6 col)
+ * - Baris 3: Grafik Laba per Lembar Saham / EPS (6 col) + Grafik Tren Beban Utang / DER (6 col)
+ * - Baris 4: Tabel Komparatif Multi-Periode dengan Perubahan YoY/QoQ nyata
  */
 export default function FinancialStatementsTable({
   fundamentals,
@@ -30,6 +49,9 @@ export default function FinancialStatementsTable({
   const f = fundamentals || {};
   const [periodMode, setPeriodMode] = useState("annual"); // "annual" | "quarterly"
   const [activeView, setActiveView] = useState("both"); // "both" | "charts" | "table"
+  const [activeIncomeChart, setActiveIncomeChart] = useState("both"); // "both" | "chartRevenue" | "chartNetIncome"
+  const [activeProfitChart, setActiveProfitChart] = useState("all"); // "all" | "roe" | "netProfitMargin" | "roa"
+  const [activeBalanceChart, setActiveBalanceChart] = useState("capital"); // "capital" | "cashDebt" | "assets"
   const [currencyMode, setCurrencyMode] = useState("IDR"); // "IDR" | "ORIGINAL"
   const [localHistory, setLocalHistory] = useState(null);
   const [localLoading, setLocalLoading] = useState(false);
@@ -67,6 +89,7 @@ export default function FinancialStatementsTable({
   const financialCurrency = apiHistory?.financialCurrency || f?.financialCurrency || "IDR";
   const usdRate = Number(apiHistory?.usdToIdrRate || f?.usdToIdrRate || 16200);
   const isForeignCurrency = financialCurrency === "USD";
+  const isUsdDisplay = currencyMode === "ORIGINAL" && isForeignCurrency;
 
   const formatFinancialValue = (val, mode = currencyMode) => {
     if (val === null || val === undefined || isNaN(val)) return "-";
@@ -148,6 +171,20 @@ export default function FinancialStatementsTable({
     })}%`;
   };
 
+  const toChartUnit = (rawVal, idrVal) => {
+    if (rawVal === null || rawVal === undefined || isNaN(rawVal)) return 0;
+    if (isUsdDisplay) {
+      return Number((Number(rawVal) / 1e6).toFixed(2));
+    }
+    const nominalIdr =
+      idrVal !== null && idrVal !== undefined
+        ? Number(idrVal)
+        : isForeignCurrency
+        ? Number(rawVal) * usdRate
+        : Number(rawVal);
+    return Number((nominalIdr / 1e12).toFixed(2));
+  };
+
   const activePeriods = useMemo(() => {
     let list = [];
     if (periodMode === "annual") {
@@ -176,30 +213,74 @@ export default function FinancialStatementsTable({
     return regularPeriods[regularPeriods.length - 1] || apiHistory?.ttm || {};
   }, [regularPeriods, apiHistory]);
 
-  const chartDisplayPeriods = useMemo(() => {
-    const isUsdMode = currencyMode === "ORIGINAL" && isForeignCurrency;
-    const chartSource = periodMode === "quarterly" ? regularPeriods : activePeriods;
-    return chartSource.map((p) => {
-      const revVal = isUsdMode
+  const latestHeadlinePeriod = useMemo(() => {
+    if (periodMode === "annual" && apiHistory?.ttm) return apiHistory.ttm;
+    return latestAuditPeriod;
+  }, [periodMode, apiHistory, latestAuditPeriod]);
+
+  // Dataset terpadu untuk seluruh grafik (Pendapatan, Laba, Neraca, Rasio, EPS, DER)
+  const chartDataset = useMemo(() => {
+    const source = periodMode === "quarterly" ? regularPeriods : activePeriods;
+    return source.map((p) => {
+      const revVal = isUsdDisplay
         ? Number(p.revenueOriginalM || (p.revenue ? p.revenue / 1e6 : 0))
         : Number(p.revenueT || 0);
-      const netVal = isUsdMode
+      const netVal = isUsdDisplay
         ? Number(p.netIncomeOriginalM || (p.netIncome ? p.netIncome / 1e6 : 0))
         : Number(p.netIncomeT || 0);
+      const epsVal =
+        p.eps !== null && p.eps !== undefined
+          ? isUsdDisplay
+            ? Number(p.eps)
+            : Number(p.epsIdr ?? (isForeignCurrency ? Number(p.eps) * usdRate : Number(p.eps)))
+          : null;
 
       return {
         ...p,
         chartRevenue: revVal,
         chartNetIncome: netVal,
+        chartAssets: toChartUnit(p.totalAssets, p.totalAssetsIdr),
+        chartEquity: Math.max(0, toChartUnit(p.totalEquity, p.totalEquityIdr)),
+        chartLiabilities: Math.max(0, toChartUnit(p.totalLiabilities, p.totalLiabilitiesIdr)),
+        chartCash: Math.max(0, toChartUnit(p.cashEquivalents, p.cashEquivalentsIdr)),
+        chartEps: epsVal !== null && !isNaN(epsVal) ? Number(epsVal.toFixed(2)) : null,
+        chartDer: p.der !== null && p.der !== undefined && !isNaN(p.der) ? Number(p.der) : null,
       };
     });
-  }, [activePeriods, regularPeriods, currencyMode, isForeignCurrency, periodMode]);
+  }, [activePeriods, regularPeriods, isUsdDisplay, isForeignCurrency, usdRate, periodMode]);
 
-  const hasNegativeChartValue = useMemo(() => {
-    return chartDisplayPeriods.some((p) => p.chartNetIncome < 0 || p.chartRevenue < 0);
-  }, [chartDisplayPeriods]);
+  const profitDataset = useMemo(() => {
+    return chartDataset.filter(
+      (p) =>
+        p.roe !== null || p.roa !== null || p.netProfitMargin !== null
+    );
+  }, [chartDataset]);
 
-  // Kalkulasi perubahan periode terakhir terhadap periode sebelumnya (YoY untuk tahunan, QoQ untuk kuartalan)
+  const epsDataset = useMemo(() => {
+    return chartDataset.filter((p) => p.chartEps !== null);
+  }, [chartDataset]);
+
+  const derDataset = useMemo(() => {
+    return chartDataset.filter((p) => p.chartDer !== null);
+  }, [chartDataset]);
+
+  const hasNegativeIncome = useMemo(() => {
+    return chartDataset.some((p) => p.chartNetIncome < 0 || p.chartRevenue < 0);
+  }, [chartDataset]);
+
+  const hasNegativeProfitRatio = useMemo(() => {
+    return profitDataset.some(
+      (p) =>
+        Number(p.roe || 0) < 0 ||
+        Number(p.roa || 0) < 0 ||
+        Number(p.netProfitMargin || 0) < 0
+    );
+  }, [profitDataset]);
+
+  const hasNegativeEps = useMemo(() => {
+    return epsDataset.some((p) => Number(p.chartEps || 0) < 0);
+  }, [epsDataset]);
+
   const computeMetricDelta = (fieldKey, isPointDiff = false) => {
     if (regularPeriods.length < 2) return null;
     const curr = regularPeriods[regularPeriods.length - 1]?.[fieldKey];
@@ -217,9 +298,11 @@ export default function FinancialStatementsTable({
   };
 
   const revDelta = computeMetricDelta("revenue", false);
+  const netDelta = computeMetricDelta("netIncome", false);
+  const epsDelta = computeMetricDelta("eps", false);
   const deltaHeaderLabel = periodMode === "annual" ? "Perubahan YoY" : "Perubahan QoQ";
+  const periodDeltaSuffix = periodMode === "annual" ? "YoY" : "QoQ";
 
-  // Proporsi Ekuitas vs Liabilitas terhadap Total Aset
   const balanceStructure = useMemo(() => {
     const eq = Math.max(0, Number(latestAuditPeriod.totalEquity || 0));
     const liab = Math.max(0, Number(latestAuditPeriod.totalLiabilities || 0));
@@ -232,46 +315,86 @@ export default function FinancialStatementsTable({
     return { equityPct, liabPct, hasData: true };
   }, [latestAuditPeriod]);
 
-  const CustomBarTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const pData = payload[0]?.payload;
-      return (
-        <div className="bg-[#0c1017] border border-white/10 p-3 rounded-xl text-xs space-y-1.5 font-sans">
-          <p className="font-bold text-white border-b border-white/10 pb-1">{label}</p>
-          <div className="flex items-center justify-between gap-4">
-            <span className="flex items-center gap-1.5 text-slate-300">
-              <span className="w-2.5 h-2.5 rounded-xs inline-block bg-[#3b82f6]" />
-              <span>Pendapatan Usaha:</span>
-            </span>
-            <span className="font-mono font-bold tabular-nums text-white">
-              {formatFinancialValue(pData?.revenue)}
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <span className="flex items-center gap-1.5 text-slate-300">
-              <span className="w-2.5 h-2.5 rounded-xs inline-block bg-[#10b981]" />
-              <span>Laba Bersih:</span>
-            </span>
-            <span
-              className={`font-mono font-bold tabular-nums ${
-                Number(pData?.netIncome || 0) < 0 ? "text-[#f87171]" : "text-white"
-              }`}
-            >
-              {formatFinancialValue(pData?.netIncome)}
-            </span>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
+  const incomeChartConfig = useMemo(
+    () => ({
+      chartRevenue: {
+        label: "Penjualan (Pendapatan)",
+        color: "hsl(var(--chart-1))",
+      },
+      chartNetIncome: {
+        label: "Laba Bersih",
+        color: "hsl(var(--chart-2))",
+      },
+    }),
+    []
+  );
+
+  const profitChartConfig = useMemo(
+    () => ({
+      roe: {
+        label: "ROE (Laba / Modal)",
+        color: "hsl(var(--chart-2))",
+      },
+      netProfitMargin: {
+        label: "Marjin Bersih (NPM)",
+        color: "hsl(var(--chart-1))",
+      },
+      roa: {
+        label: "ROA (Laba / Aset)",
+        color: "hsl(var(--chart-4))",
+      },
+    }),
+    []
+  );
+
+  const balanceChartConfig = useMemo(
+    () => ({
+      chartEquity: {
+        label: "Modal Bersih (Ekuitas)",
+        color: "hsl(var(--chart-1))",
+      },
+      chartLiabilities: {
+        label: "Total Utang (Liabilitas)",
+        color: "hsl(var(--chart-3))",
+      },
+      chartCash: {
+        label: "Uang Kas Tersedia",
+        color: "hsl(var(--chart-2))",
+      },
+      chartAssets: {
+        label: "Total Harta (Aset)",
+        color: "hsl(var(--chart-1))",
+      },
+    }),
+    []
+  );
+
+  const epsChartConfig = useMemo(
+    () => ({
+      chartEps: {
+        label: "Laba / Lembar (EPS)",
+        color: "hsl(var(--chart-2))",
+      },
+    }),
+    []
+  );
+
+  const derChartConfig = useMemo(
+    () => ({
+      chartDer: {
+        label: "Rasio Utang (DER)",
+        color: "hsl(var(--chart-1))",
+      },
+    }),
+    []
+  );
 
   const getValueColorClass = (val) => {
-    if (val === null || val === undefined || isNaN(val)) return "text-slate-400";
+    if (val === null || val === undefined || isNaN(val)) return "text-zinc-400 dark:text-zinc-500";
     const num = Number(val);
-    if (num > 0) return "text-emerald-600 dark:text-[#2fe695]";
-    if (num < 0) return "text-rose-600 dark:text-[#f87171]";
-    return "text-slate-600 dark:text-slate-300";
+    if (num > 0) return "text-emerald-600 dark:text-[#26a69a]";
+    if (num < 0) return "text-rose-600 dark:text-[#ef5350]";
+    return "text-zinc-700 dark:text-zinc-300";
   };
 
   const formatDeltaCell = (deltaVal, isPointDiff = false) => {
@@ -286,15 +409,15 @@ export default function FinancialStatementsTable({
   };
 
   const stickyLabelCellClass =
-    "py-2.5 px-4 sticky left-0 z-10 bg-white dark:bg-[#0c0e14] border-r border-slate-100 dark:border-white/[0.04] font-medium text-slate-800 dark:text-slate-200";
+    "py-2.5 px-4 sticky left-0 z-10 bg-white dark:bg-[#0f1014] border-r border-zinc-100 dark:border-white/[0.04] font-medium text-zinc-800 dark:text-zinc-200";
 
   const TABLE_SECTIONS = [
     {
-      title: "Laporan Laba Rugi (Income Statement)",
+      title: "Laporan Laba Rugi (Penjualan & Keuntungan)",
       rows: [
         {
           key: "revenue",
-          label: "Pendapatan Usaha (Revenue)",
+          label: "Total Penjualan (Revenue)",
           type: "currency",
           isBold: true,
         },
@@ -307,59 +430,59 @@ export default function FinancialStatementsTable({
         },
         {
           key: "netProfitMargin",
-          label: "Marjin Laba Bersih (NPM)",
+          label: "Sisa Laba dari Penjualan (NPM)",
           type: "percent",
           isPointDiff: true,
           colorBySign: true,
         },
         {
           key: "eps",
-          label: "Laba per Saham (EPS)",
+          label: "Laba per 1 Lembar Saham (EPS)",
           type: "eps",
           colorBySign: true,
         },
       ],
     },
     {
-      title: "Neraca Keuangan (Balance Sheet)",
+      title: "Neraca Keuangan (Harta, Modal, & Utang)",
       rows: [
         {
           key: "totalAssets",
-          label: "Total Aset",
+          label: "Total Harta (Aset)",
           type: "currency",
           isBold: true,
         },
         {
           key: "totalEquity",
-          label: "Total Ekuitas (Modal Bersih)",
+          label: "Modal Bersih (Ekuitas)",
           type: "currency",
           isBold: true,
         },
         {
           key: "totalLiabilities",
-          label: "Total Liabilitas (Kewajiban)",
+          label: "Total Utang (Liabilitas)",
           type: "currency",
         },
         {
           key: "cashEquivalents",
-          label: "Kas & Setara Kas",
+          label: "Uang Kas Tersedia",
           type: "currency",
         },
       ],
     },
     {
-      title: "Rasio Pengembalian & Solvabilitas",
+      title: "Rasio Efisiensi Usaha",
       rows: [
         {
           key: "roe",
-          label: "Return on Equity (ROE)",
+          label: "Laba dari Modal Sendiri (ROE)",
           type: "percent",
           isPointDiff: true,
           colorBySign: true,
         },
         {
           key: "roa",
-          label: "Return on Assets (ROA)",
+          label: "Laba dari Total Harta (ROA)",
           type: "percent",
           isPointDiff: true,
           colorBySign: true,
@@ -368,33 +491,109 @@ export default function FinancialStatementsTable({
     },
   ];
 
+  const INCOME_HEADER_TABS = [
+    {
+      id: "both",
+      label: "Perbandingan",
+      value:
+        latestHeadlinePeriod?.netProfitMargin !== null &&
+        latestHeadlinePeriod?.netProfitMargin !== undefined
+          ? `NPM ${formatPct(latestHeadlinePeriod.netProfitMargin)}`
+          : "2 Seri",
+      valueClass: getValueColorClass(latestHeadlinePeriod?.netProfitMargin),
+    },
+    {
+      id: "chartRevenue",
+      label: "Penjualan",
+      value: formatFinancialValue(latestHeadlinePeriod?.revenue),
+      valueClass: "text-zinc-900 dark:text-white",
+    },
+    {
+      id: "chartNetIncome",
+      label: "Laba Bersih",
+      value: formatFinancialValue(latestHeadlinePeriod?.netIncome),
+      valueClass:
+        latestHeadlinePeriod?.netIncome !== null &&
+        latestHeadlinePeriod?.netIncome !== undefined &&
+        Number(latestHeadlinePeriod.netIncome) < 0
+          ? "text-rose-600 dark:text-[#ef5350]"
+          : "text-emerald-600 dark:text-[#26a69a]",
+    },
+  ];
+
+  const PROFIT_HEADER_TABS = [
+    { id: "all", label: "Semua", value: "3 Rasio", valueClass: "text-zinc-900 dark:text-white" },
+    {
+      id: "roe",
+      label: "ROE",
+      value: formatPct(latestAuditPeriod?.roe),
+      valueClass: getValueColorClass(latestAuditPeriod?.roe),
+    },
+    {
+      id: "netProfitMargin",
+      label: "Marjin",
+      value: formatPct(latestAuditPeriod?.netProfitMargin),
+      valueClass: getValueColorClass(latestAuditPeriod?.netProfitMargin),
+    },
+    {
+      id: "roa",
+      label: "ROA",
+      value: formatPct(latestAuditPeriod?.roa),
+      valueClass: getValueColorClass(latestAuditPeriod?.roa),
+    },
+  ];
+
+  const BALANCE_HEADER_TABS = [
+    {
+      id: "capital",
+      label: "Modal vs Utang",
+      value: formatFinancialValue(latestAuditPeriod?.totalEquity),
+      valueClass: "text-zinc-900 dark:text-white",
+    },
+    {
+      id: "cashDebt",
+      label: "Kas vs Utang",
+      value: formatFinancialValue(latestAuditPeriod?.cashEquivalents),
+      valueClass: "text-zinc-900 dark:text-white",
+    },
+    {
+      id: "assets",
+      label: "Total Aset",
+      value: formatFinancialValue(latestAuditPeriod?.totalAssets),
+      valueClass: "text-zinc-900 dark:text-white",
+    },
+  ];
+
+  const unitLabel = isUsdDisplay ? `Juta ${financialCurrency}` : "Triliun Rupiah";
+  const periodLabel = periodMode === "annual" ? "Tahunan + 12 Bulan Terakhir (TTM)" : "Kuartalan (Q1-Q4)";
+
   return (
     <div className="space-y-4">
       {/* ========================================================
           1. HEADER LAPORAN KEUANGAN & CONTROLLER FILTER
           ======================================================== */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2.5 border-b border-slate-200 dark:border-white/[0.08]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2.5 border-b border-zinc-200 dark:border-white/[0.08]">
         <div>
-          <h2 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Laporan Keuangan & Struktur Neraca
+          <h2 className="text-base sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+            Laporan Keuangan & Grafik Kinerja
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Rekam jejak pendapatan, laba bersih, posisi neraca, dan rasio efisiensi{" "}
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+            Perkembangan penjualan, laba, modal, utang, uang kas, dan efisiensi usaha{" "}
             {stock?.companyName || quote?.symbol}.
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           {isForeignCurrency && (
-            <div className="inline-flex items-center bg-slate-100 dark:bg-white/[0.04] p-0.5 rounded-lg border border-slate-200 dark:border-white/[0.08] text-xs">
+            <div className="inline-flex items-center bg-zinc-100 dark:bg-white/[0.04] p-0.5 rounded-lg border border-zinc-200 dark:border-white/[0.08] text-xs">
               <button
                 type="button"
                 onClick={() => setCurrencyMode("IDR")}
                 title={`Konversi kurs resmi (1 USD ≈ Rp ${Math.round(usdRate).toLocaleString("id-ID")})`}
                 className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
                   currencyMode === "IDR"
-                    ? "bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    ? "bg-white text-zinc-900 dark:bg-zinc-800 dark:text-white"
+                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
                 }`}
               >
                 IDR
@@ -405,8 +604,8 @@ export default function FinancialStatementsTable({
                 title={`Mata uang pelaporan resmi emiten (${financialCurrency})`}
                 className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
                   currencyMode === "ORIGINAL"
-                    ? "bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    ? "bg-white text-zinc-900 dark:bg-zinc-800 dark:text-white"
+                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
                 }`}
               >
                 {financialCurrency}
@@ -415,14 +614,14 @@ export default function FinancialStatementsTable({
           )}
 
           {/* Toggle Periode: Tahunan vs Kuartalan */}
-          <div className="inline-flex items-center bg-slate-100 dark:bg-white/[0.04] p-0.5 rounded-lg border border-slate-200 dark:border-white/[0.08] text-xs">
+          <div className="inline-flex items-center bg-zinc-100 dark:bg-white/[0.04] p-0.5 rounded-lg border border-zinc-200 dark:border-white/[0.08] text-xs">
             <button
               type="button"
               onClick={() => setPeriodMode("annual")}
               className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
                 periodMode === "annual"
-                  ? "bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  ? "bg-white text-zinc-900 dark:bg-zinc-800 dark:text-white"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
               }`}
             >
               Tahunan
@@ -432,8 +631,8 @@ export default function FinancialStatementsTable({
               onClick={() => setPeriodMode("quarterly")}
               className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
                 periodMode === "quarterly"
-                  ? "bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  ? "bg-white text-zinc-900 dark:bg-zinc-800 dark:text-white"
+                  : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
               }`}
             >
               Kuartalan
@@ -441,7 +640,7 @@ export default function FinancialStatementsTable({
           </div>
 
           {/* Switcher Tampilan (Semua / Grafik / Tabel) */}
-          <div className="inline-flex items-center bg-slate-100 dark:bg-white/[0.04] p-0.5 rounded-lg border border-slate-200 dark:border-white/[0.08] text-xs">
+          <div className="inline-flex items-center bg-zinc-100 dark:bg-white/[0.04] p-0.5 rounded-lg border border-zinc-200 dark:border-white/[0.08] text-xs">
             {[
               { id: "both", label: "Semua" },
               { id: "charts", label: "Grafik" },
@@ -453,8 +652,8 @@ export default function FinancialStatementsTable({
                 onClick={() => setActiveView(item.id)}
                 className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
                   activeView === item.id
-                    ? "bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    ? "bg-white text-zinc-900 dark:bg-zinc-800 dark:text-white"
+                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
                 }`}
               >
                 {item.label}
@@ -466,14 +665,14 @@ export default function FinancialStatementsTable({
 
       {/* Loading / Error State */}
       {isLoading && !apiHistory && (
-        <div className="p-8 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex items-center justify-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-          <RefreshCw className="w-4 h-4 animate-spin text-slate-400" aria-hidden="true" />
+        <div className="p-8 rounded-2xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1014] flex items-center justify-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+          <RefreshCw className="w-4 h-4 animate-spin text-zinc-400" aria-hidden="true" />
           <span>Memuat laporan keuangan historis...</span>
         </div>
       )}
 
       {propError && !apiHistory && !isLoading && (
-        <div className="p-5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/30 dark:bg-rose-950/20 flex items-center justify-between gap-4 text-xs">
+        <div className="p-5 rounded-2xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/30 dark:bg-rose-950/20 flex items-center justify-between gap-4 text-xs">
           <span className="text-rose-700 dark:text-rose-300">{propError}</span>
           {onRetryHistory && (
             <button
@@ -488,206 +687,874 @@ export default function FinancialStatementsTable({
       )}
 
       {/* ========================================================
-          2. RINGKASAN VISUAL (2 PANEL BERSIH & AKURAT)
+          2. VISUALISASI MULTI-GRAFIK (5 GRAFIK INSIGHT + BENTO NERACA)
           ======================================================== */}
       {apiHistory && (activeView === "both" || activeView === "charts") && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* Panel 1 (7 Kolom): Grafik Batang Pendapatan vs Laba Bersih */}
-          <div className="lg:col-span-7 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                  Tren Pendapatan & Laba Bersih
-                </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Satuan dalam{" "}
-                  {currencyMode === "ORIGINAL" && isForeignCurrency
-                    ? `Juta ${financialCurrency}`
-                    : "Triliun Rupiah"}
-                </p>
+        <div className="space-y-4">
+          {/* BARIS 1: PENJUALAN & LABA BERSIH (8 COL) + STRUKTUR NERACA & RASIO (4 COL) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+            {/* GRAFIK 1: PENJUALAN & LABA BERSIH */}
+            <Card className="lg:col-span-8 flex flex-col justify-between overflow-hidden">
+              <CardHeader className="flex flex-col items-stretch space-y-0 border-b border-zinc-200 dark:border-white/[0.08] p-0 sm:flex-row">
+                <div className="flex flex-1 flex-col justify-center gap-1 px-5 py-4">
+                  <CardTitle className="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">
+                    Penjualan & Laba Bersih
+                  </CardTitle>
+                  <CardDescription className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    Satuan {unitLabel} ({periodLabel})
+                  </CardDescription>
+                </div>
+
+                <div className="flex border-t border-zinc-200 dark:border-white/[0.08] sm:border-t-0">
+                  {INCOME_HEADER_TABS.map((tab) => {
+                    const isActive = activeIncomeChart === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        data-active={isActive}
+                        onClick={() => setActiveIncomeChart(tab.id)}
+                        className={cn(
+                          "relative flex flex-1 flex-col justify-center gap-0.5 px-3.5 py-3 text-left transition-colors cursor-pointer sm:px-5 sm:py-3.5 sm:border-l border-zinc-200 dark:border-white/[0.08] even:border-l first:border-l-0 sm:first:border-l",
+                          isActive
+                            ? "bg-zinc-100/80 dark:bg-white/[0.05]"
+                            : "hover:bg-zinc-50 dark:hover:bg-white/[0.02]"
+                        )}
+                      >
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
+                          {tab.label}
+                        </span>
+                        <span
+                          className={cn(
+                            "text-xs sm:text-sm font-extrabold font-mono tabular-nums leading-tight whitespace-nowrap",
+                            tab.valueClass
+                          )}
+                        >
+                          {tab.value}
+                        </span>
+                        {isActive && (
+                          <span className="absolute inset-x-0 bottom-0 h-0.5 bg-zinc-900 dark:bg-white" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </CardHeader>
+
+              <CardContent className="px-3 pt-4 pb-4 sm:px-5 sm:pt-5 flex-1 flex flex-col justify-center">
+                <ChartContainer config={incomeChartConfig} className="aspect-auto h-[265px] w-full">
+                  <BarChart
+                    accessibilityLayer
+                    data={chartDataset}
+                    margin={{ top: 8, right: 10, left: -12, bottom: 0 }}
+                  >
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="period"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      tick={{ fontSize: 11 }}
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fontSize: 11 }}
+                      tickFormatter={(val) => (isUsdDisplay ? `$${val}M` : `${val}T`)}
+                    />
+                    {hasNegativeIncome && (
+                      <ReferenceLine y={0} stroke="rgba(161,161,170,0.4)" />
+                    )}
+                    <ChartTooltip
+                      cursor={{ fill: "rgba(161, 161, 170, 0.08)" }}
+                      content={
+                        <ChartTooltipContent
+                          className="min-w-[190px]"
+                          formatter={(value, name, item) => {
+                            const isRev = item.dataKey === "chartRevenue";
+                            const rawNominal = isRev
+                              ? item.payload?.revenue
+                              : item.payload?.netIncome;
+                            const isNeg = Number(rawNominal || 0) < 0;
+                            const swatchColor = isRev
+                              ? "hsl(var(--chart-1))"
+                              : isNeg
+                              ? "#ef5350"
+                              : "hsl(var(--chart-2))";
+                            return (
+                              <div className="flex w-full items-center justify-between gap-4">
+                                <span className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
+                                  <span
+                                    className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                                    style={{ backgroundColor: swatchColor }}
+                                  />
+                                  <span>{isRev ? "Penjualan" : "Laba Bersih"}</span>
+                                </span>
+                                <span
+                                  className={cn(
+                                    "font-mono font-bold tabular-nums",
+                                    isNeg
+                                      ? "text-rose-600 dark:text-[#ef5350]"
+                                      : "text-zinc-900 dark:text-white"
+                                  )}
+                                >
+                                  {formatFinancialValue(rawNominal)}
+                                </span>
+                              </div>
+                            );
+                          }}
+                        />
+                      }
+                    />
+                    {activeIncomeChart === "both" && (
+                      <ChartLegend content={<ChartLegendContent />} />
+                    )}
+                    {(activeIncomeChart === "both" || activeIncomeChart === "chartRevenue") && (
+                      <Bar
+                        dataKey="chartRevenue"
+                        name="Penjualan (Pendapatan)"
+                        fill="var(--color-chartRevenue)"
+                        radius={[5, 5, 0, 0]}
+                        maxBarSize={activeIncomeChart === "both" ? 32 : 46}
+                      />
+                    )}
+                    {(activeIncomeChart === "both" || activeIncomeChart === "chartNetIncome") && (
+                      <Bar
+                        dataKey="chartNetIncome"
+                        name="Laba Bersih"
+                        fill="var(--color-chartNetIncome)"
+                        radius={[5, 5, 0, 0]}
+                        maxBarSize={activeIncomeChart === "both" ? 32 : 46}
+                      >
+                        {chartDataset.map((entry, idx) => (
+                          <Cell
+                            key={`net-${idx}`}
+                            fill={
+                              Number(entry.chartNetIncome) < 0
+                                ? "#ef5350"
+                                : "var(--color-chartNetIncome)"
+                            }
+                          />
+                        ))}
+                      </Bar>
+                    )}
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+
+            {/* PANEL KANAN (4 COL): STRUKTUR NERACA + RINGKASAN RASIO */}
+            <div className="lg:col-span-4 flex flex-col gap-4">
+              <div className="p-5 rounded-2xl bg-zinc-900 text-white dark:bg-[#14151a] border border-zinc-800 dark:border-white/[0.10] flex flex-col justify-between gap-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-400">
+                      Struktur Neraca ({latestAuditPeriod.period || "-"})
+                    </p>
+                    <h3 className="text-sm font-bold tracking-tight text-white mt-0.5">
+                      Sumber Dana: Modal vs Utang
+                    </h3>
+                  </div>
+                  <span className="text-[11px] font-mono font-bold tabular-nums px-2 py-0.5 rounded-md bg-white/[0.07] border border-white/[0.10] text-zinc-100 shrink-0">
+                    DER{" "}
+                    {latestAuditPeriod.der !== null && latestAuditPeriod.der !== undefined
+                      ? `${Number(latestAuditPeriod.der).toLocaleString("id-ID")}x`
+                      : "-"}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-end justify-between gap-2">
+                    <div>
+                      <span className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight tabular-nums text-white">
+                        {balanceStructure.equityPct}%
+                      </span>
+                      <span className="text-[11px] text-zinc-400 ml-1.5">Modal Sendiri</span>
+                    </div>
+                    <span className="text-xs font-mono font-semibold tabular-nums text-zinc-400 mb-0.5">
+                      Utang {balanceStructure.liabPct}%
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-white/[0.08] rounded-sm overflow-hidden flex">
+                    <div
+                      className="h-full bg-white transition-all duration-300"
+                      style={{ width: `${balanceStructure.equityPct}%` }}
+                    />
+                    <div
+                      className="h-full bg-zinc-600 transition-all duration-300"
+                      style={{ width: `${balanceStructure.liabPct}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
+                  <div className="px-2.5 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06]">
+                    <span className="text-[10px] text-zinc-400 block">Total Harta (Aset)</span>
+                    <span className="font-mono font-bold tabular-nums text-white">
+                      {formatFinancialValue(latestAuditPeriod.totalAssets)}
+                    </span>
+                  </div>
+                  <div className="px-2.5 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06]">
+                    <span className="text-[10px] text-zinc-400 block">Uang Kas Tersedia</span>
+                    <span className="font-mono font-bold tabular-nums text-white">
+                      {formatFinancialValue(latestAuditPeriod.cashEquivalents)}
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              {revDelta !== null && (
-                <span
-                  className={`text-xs font-bold font-mono tabular-nums px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] w-fit ${getValueColorClass(
-                    revDelta
-                  )}`}
-                >
-                  Omset {revDelta > 0 ? "+" : ""}
-                  {revDelta.toLocaleString("id-ID")}% {periodMode === "annual" ? "YoY" : "QoQ"}
-                </span>
-              )}
-            </div>
+              <div className="p-5 rounded-2xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1014] flex flex-col justify-between gap-4 flex-1">
+                <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-zinc-100 dark:border-white/[0.06]">
+                  <h3 className="text-sm font-bold text-zinc-900 dark:text-white leading-tight">
+                    Rasio Efisiensi & Laba
+                  </h3>
+                  <span className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
+                    {latestAuditPeriod.period || "-"}
+                  </span>
+                </div>
 
-            <div className="w-full h-60 pt-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={chartDisplayPeriods}
-                  margin={{ top: 8, right: 8, left: -12, bottom: 0 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="rgba(148,163,184,0.14)"
-                  />
-                  <XAxis
-                    dataKey="period"
-                    tick={{ fill: "#94a3b8", fontSize: 11 }}
-                    axisLine={{ stroke: "rgba(148,163,184,0.2)" }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fill: "#94a3b8", fontSize: 11 }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(val) =>
-                      currencyMode === "ORIGINAL" && isForeignCurrency ? `$${val}M` : `${val}T`
-                    }
-                  />
-                  {hasNegativeChartValue && (
-                    <ReferenceLine y={0} stroke="rgba(148,163,184,0.35)" />
-                  )}
-                  <Tooltip content={<CustomBarTooltip />} />
-                  <Legend
-                    verticalAlign="top"
-                    align="right"
-                    iconType="rect"
-                    iconSize={10}
-                    wrapperStyle={{ paddingBottom: 8, fontSize: 11 }}
-                  />
-                  <Bar
-                    dataKey="chartRevenue"
-                    name="Pendapatan Usaha"
-                    fill="#3b82f6"
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={34}
-                  />
-                  <Bar
-                    dataKey="chartNetIncome"
-                    name="Laba Bersih"
-                    fill="#10b981"
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={34}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-500 dark:text-zinc-400 block">
+                      ROE (Laba / Modal)
+                    </span>
+                    <span
+                      className={cn(
+                        "font-mono font-extrabold text-sm tabular-nums",
+                        getValueColorClass(latestAuditPeriod.roe)
+                      )}
+                    >
+                      {formatPct(latestAuditPeriod.roe)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-500 dark:text-zinc-400 block">
+                      ROA (Laba / Aset)
+                    </span>
+                    <span
+                      className={cn(
+                        "font-mono font-extrabold text-sm tabular-nums",
+                        getValueColorClass(latestAuditPeriod.roa)
+                      )}
+                    >
+                      {formatPct(latestAuditPeriod.roa)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-500 dark:text-zinc-400 block">
+                      Marjin (NPM)
+                    </span>
+                    <span
+                      className={cn(
+                        "font-mono font-extrabold text-sm tabular-nums",
+                        getValueColorClass(latestAuditPeriod.netProfitMargin)
+                      )}
+                    >
+                      {formatPct(latestAuditPeriod.netProfitMargin)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-500 dark:text-zinc-400 block">
+                      Laba / Saham (EPS)
+                    </span>
+                    <span
+                      className={cn(
+                        "font-mono font-extrabold text-sm tabular-nums",
+                        latestAuditPeriod.eps !== null &&
+                          latestAuditPeriod.eps !== undefined &&
+                          Number(latestAuditPeriod.eps) < 0
+                          ? "text-rose-600 dark:text-[#ef5350]"
+                          : "text-zinc-900 dark:text-white"
+                      )}
+                    >
+                      {formatEpsValue(latestAuditPeriod.eps)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-500 dark:text-zinc-400 block">
+                      Penjualan ({periodDeltaSuffix})
+                    </span>
+                    <span
+                      className={cn(
+                        "font-mono font-extrabold text-sm tabular-nums",
+                        getValueColorClass(revDelta)
+                      )}
+                    >
+                      {formatDeltaCell(revDelta, false)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-500 dark:text-zinc-400 block">
+                      Laba ({periodDeltaSuffix})
+                    </span>
+                    <span
+                      className={cn(
+                        "font-mono font-extrabold text-sm tabular-nums",
+                        getValueColorClass(netDelta)
+                      )}
+                    >
+                      {formatDeltaCell(netDelta, false)}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Panel 2 (5 Kolom): Komposisi Neraca & Rasio Efisiensi */}
-          <div className="lg:col-span-5 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between space-y-4">
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                  Komposisi Neraca ({latestAuditPeriod.period || "-"})
-                </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Proporsi pendanaan Aset dari Modal Bersih vs Kewajiban
-                </p>
-              </div>
-              <span className="text-xs font-mono font-bold tabular-nums px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-200">
-                DER{" "}
-                {latestAuditPeriod.der !== null && latestAuditPeriod.der !== undefined
-                  ? `${Number(latestAuditPeriod.der).toLocaleString("id-ID")}x`
-                  : "-"}
-              </span>
-            </div>
+          {/* BARIS 2: TREN PROFITABILITAS (6 COL) + PERKEMBANGAN NERACA & KAS (6 COL) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+            {/* GRAFIK 2: TREN PROFITABILITAS & EFISIENSI (ROE, NPM, ROA) */}
+            <Card className="lg:col-span-6 flex flex-col justify-between overflow-hidden">
+              <CardHeader className="flex flex-col items-stretch space-y-0 border-b border-zinc-200 dark:border-white/[0.08] p-0 xl:flex-row">
+                <div className="flex flex-1 flex-col justify-center gap-1 px-5 py-4">
+                  <CardTitle className="text-sm font-bold text-zinc-900 dark:text-white">
+                    Tren Profitabilitas (%)
+                  </CardTitle>
+                  <CardDescription className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    Kemampuan cetak laba dari modal (ROE), penjualan (NPM), dan harta (ROA)
+                  </CardDescription>
+                </div>
 
-            {/* Bar Proporsi Ekuitas vs Liabilitas */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs font-mono tabular-nums">
-                <span className="text-emerald-600 dark:text-[#2fe695] font-semibold">
-                  Ekuitas {balanceStructure.equityPct}%
-                </span>
-                <span className="text-amber-600 dark:text-amber-400 font-semibold">
-                  Liabilitas {balanceStructure.liabPct}%
-                </span>
-              </div>
-              <div className="w-full h-2.5 rounded-md bg-slate-100 dark:bg-white/[0.06] overflow-hidden flex">
-                <div
-                  className="h-full bg-[#10b981] transition-all duration-300"
-                  style={{ width: `${balanceStructure.equityPct}%` }}
-                  title={`Ekuitas: ${balanceStructure.equityPct}%`}
-                />
-                <div
-                  className="h-full bg-[#f59e0b] transition-all duration-300"
-                  style={{ width: `${balanceStructure.liabPct}%` }}
-                  title={`Liabilitas: ${balanceStructure.liabPct}%`}
-                />
-              </div>
-            </div>
+                <div className="flex border-t border-zinc-200 dark:border-white/[0.08] xl:border-t-0">
+                  {PROFIT_HEADER_TABS.map((tab) => {
+                    const isActive = activeProfitChart === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveProfitChart(tab.id)}
+                        className={cn(
+                          "relative flex flex-1 flex-col justify-center gap-0.5 px-3 py-2.5 text-left transition-colors cursor-pointer xl:border-l border-zinc-200 dark:border-white/[0.08] even:border-l first:border-l-0 xl:first:border-l",
+                          isActive
+                            ? "bg-zinc-100/80 dark:bg-white/[0.05]"
+                            : "hover:bg-zinc-50 dark:hover:bg-white/[0.02]"
+                        )}
+                      >
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
+                          {tab.label}
+                        </span>
+                        <span
+                          className={cn(
+                            "text-xs font-extrabold font-mono tabular-nums whitespace-nowrap",
+                            tab.valueClass
+                          )}
+                        >
+                          {tab.value}
+                        </span>
+                        {isActive && (
+                          <span className="absolute inset-x-0 bottom-0 h-0.5 bg-zinc-900 dark:bg-white" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </CardHeader>
 
-            {/* 4 Angka Utama Neraca */}
-            <div className="grid grid-cols-2 gap-2.5 text-xs">
-              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-white/[0.025] border border-slate-200/70 dark:border-white/[0.06]">
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
-                  Total Aset
-                </span>
-                <span className="font-mono font-bold tabular-nums text-slate-900 dark:text-slate-100 text-xs sm:text-sm">
-                  {formatFinancialValue(latestAuditPeriod.totalAssets)}
-                </span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-white/[0.025] border border-slate-200/70 dark:border-white/[0.06]">
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
-                  Kas & Setara Kas
-                </span>
-                <span className="font-mono font-bold tabular-nums text-blue-600 dark:text-blue-400 text-xs sm:text-sm">
-                  {formatFinancialValue(latestAuditPeriod.cashEquivalents)}
-                </span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-white/[0.025] border border-slate-200/70 dark:border-white/[0.06]">
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
-                  Total Ekuitas
-                </span>
-                <span className="font-mono font-bold tabular-nums text-emerald-600 dark:text-[#2fe695] text-xs sm:text-sm">
-                  {formatFinancialValue(latestAuditPeriod.totalEquity)}
-                </span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-white/[0.025] border border-slate-200/70 dark:border-white/[0.06]">
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
-                  Total Liabilitas
-                </span>
-                <span className="font-mono font-bold tabular-nums text-amber-600 dark:text-amber-400 text-xs sm:text-sm">
-                  {formatFinancialValue(latestAuditPeriod.totalLiabilities)}
-                </span>
-              </div>
-            </div>
+              <CardContent className="px-3 pt-4 pb-4 sm:px-5 sm:pt-5 flex-1">
+                <ChartContainer config={profitChartConfig} className="aspect-auto h-[230px] w-full">
+                  <LineChart
+                    accessibilityLayer
+                    data={profitDataset}
+                    margin={{ top: 10, right: 12, left: -14, bottom: 0 }}
+                  >
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="period"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      tick={{ fontSize: 11 }}
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fontSize: 11 }}
+                      tickFormatter={(val) => `${val}%`}
+                    />
+                    {hasNegativeProfitRatio && (
+                      <ReferenceLine y={0} stroke="rgba(161,161,170,0.4)" />
+                    )}
+                    <ChartTooltip
+                      content={
+                        <ChartTooltipContent
+                          className="min-w-[180px]"
+                          formatter={(value, name, item) => {
+                            const labelMap = {
+                              roe: "ROE (Laba / Modal)",
+                              netProfitMargin: "Marjin Bersih (NPM)",
+                              roa: "ROA (Laba / Aset)",
+                            };
+                            const colorMap = {
+                              roe: "hsl(var(--chart-2))",
+                              netProfitMargin: "hsl(var(--chart-1))",
+                              roa: "hsl(var(--chart-4))",
+                            };
+                            return (
+                              <div className="flex w-full items-center justify-between gap-4">
+                                <span className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
+                                  <span
+                                    className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                                    style={{ backgroundColor: colorMap[item.dataKey] || item.color }}
+                                  />
+                                  <span>{labelMap[item.dataKey] || name}</span>
+                                </span>
+                                <span
+                                  className={cn(
+                                    "font-mono font-bold tabular-nums",
+                                    getValueColorClass(value)
+                                  )}
+                                >
+                                  {formatPct(value)}
+                                </span>
+                              </div>
+                            );
+                          }}
+                        />
+                      }
+                    />
+                    {activeProfitChart === "all" && (
+                      <ChartLegend content={<ChartLegendContent />} />
+                    )}
+                    {(activeProfitChart === "all" || activeProfitChart === "roe") && (
+                      <Line
+                        type="monotone"
+                        dataKey="roe"
+                        name="ROE (Laba / Modal)"
+                        stroke="var(--color-roe)"
+                        strokeWidth={2.2}
+                        dot={{ r: 3, fill: "var(--color-roe)", strokeWidth: 0 }}
+                        activeDot={{ r: 5 }}
+                        connectNulls
+                      />
+                    )}
+                    {(activeProfitChart === "all" || activeProfitChart === "netProfitMargin") && (
+                      <Line
+                        type="monotone"
+                        dataKey="netProfitMargin"
+                        name="Marjin Bersih (NPM)"
+                        stroke="var(--color-netProfitMargin)"
+                        strokeWidth={2}
+                        dot={{ r: 3, fill: "var(--color-netProfitMargin)", strokeWidth: 0 }}
+                        activeDot={{ r: 5 }}
+                        connectNulls
+                      />
+                    )}
+                    {(activeProfitChart === "all" || activeProfitChart === "roa") && (
+                      <Line
+                        type="monotone"
+                        dataKey="roa"
+                        name="ROA (Laba / Aset)"
+                        stroke="var(--color-roa)"
+                        strokeWidth={1.8}
+                        strokeDasharray="4 3"
+                        dot={{ r: 3, fill: "var(--color-roa)", strokeWidth: 0 }}
+                        activeDot={{ r: 5 }}
+                        connectNulls
+                      />
+                    )}
+                  </LineChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
 
-            {/* Strip 3 Rasio Efisiensi (ROE, ROA, NPM) */}
-            <div className="pt-2.5 border-t border-slate-100 dark:border-white/[0.06] grid grid-cols-3 gap-2 text-xs">
-              <div>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">ROE</span>
-                <span
-                  className={`font-mono font-bold tabular-nums ${getValueColorClass(
-                    latestAuditPeriod.roe
-                  )}`}
-                >
-                  {formatPct(latestAuditPeriod.roe)}
-                </span>
-              </div>
-              <div>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">ROA</span>
-                <span
-                  className={`font-mono font-bold tabular-nums ${getValueColorClass(
-                    latestAuditPeriod.roa
-                  )}`}
-                >
-                  {formatPct(latestAuditPeriod.roa)}
-                </span>
-              </div>
-              <div>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
-                  Marjin (NPM)
-                </span>
-                <span
-                  className={`font-mono font-bold tabular-nums ${getValueColorClass(
-                    latestAuditPeriod.netProfitMargin
-                  )}`}
-                >
-                  {formatPct(latestAuditPeriod.netProfitMargin)}
-                </span>
-              </div>
-            </div>
+            {/* GRAFIK 3: PERKEMBANGAN NERACA (MODAL VS UTANG / KAS VS UTANG / TOTAL ASET) */}
+            <Card className="lg:col-span-6 flex flex-col justify-between overflow-hidden">
+              <CardHeader className="flex flex-col items-stretch space-y-0 border-b border-zinc-200 dark:border-white/[0.08] p-0 xl:flex-row">
+                <div className="flex flex-1 flex-col justify-center gap-1 px-5 py-4">
+                  <CardTitle className="text-sm font-bold text-zinc-900 dark:text-white">
+                    Perkembangan Neraca & Kas
+                  </CardTitle>
+                  <CardDescription className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    Perbandingan harta, modal sendiri, utang, dan uang kas ({unitLabel})
+                  </CardDescription>
+                </div>
+
+                <div className="flex border-t border-zinc-200 dark:border-white/[0.08] xl:border-t-0">
+                  {BALANCE_HEADER_TABS.map((tab) => {
+                    const isActive = activeBalanceChart === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveBalanceChart(tab.id)}
+                        className={cn(
+                          "relative flex flex-1 flex-col justify-center gap-0.5 px-3 py-2.5 text-left transition-colors cursor-pointer xl:border-l border-zinc-200 dark:border-white/[0.08] even:border-l first:border-l-0 xl:first:border-l",
+                          isActive
+                            ? "bg-zinc-100/80 dark:bg-white/[0.05]"
+                            : "hover:bg-zinc-50 dark:hover:bg-white/[0.02]"
+                        )}
+                      >
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
+                          {tab.label}
+                        </span>
+                        <span
+                          className={cn(
+                            "text-xs font-extrabold font-mono tabular-nums whitespace-nowrap",
+                            tab.valueClass
+                          )}
+                        >
+                          {tab.value}
+                        </span>
+                        {isActive && (
+                          <span className="absolute inset-x-0 bottom-0 h-0.5 bg-zinc-900 dark:bg-white" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </CardHeader>
+
+              <CardContent className="px-3 pt-4 pb-4 sm:px-5 sm:pt-5 flex-1">
+                <ChartContainer config={balanceChartConfig} className="aspect-auto h-[230px] w-full">
+                  <BarChart
+                    accessibilityLayer
+                    data={chartDataset}
+                    margin={{ top: 10, right: 10, left: -12, bottom: 0 }}
+                  >
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="period"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      tick={{ fontSize: 11 }}
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fontSize: 11 }}
+                      tickFormatter={(val) => (isUsdDisplay ? `$${val}M` : `${val}T`)}
+                    />
+                    <ChartTooltip
+                      cursor={{ fill: "rgba(161, 161, 170, 0.08)" }}
+                      content={
+                        <ChartTooltipContent
+                          className="min-w-[195px]"
+                          formatter={(value, name, item) => {
+                            const fieldMap = {
+                              chartEquity: {
+                                label: "Modal Bersih",
+                                raw: item.payload?.totalEquity,
+                                color: "hsl(var(--chart-1))",
+                              },
+                              chartLiabilities: {
+                                label: "Total Utang",
+                                raw: item.payload?.totalLiabilities,
+                                color: "hsl(var(--chart-3))",
+                              },
+                              chartCash: {
+                                label: "Uang Kas Tersedia",
+                                raw: item.payload?.cashEquivalents,
+                                color: "hsl(var(--chart-2))",
+                              },
+                              chartAssets: {
+                                label: "Total Harta (Aset)",
+                                raw: item.payload?.totalAssets,
+                                color: "hsl(var(--chart-1))",
+                              },
+                            };
+                            const info = fieldMap[item.dataKey];
+                            return (
+                              <div className="flex w-full items-center justify-between gap-4">
+                                <span className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
+                                  <span
+                                    className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                                    style={{ backgroundColor: info?.color || item.color }}
+                                  />
+                                  <span>{info?.label || name}</span>
+                                </span>
+                                <span className="font-mono font-bold tabular-nums text-zinc-900 dark:text-white">
+                                  {formatFinancialValue(info?.raw)}
+                                </span>
+                              </div>
+                            );
+                          }}
+                        />
+                      }
+                    />
+                    {activeBalanceChart !== "assets" && (
+                      <ChartLegend content={<ChartLegendContent />} />
+                    )}
+                    {activeBalanceChart === "capital" && (
+                      <>
+                        <Bar
+                          dataKey="chartEquity"
+                          name="Modal Bersih (Ekuitas)"
+                          stackId="neraca"
+                          fill="var(--color-chartEquity)"
+                          radius={[0, 0, 0, 0]}
+                          maxBarSize={38}
+                        />
+                        <Bar
+                          dataKey="chartLiabilities"
+                          name="Total Utang (Liabilitas)"
+                          stackId="neraca"
+                          fill="var(--color-chartLiabilities)"
+                          radius={[5, 5, 0, 0]}
+                          maxBarSize={38}
+                        />
+                      </>
+                    )}
+                    {activeBalanceChart === "cashDebt" && (
+                      <>
+                        <Bar
+                          dataKey="chartCash"
+                          name="Uang Kas Tersedia"
+                          fill="var(--color-chartCash)"
+                          radius={[5, 5, 0, 0]}
+                          maxBarSize={28}
+                        />
+                        <Bar
+                          dataKey="chartLiabilities"
+                          name="Total Utang (Liabilitas)"
+                          fill="var(--color-chartLiabilities)"
+                          radius={[5, 5, 0, 0]}
+                          maxBarSize={28}
+                        />
+                      </>
+                    )}
+                    {activeBalanceChart === "assets" && (
+                      <Bar
+                        dataKey="chartAssets"
+                        name="Total Harta (Aset)"
+                        fill="var(--color-chartAssets)"
+                        radius={[5, 5, 0, 0]}
+                        maxBarSize={42}
+                      />
+                    )}
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* BARIS 3: LABA PER LEMBAR SAHAM / EPS (6 COL) + TREN RASIO UTANG / DER (6 COL) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+            {/* GRAFIK 4: LABA PER 1 LEMBAR SAHAM (EPS) */}
+            <Card className="lg:col-span-6 flex flex-col justify-between overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-zinc-200 dark:border-white/[0.08] px-5 py-4 space-y-0">
+                <div>
+                  <CardTitle className="text-sm font-bold text-zinc-900 dark:text-white">
+                    Laba per 1 Lembar Saham (EPS)
+                  </CardTitle>
+                  <CardDescription className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    Jatah keuntungan bersih yang melekat pada setiap 1 lembar saham
+                  </CardDescription>
+                </div>
+                <div className="text-right shrink-0">
+                  <div
+                    className={cn(
+                      "text-sm sm:text-base font-extrabold font-mono tabular-nums",
+                      latestAuditPeriod?.eps !== null &&
+                        latestAuditPeriod?.eps !== undefined &&
+                        Number(latestAuditPeriod.eps) < 0
+                        ? "text-rose-600 dark:text-[#ef5350]"
+                        : "text-zinc-900 dark:text-white"
+                    )}
+                  >
+                    {formatEpsValue(latestAuditPeriod?.eps)}
+                  </div>
+                  {epsDelta !== null && (
+                    <div
+                      className={cn(
+                        "text-[11px] font-mono font-semibold tabular-nums",
+                        getValueColorClass(epsDelta)
+                      )}
+                    >
+                      {formatDeltaCell(epsDelta, false)} {periodDeltaSuffix}
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+
+              <CardContent className="px-3 pt-4 pb-4 sm:px-5 sm:pt-5 flex-1">
+                {epsDataset.length > 0 ? (
+                  <ChartContainer config={epsChartConfig} className="aspect-auto h-[210px] w-full">
+                    <BarChart
+                      accessibilityLayer
+                      data={epsDataset}
+                      margin={{ top: 8, right: 10, left: -10, bottom: 0 }}
+                    >
+                      <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="period"
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                        tick={{ fontSize: 11 }}
+                      />
+                      <YAxis
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(val) => (isUsdDisplay ? `$${val}` : `${val}`)}
+                      />
+                      {hasNegativeEps && (
+                        <ReferenceLine y={0} stroke="rgba(161,161,170,0.4)" />
+                      )}
+                      <ChartTooltip
+                        cursor={{ fill: "rgba(161, 161, 170, 0.08)" }}
+                        content={
+                          <ChartTooltipContent
+                            className="min-w-[175px]"
+                            formatter={(value, name, item) => {
+                              const isNeg = Number(value || 0) < 0;
+                              return (
+                                <div className="flex w-full items-center justify-between gap-4">
+                                  <span className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
+                                    <span
+                                      className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                                      style={{
+                                        backgroundColor: isNeg ? "#ef5350" : "hsl(var(--chart-2))",
+                                      }}
+                                    />
+                                    <span>Laba / Lembar (EPS)</span>
+                                  </span>
+                                  <span
+                                    className={cn(
+                                      "font-mono font-bold tabular-nums",
+                                      isNeg
+                                        ? "text-rose-600 dark:text-[#ef5350]"
+                                        : "text-zinc-900 dark:text-white"
+                                    )}
+                                  >
+                                    {formatEpsValue(item.payload?.eps)}
+                                  </span>
+                                </div>
+                              );
+                            }}
+                          />
+                        }
+                      />
+                      <Bar
+                        dataKey="chartEps"
+                        name="Laba / Lembar (EPS)"
+                        fill="var(--color-chartEps)"
+                        radius={[5, 5, 0, 0]}
+                        maxBarSize={38}
+                      >
+                        {epsDataset.map((entry, idx) => (
+                          <Cell
+                            key={`eps-${idx}`}
+                            fill={
+                              Number(entry.chartEps) < 0 ? "#ef5350" : "var(--color-chartEps)"
+                            }
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ChartContainer>
+                ) : (
+                  <div className="h-[210px] flex items-center justify-center text-xs text-zinc-500 dark:text-zinc-400">
+                    Data EPS per periode tersedia pada tampilan Tahunan.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* GRAFIK 5: TREN BEBAN UTANG TERHADAP MODAL (DER) */}
+            <Card className="lg:col-span-6 flex flex-col justify-between overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-zinc-200 dark:border-white/[0.08] px-5 py-4 space-y-0">
+                <div>
+                  <CardTitle className="text-sm font-bold text-zinc-900 dark:text-white">
+                    Tren Rasio Utang dibanding Modal (DER)
+                  </CardTitle>
+                  <CardDescription className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    Garis batas 1,0x menunjukkan total utang sama besar dengan modal sendiri
+                  </CardDescription>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-sm sm:text-base font-extrabold font-mono tabular-nums text-zinc-900 dark:text-white">
+                    {latestAuditPeriod?.der !== null && latestAuditPeriod?.der !== undefined
+                      ? `${Number(latestAuditPeriod.der).toLocaleString("id-ID", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}x`
+                      : "-"}
+                  </div>
+                  <div className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
+                    {latestAuditPeriod?.period || "-"}
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="px-3 pt-4 pb-4 sm:px-5 sm:pt-5 flex-1">
+                {derDataset.length > 0 ? (
+                  <ChartContainer config={derChartConfig} className="aspect-auto h-[210px] w-full">
+                    <AreaChart
+                      accessibilityLayer
+                      data={derDataset}
+                      margin={{ top: 10, right: 12, left: -14, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="derMonoFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.22} />
+                          <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="period"
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                        tick={{ fontSize: 11 }}
+                      />
+                      <YAxis
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(val) => `${val}x`}
+                      />
+                      <ReferenceLine
+                        y={1}
+                        stroke="rgba(161,161,170,0.45)"
+                        strokeDasharray="4 4"
+                      />
+                      <ChartTooltip
+                        content={
+                          <ChartTooltipContent
+                            className="min-w-[175px]"
+                            formatter={(value) => (
+                              <div className="flex w-full items-center justify-between gap-4">
+                                <span className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
+                                  <span
+                                    className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                                    style={{ backgroundColor: "hsl(var(--chart-1))" }}
+                                  />
+                                  <span>Utang / Modal (DER)</span>
+                                </span>
+                                <span className="font-mono font-bold tabular-nums text-zinc-900 dark:text-white">
+                                  {Number(value).toLocaleString("id-ID", {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}
+                                  x
+                                </span>
+                              </div>
+                            )}
+                          />
+                        }
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="chartDer"
+                        name="Rasio Utang (DER)"
+                        stroke="var(--color-chartDer)"
+                        strokeWidth={2}
+                        fill="url(#derMonoFill)"
+                        dot={{ r: 3, fill: "var(--color-chartDer)", strokeWidth: 0 }}
+                        activeDot={{ r: 5 }}
+                      />
+                    </AreaChart>
+                  </ChartContainer>
+                ) : (
+                  <div className="h-[210px] flex items-center justify-center text-xs text-zinc-500 dark:text-zinc-400">
+                    Data rasio DER belum tersedia untuk periode ini.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       )}
@@ -696,12 +1563,12 @@ export default function FinancialStatementsTable({
           3. TABEL KOMPARATIF MULTI-PERIODE
           ======================================================== */}
       {apiHistory && (activeView === "both" || activeView === "table") && (
-        <div className="rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] overflow-hidden">
+        <div className="rounded-2xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1014] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 font-semibold">
-                  <th className="py-3 px-4 min-w-[200px] sticky left-0 z-20 bg-slate-50 dark:bg-[#10131b] border-r border-slate-200/70 dark:border-white/[0.06]">
+                <tr className="border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50 dark:bg-white/[0.02] text-zinc-500 dark:text-zinc-400 font-semibold">
+                  <th className="py-3 px-4 min-w-[215px] sticky left-0 z-20 bg-zinc-50 dark:bg-[#131419] border-r border-zinc-200/70 dark:border-white/[0.06]">
                     Pos Laporan Keuangan
                   </th>
                   {activePeriods.map((p) => (
@@ -709,7 +1576,7 @@ export default function FinancialStatementsTable({
                       key={p.period}
                       className={`py-3 px-4 font-mono text-right min-w-[125px] ${
                         p.isTTM
-                          ? "bg-emerald-500/[0.06] text-emerald-700 dark:text-[#2fe695] font-bold border-l border-emerald-500/20"
+                          ? "bg-zinc-100/70 dark:bg-white/[0.04] text-zinc-900 dark:text-white font-bold border-l border-zinc-200 dark:border-white/[0.08]"
                           : ""
                       }`}
                     >
@@ -721,13 +1588,13 @@ export default function FinancialStatementsTable({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
+              <tbody className="divide-y divide-zinc-100 dark:divide-white/[0.04]">
                 {TABLE_SECTIONS.map((section) => (
                   <React.Fragment key={section.title}>
-                    <tr className="bg-slate-50/70 dark:bg-white/[0.015]">
+                    <tr className="bg-zinc-50/70 dark:bg-white/[0.015]">
                       <td
                         colSpan={activePeriods.length + 2}
-                        className="py-2 px-4 font-bold text-slate-700 dark:text-slate-300 text-[11px] uppercase tracking-wider"
+                        className="py-2 px-4 font-bold text-zinc-600 dark:text-zinc-300 text-[11px] uppercase tracking-wider"
                       >
                         {section.title}
                       </td>
@@ -738,7 +1605,7 @@ export default function FinancialStatementsTable({
                       return (
                         <tr
                           key={row.key}
-                          className="hover:bg-slate-50/60 dark:hover:bg-white/[0.02] transition-colors"
+                          className="hover:bg-zinc-50/60 dark:hover:bg-white/[0.02] transition-colors"
                         >
                           <td className={stickyLabelCellClass}>{row.label}</td>
 
@@ -755,7 +1622,7 @@ export default function FinancialStatementsTable({
 
                             const cellColor = row.colorBySign
                               ? getValueColorClass(rawVal)
-                              : "text-slate-900 dark:text-slate-100";
+                              : "text-zinc-900 dark:text-zinc-100";
 
                             return (
                               <td
@@ -764,7 +1631,7 @@ export default function FinancialStatementsTable({
                                   row.isBold ? "font-bold" : "font-semibold"
                                 } ${cellColor} ${
                                   p.isTTM
-                                    ? "bg-emerald-500/[0.02] border-l border-emerald-500/15"
+                                    ? "bg-zinc-50/60 dark:bg-white/[0.02] border-l border-zinc-200/70 dark:border-white/[0.06]"
                                     : ""
                                 }`}
                               >

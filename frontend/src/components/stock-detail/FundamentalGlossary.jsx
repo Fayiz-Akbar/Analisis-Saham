@@ -1,19 +1,12 @@
 import React from "react";
 
 /**
- * Panduan Indikator Fundamental
- * Menyajikan nilai aktual emiten, status evaluasi langsung, dan cara baca praktis 1 kalimat
- * tanpa penjelasan buku teks yang bertele-tele.
+ * Panduan Indikator Fundamental (Ramah Pemula)
+ * Menampilkan nilai aktual emiten dan penjelasan sederhana dengan contoh nyata,
+ * bebas jargon ambigu dan tanpa penilaian if-else otomatis.
  */
 export default function FundamentalGlossary({ fundamentals, symbol }) {
   const f = fundamentals || {};
-
-  const positiveBadge =
-    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-[#062c19] dark:text-[#2fe695] dark:border-[#0e4429]";
-  const negativeBadge =
-    "bg-rose-50 text-rose-700 border-rose-200 dark:bg-[#2a0e12] dark:text-[#f87171] dark:border-[#4c151c]";
-  const neutralBadge =
-    "bg-slate-100 text-slate-700 border-slate-200 dark:bg-white/[0.06] dark:text-slate-300 dark:border-white/[0.1]";
 
   const formatNum = (val, suffix = "") => {
     if (val === null || val === undefined || isNaN(val)) return "-";
@@ -46,220 +39,114 @@ export default function FundamentalGlossary({ fundamentals, symbol }) {
   const GLOSSARY_ITEMS = [
     {
       code: "PER",
-      name: "Price to Earnings Ratio",
+      name: "Harga dibanding Laba (Price to Earnings)",
       currentValue: formatNum(pe, "x"),
-      status:
-        pe === null
-          ? "Data -"
-          : pe < 0
-          ? "Rugi Bersih"
-          : pe < 12
-          ? "Murah"
-          : pe <= 22
-          ? "Wajar"
-          : "Premium",
-      badgeStyle:
-        pe === null
-          ? neutralBadge
-          : pe < 0
-          ? negativeBadge
-          : pe < 12
-          ? positiveBadge
-          : neutralBadge,
       guide:
-        "Berapa kali lipat harga saham dibanding laba tahunannya. Umumnya wajar di kisaran 10x sampai 20x.",
+        "Mengukur berapa kali lipat harga saham dibanding keuntungan bersih per lembar dalam setahun. Contoh: PER 10x artinya butuh sekitar 10 tahun laba untuk menutup harga beli saham.",
     },
     {
       code: "PBV",
-      name: "Price to Book Value",
+      name: "Harga dibanding Modal Bersih (Price to Book Value)",
       currentValue: formatNum(pbv, "x"),
-      status:
-        pbv === null
-          ? "Data -"
-          : pbv < 1
-          ? "Di Bawah Modal"
-          : pbv <= 2.5
-          ? "Wajar"
-          : "Premium",
-      badgeStyle:
-        pbv === null ? neutralBadge : pbv < 1.2 ? positiveBadge : neutralBadge,
       guide:
-        "Perbandingan harga saham terhadap modal bersih perusahaan. PBV di bawah 1x menandakan harga diskon terhadap nilai buku.",
+        "Membandingkan harga saham dengan nilai modal bersih perusahaan (total harta dikurangi utang). PBV 1x artinya harga saham sama persis dengan nilai modal bersihnya.",
     },
     {
       code: "ROE",
-      name: "Return on Equity",
+      name: "Keuntungan dari Modal Sendiri (Return on Equity)",
       currentValue: formatNum(roe, "%"),
-      status:
-        roe === null
-          ? "Data -"
-          : roe >= 15
-          ? "Efisien"
-          : roe > 0
-          ? "Moderat"
-          : "Negatif",
-      badgeStyle:
-        roe === null
-          ? neutralBadge
-          : roe >= 15
-          ? positiveBadge
-          : roe < 0
-          ? negativeBadge
-          : neutralBadge,
       guide:
-        "Seberapa besar laba bersih yang dihasilkan dari modal pemegang saham. Standar emiten unggulan berada di atas 15%.",
+        "Persentase laba bersih yang berhasil dicetak dari modal pemilik saham. Contoh: ROE 15% artinya setiap Rp 100 modal mampu menghasilkan Rp 15 laba bersih dalam setahun.",
     },
     {
       code: "ROA",
-      name: "Return on Assets",
+      name: "Keuntungan dari Total Harta (Return on Assets)",
       currentValue: formatNum(roa, "%"),
-      status:
-        roa === null
-          ? "Data -"
-          : roa >= 5
-          ? "Produktif"
-          : roa > 0
-          ? "Cukup"
-          : "Negatif",
-      badgeStyle:
-        roa === null
-          ? neutralBadge
-          : roa >= 5
-          ? positiveBadge
-          : roa < 0
-          ? negativeBadge
-          : neutralBadge,
       guide:
-        "Kemampuan seluruh aset perusahaan menghasilkan laba bersih. ROA di atas 5% tergolong produktif (atau di atas 2% untuk bank).",
+        "Persentase laba bersih yang dihasilkan dari seluruh harta (aset) yang dimiliki perusahaan, baik yang berasal dari modal sendiri maupun dari utang.",
     },
     {
       code: "NPM",
-      name: "Net Profit Margin",
+      name: "Sisa Laba dari Penjualan (Net Profit Margin)",
       currentValue: formatNum(npm, "%"),
-      status:
-        npm === null
-          ? "Data -"
-          : npm >= 15
-          ? "Marjin Tebal"
-          : npm > 0
-          ? "Positif"
-          : "Defisit",
-      badgeStyle:
-        npm === null
-          ? neutralBadge
-          : npm >= 15
-          ? positiveBadge
-          : npm < 0
-          ? negativeBadge
-          : neutralBadge,
       guide:
-        "Porsi pendapatan usaha yang tersisa menjadi laba bersih setelah dikurangi semua biaya operasional, bunga, dan pajak.",
+        "Persentase uang penjualan yang tersisa menjadi laba bersih setelah dipotong biaya operasional, bunga, dan pajak. Contoh: NPM 20% artinya dari Rp 100 penjualan, Rp 20 adalah laba bersih.",
     },
     {
       code: "DER",
-      name: "Debt to Equity Ratio",
+      name: "Utang dibanding Modal (Debt to Equity)",
       currentValue: formatNum(der, "x"),
-      status:
-        der === null
-          ? "Data -"
-          : der <= 1.0
-          ? "Utang Rendah"
-          : der <= 2.0
-          ? "Terkendali"
-          : "Leverage Tinggi",
-      badgeStyle:
-        der === null
-          ? neutralBadge
-          : der <= 1.0
-          ? positiveBadge
-          : der > 2.5
-          ? negativeBadge
-          : neutralBadge,
       guide:
-        "Perbandingan total kewajiban terhadap modal sendiri. DER di bawah 1,0x berarti modal bersih lebih besar daripada total utang.",
+        "Membandingkan total utang perusahaan dengan modal sendiri. DER 1x berarti jumlah utang sama besar dengan modal; di bawah 1x berarti modal lebih besar daripada utang.",
     },
     {
       code: "EPS",
-      name: "Earnings Per Share",
+      name: "Laba per 1 Lembar Saham (Earnings Per Share)",
       currentValue: formatEps(eps),
-      status:
-        eps === null ? "Data -" : eps > 0 ? "Laba Positif" : "Rugi / Saham",
-      badgeStyle:
-        eps === null ? neutralBadge : eps > 0 ? positiveBadge : negativeBadge,
       guide:
-        "Nominal laba bersih yang menjadi hak setiap 1 lembar saham beredar. EPS yang naik konsisten menjadi pendorong kenaikan harga saham.",
+        "Jumlah keuntungan bersih perusahaan yang menjadi jatah setiap 1 lembar saham. Semakin tinggi EPS, semakin besar laba yang dihasilkan untuk setiap lembar saham yang Anda pegang.",
     },
     {
       code: "Yield",
-      name: "Dividend Yield",
+      name: "Persentase Bagi Hasil Tunai (Dividend Yield)",
       currentValue: dy && dy > 0 ? formatNum(dy, "%") : "-",
-      status:
-        !dy || dy <= 0
-          ? "Tanpa Dividen"
-          : dy >= 4
-          ? "Dividen Tinggi"
-          : "Rutin Bagi",
-      badgeStyle:
-        !dy || dy <= 0 ? neutralBadge : dy >= 4 ? positiveBadge : neutralBadge,
       guide:
-        "Persentase pembagian dividen tunai tahunan dibandingkan harga saham saat ini. Yield di atas 4% menarik bagi investor dividen.",
+        "Persentase dividen tunai yang dibagikan dalam setahun dibanding harga saham sekarang. Contoh: Yield 5% artinya dari pembelian saham Rp 1 juta, potensi dividen tunainya Rp 50 ribu per tahun.",
+    },
+    {
+      code: "TTM",
+      name: "Akumulasi 12 Bulan Terakhir (Trailing Twelve Months)",
+      currentValue: "4 Kuartal",
+      guide:
+        "Gabungan laporan keuangan dari 4 kuartal (12 bulan) paling baru. Dipakai agar investor bisa melihat kinerja paling update tanpa harus menunggu laporan tahunan tutup buku.",
     },
   ];
 
   return (
     <div className="space-y-3.5">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2.5 border-b border-slate-200 dark:border-white/[0.08]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2.5 border-b border-zinc-200 dark:border-white/[0.08]">
         <div>
-          <h2 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Panduan Baca Indikator ({symbol})
+          <h2 className="text-base sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+            Panduan Istilah & Indikator ({symbol})
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Arti praktis setiap rasio utama beserta patokan angka wajar untuk menilai saham {symbol}.
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+            Penjelasan sederhana tiap istilah keuangan agar mudah dipahami sebelum membaca laporan {symbol}.
           </p>
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] overflow-hidden">
+      <div className="rounded-2xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1014] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-slate-50 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/[0.08] text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <thead className="bg-zinc-50 dark:bg-white/[0.02] border-b border-zinc-200 dark:border-white/[0.08] text-[11px] uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               <tr>
-                <th className="px-4 py-3 font-bold min-w-[170px]">Indikator</th>
+                <th className="px-4 py-3 font-bold min-w-[210px]">Istilah</th>
                 <th className="px-4 py-3 font-bold text-right min-w-[110px]">Nilai {symbol}</th>
-                <th className="px-4 py-3 font-bold min-w-[125px]">Status</th>
-                <th className="px-4 py-3 font-bold">Cara Baca & Patokan Wajar</th>
+                <th className="px-4 py-3 font-bold">Arti Sederhana & Contoh</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
+            <tbody className="divide-y divide-zinc-100 dark:divide-white/[0.04]">
               {GLOSSARY_ITEMS.map((item) => (
                 <tr
                   key={item.code}
-                  className="hover:bg-slate-50/70 dark:hover:bg-white/[0.02] transition-colors"
+                  className="hover:bg-zinc-50/70 dark:hover:bg-white/[0.02] transition-colors"
                 >
-                  <td className="px-4 py-3 align-middle">
-                    <div className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">
+                  <td className="px-4 py-3 align-top">
+                    <div className="font-bold text-zinc-900 dark:text-white text-xs sm:text-sm">
                       {item.code}
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                    <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
                       {item.name}
                     </div>
                   </td>
 
-                  <td className="px-4 py-3 text-right whitespace-nowrap align-middle">
-                    <span className="font-mono font-bold tabular-nums text-xs sm:text-sm text-slate-900 dark:text-slate-100">
+                  <td className="px-4 py-3 text-right whitespace-nowrap align-top">
+                    <span className="font-mono font-bold tabular-nums text-xs sm:text-sm text-zinc-900 dark:text-white">
                       {item.currentValue}
                     </span>
                   </td>
 
-                  <td className="px-4 py-3 whitespace-nowrap align-middle">
-                    <span
-                      className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-md border ${item.badgeStyle}`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-
-                  <td className="px-4 py-3 text-slate-600 dark:text-slate-300 leading-relaxed align-middle max-w-xl">
+                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-300 leading-relaxed align-top max-w-2xl">
                     {item.guide}
                   </td>
                 </tr>
