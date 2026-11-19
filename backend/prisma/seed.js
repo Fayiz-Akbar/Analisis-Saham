@@ -1,4 +1,4 @@
-﻿import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -541,11 +541,7 @@ async function main() {
   console.log(
     `✅ ${seededModulesCount} Modul Kurikulum dipastikan aktif (${seededQuizzesCount} butir soal kuis baru ditambahkan).`
   );
-  // 5. Seeding Data Fundamental 80 Emiten IDX80
-  console.log("⏳ Seeding Data Fundamental 80 Emiten IDX80...");
-  const { seedAllFundamentals } = await import("./seedFundamentals.js");
-  await seedAllFundamentals();
-  console.log("🎉 Seeding Database Selesai!");
+  console.log("🎉 Seeding Database Master Selesai (Data fundamental ditarik langsung secara live dari API)!");
 }
 
 main()

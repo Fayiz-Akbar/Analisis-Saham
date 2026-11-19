@@ -15,6 +15,7 @@ export default function TradingViewChart({
   isDarkMode = false,
   symbol = "BBCA",
 }) {
+  const chartWrapperRef = useRef(null);
   const chartContainerRef = useRef(null);
   const chartInstanceRef = useRef(null);
   const mainSeriesRef = useRef(null);
@@ -37,15 +38,11 @@ export default function TradingViewChart({
 
   // Urutan hierarki timeframe untuk auto-load riwayat masa lalu saat grafik ditarik ke kiri
   const rangeSteps = {
-    "1h": "2h",
-    "2h": "3h",
-    "3h": "4h",
-    "4h": "1d",
-    "1d": "1w",
-    "1w": "1mo",
+    "1d": "1mo",
     "1mo": "3mo",
-    "3mo": "6mo",
-    "6mo": "1y",
+    "3mo": "1y",
+    "1y": "5y",
+    "5y": "max",
   };
 
   const loadOlderHistory = async () => {
@@ -80,18 +77,14 @@ export default function TradingViewChart({
     }
   };
 
-  // 10 Resolusi Lilin (1 Batang Lilin = Timeframe yang dipilih)
+  // Opsi Timeframe Persis Seperti Tampilan Dashboard
   const ranges = [
-    { label: "1 Jam", short: "1J", value: "1h", title: "1 Lilin = 1 Jam" },
-    { label: "2 Jam", short: "2J", value: "2h", title: "1 Lilin = 2 Jam" },
-    { label: "3 Jam", short: "3J", value: "3h", title: "1 Lilin = 3 Jam" },
-    { label: "4 Jam", short: "4J", value: "4h", title: "1 Lilin = 4 Jam" },
-    { label: "1 Hari", short: "1H", value: "1d", title: "1 Lilin = 1 Hari (Daily)" },
-    { label: "1 Minggu", short: "1Mgg", value: "1w", title: "1 Lilin = 1 Minggu (Weekly)" },
-    { label: "1 Bulan", short: "1Bln", value: "1mo", title: "1 Lilin = 1 Bulan (Monthly)" },
-    { label: "3 Bulan", short: "3Bln", value: "3mo", title: "1 Lilin = 3 Bulan (Kuartalan / Q)" },
-    { label: "6 Bulan", short: "6Bln", value: "6mo", title: "1 Lilin = 6 Bulan (Semesteran / S)" },
-    { label: "1 Tahun", short: "1Th", value: "1y", title: "1 Lilin = 1 Tahun (Tahunan / 12M)" },
+    { label: "1D", value: "1d", title: "1 Lilin = 1 Hari (Daily)" },
+    { label: "1Bln", value: "1mo", title: "1 Lilin = 1 Bulan (Monthly)" },
+    { label: "3Bln", value: "3mo", title: "1 Lilin = 3 Bulan (Kuartalan / Q)" },
+    { label: "1Th", value: "1y", title: "1 Lilin = 1 Tahun (Tahunan / 12M)" },
+    { label: "5Th", value: "5y", title: "1 Lilin = 5 Tahun" },
+    { label: "Seluruhnya", value: "max", title: "Seluruh Riwayat Historis" },
   ];
 
   // Helper format tanggal & jam yang adaptif terhadap resolusi lilin
@@ -315,8 +308,27 @@ export default function TradingViewChart({
 
     window.addEventListener("resize", handleResize);
 
+    // Listener Fullscreen API untuk resize chart otomatis ke tinggi layar penuh
+    const handleFsChange = () => {
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      setIsFullscreen(isFs);
+      if (chart && container) {
+        setTimeout(() => {
+          const newWidth = container.clientWidth;
+          const newHeight = isFs ? Math.max(window.innerHeight - 150, 520) : 460;
+          chart.applyOptions({ width: newWidth, height: newHeight });
+          chart.timeScale().fitContent();
+        }, 80);
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFsChange);
+    document.addEventListener("webkitfullscreenchange", handleFsChange);
+
     return () => {
       window.removeEventListener("resize", handleResize);
+      document.removeEventListener("fullscreenchange", handleFsChange);
+      document.removeEventListener("webkitfullscreenchange", handleFsChange);
       if (chartInstanceRef.current) {
         chartInstanceRef.current.remove();
         chartInstanceRef.current = null;
@@ -325,13 +337,21 @@ export default function TradingViewChart({
   }, [activeCandles, isDarkMode, chartType, range]);
 
   const toggleFullscreen = () => {
-    const el = chartContainerRef.current?.parentElement;
+    const el = chartWrapperRef.current;
     if (!el) return;
 
-    if (!document.fullscreenElement) {
-      el.requestFullscreen?.().then(() => setIsFullscreen(true)).catch(() => {});
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      if (el.requestFullscreen) {
+        el.requestFullscreen().catch(() => {});
+      } else if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
+      }
     } else {
-      document.exitFullscreen?.().then(() => setIsFullscreen(false)).catch(() => {});
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
     }
   };
 
@@ -349,69 +369,77 @@ export default function TradingViewChart({
       : activeCandle?.close ?? 0;
 
   return (
-    <div className="space-y-3">
-      {/* 1. TOP CONTROLS BAR: Timeframe Pills on Left & Chart Type Toggles on Right */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800/80 pb-3">
-        {/* Left: Timeframe Range Buttons (1, 2, 3, 4 Jam, 1 Hari, 1 Minggu, 1 Bulan, 3, 6 Bulan, 1 Tahun) */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl overflow-x-auto max-w-full scrollbar-none">
-          {ranges.map((r) => (
-            <button
-              key={r.value}
-              onClick={() => onRangeChange && onRangeChange(r.value)}
-              title={r.title}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
-                range === r.value
-                  ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm font-bold"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-              }`}
-            >
-              <span className="hidden xl:inline">{r.label}</span>
-              <span className="xl:hidden">{r.short}</span>
-            </button>
-          ))}
+    <div
+      ref={chartWrapperRef}
+      className={
+        isFullscreen
+          ? "fixed inset-0 z-50 bg-white dark:bg-[#080808] p-6 overflow-y-auto space-y-3"
+          : "w-full space-y-2 bg-transparent p-0 border-0"
+      }
+    >
+      {/* 1. TOP CONTROLS BAR: Candle/Garis Toggle & Timeframe Selector Sebelahan (Persis Seperti Dashboard) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 dark:border-white/[0.08] pb-3">
+        {/* Sisi Kiri: Simbol Saham */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-slate-900 dark:text-white">{symbol}</span>
         </div>
 
-        {/* Right: Chart Type Toggles */}
-        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
-          {/* Mode Area / Line Chart */}
-          <button
-            onClick={() => setChartType("area")}
-            title="Tampilan Grafik Garis / Area (Gradient)"
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              chartType === "area"
-                ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm"
-                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-            }`}
-          >
-            Garis / Area
-          </button>
+        {/* Sisi Kanan: Toggle Candle/Garis + Timeframe Sebelahan (Tanpa Container Box di Belakang) */}
+        <div className="flex items-center gap-3 shrink-0 ml-auto">
+          {/* TOGGLE: Candlestick vs Garis / Area */}
+          <div className="inline-flex items-center bg-transparent p-0 gap-1 shrink-0">
+            <button
+              onClick={() => setChartType("candle")}
+              title="Tampilan Grafik Candlestick Lilin (OHLC)"
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                chartType === "candle"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M9 3v4m0 10v4M6 7h6v10H6zM17 6v3m0 8v4M14 9h6v8h-6z" />
+              </svg>
+              <span>Candle</span>
+            </button>
+            <button
+              onClick={() => setChartType("area")}
+              title="Tampilan Grafik Garis / Area"
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                chartType === "area"
+                  ? (isUp ? "bg-emerald-600 text-white shadow-sm" : "bg-rose-600 text-white shadow-sm")
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M3 3v18h18M7 16l4-5 4 3 6-7" />
+              </svg>
+              <span>Garis</span>
+            </button>
+          </div>
 
-          {/* Mode Candlestick */}
-          <button
-            onClick={() => setChartType("candle")}
-            title="Tampilan Grafik Candlestick Lilin (OHLC)"
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              chartType === "candle"
-                ? "bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
-                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-            }`}
-          >
-            Candlestick
-          </button>
-
-          {/* Fullscreen */}
-          <button
-            onClick={toggleFullscreen}
-            title={isFullscreen ? "Keluar Layar Penuh" : "Layar Penuh"}
-            className="px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors"
-          >
-            {isFullscreen ? "Kecilkan" : "Layar Penuh"}
-          </button>
+          {/* Timeframe Selector Sebelahan (Tanpa Container Box di Belakang) */}
+          <div className="inline-flex items-center bg-transparent p-0 gap-1 shrink-0">
+            {ranges.map((r) => (
+              <button
+                key={r.value}
+                onClick={() => onRangeChange && onRangeChange(r.value)}
+                title={r.title}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  range === r.value
+                    ? "bg-slate-200 text-slate-900 dark:bg-[#2a2e39] dark:text-white font-bold"
+                    : "text-slate-600 hover:text-slate-900 dark:text-[#787b86] dark:hover:text-white"
+                }`}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* 2. SUB-BAR: Info Harga & Detail Saat Hover */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-1 py-1">
         {activeCandle ? (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
             <div className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
@@ -481,9 +509,61 @@ export default function TradingViewChart({
         )}
       </div>
 
-      {/* 3. CHART CANVAS CONTAINER */}
-      <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
-        <div ref={chartContainerRef} className="w-full" style={{ minHeight: "460px" }} />
+      {/* 3. CHART CANVAS CONTAINER (TANPA CONTAINER LATAR DI BELAKANG) */}
+      <div className="relative overflow-hidden bg-transparent border-0 shadow-none my-1">
+        <div ref={chartContainerRef} className="w-full" style={{ minHeight: isFullscreen ? "calc(100vh - 200px)" : "440px" }} />
+      </div>
+
+      {/* 4. TOOLBAR BAWAH: IKON KONTROL TRADINGVIEW PERSIS SEPERTI DASHBOARD */}
+      <div className="flex items-center justify-end gap-1.5 pt-1 pb-1 bg-transparent select-none">
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {/* Ikon Garis Area */}
+          <button
+            onClick={() => setChartType("area")}
+            title="Ubah ke Grafik Garis / Area"
+            className={`p-1 bg-transparent border-0 transition-colors cursor-pointer ${
+              chartType === "area"
+                ? "text-slate-900 dark:text-white font-bold"
+                : "text-slate-400 hover:text-slate-800 dark:text-[#787b86] dark:hover:text-white"
+            }`}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <path d="M3 3v18h18M7 16l4-5 4 3 6-7" />
+            </svg>
+          </button>
+
+          {/* Ikon Candlestick */}
+          <button
+            onClick={() => setChartType("candle")}
+            title="Ubah ke Grafik Candlestick Lilin"
+            className={`p-1 bg-transparent border-0 transition-colors cursor-pointer ${
+              chartType === "candle"
+                ? "text-slate-900 dark:text-white font-bold"
+                : "text-slate-400 hover:text-slate-800 dark:text-[#787b86] dark:hover:text-white"
+            }`}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <path d="M9 3v4m0 10v4M6 7h6v10H6zM17 6v3m0 8v4M14 9h6v8h-6z" />
+            </svg>
+          </button>
+
+          {/* Ikon Fullscreen */}
+          <button
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "Keluar Layar Penuh (Esc)" : "Mode Layar Penuh"}
+            className="p-1 text-slate-400 hover:text-slate-800 dark:text-[#787b86] dark:hover:text-white bg-transparent border-0 transition-colors cursor-pointer"
+          >
+            {isFullscreen ? (
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 14h6m0 0v6m0-6l-7 7m17-11h-6m0 0V4m0 6l7-7m-7 17l7-7m0 0v6m0-6h-6M4 4l7 7m0 0V4m0 7H4" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

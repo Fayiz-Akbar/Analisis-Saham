@@ -5,7 +5,7 @@ export default function AiAssistantView({ onSelectStock }) {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      text: "Halo! Saya adalah Asisten Cerdas InvestAI berbasis Google Gemini dengan arsitektur Context-Grounded. Seluruh analisis yang saya sajikan terikat ketat pada data faktual laporan keuangan emiten IDX80 dan kaidah fundamental tanpa spekulasi liar. Ada yang ingin Anda tanyakan seputar emiten atau konsep investasi?",
+      text: "Halo! Saya adalah Asisten Cerdas InvestAI berbasis Google Gemini dengan arsitektur Context-Grounded. Seluruh analisis yang saya sajikan terikat ketat pada data faktual laporan keuangan emiten bursa dan kaidah fundamental tanpa spekulasi liar. Ada yang ingin Anda tanyakan seputar emiten atau konsep investasi?",
       timestamp: "Baru saja",
     },
   ]);
@@ -149,7 +149,7 @@ export default function AiAssistantView({ onSelectStock }) {
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder={
               activeRole === "FINANCIAL_ASSISTANT"
-                ? "Tanyakan perbandingan rasio, valuasi, atau analisis emiten IDX80..."
+                ? "Tanyakan perbandingan rasio, valuasi, atau analisis emiten saham..."
                 : "Tanyakan konsep dasar, istilah keuangan, atau strategi investasi..."
             }
             className="flex-1 px-4 py-2.5 rounded-xl text-xs border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"

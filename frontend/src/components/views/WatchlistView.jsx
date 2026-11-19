@@ -657,7 +657,7 @@ export default function WatchlistView({ onSelectStock, onBrowseCatalog }) {
             Belum Ada Saham di Watchlist
           </h3>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
-            Anda dapat menambahkan emiten konstituen IDX80 ke daftar pantauan ini dengan mengklik ikon bintang (⭐) pada halaman katalog saham.
+            Anda dapat menambahkan emiten bursa ke daftar pantauan ini dengan mengklik ikon bintang (⭐) pada halaman katalog saham.
           </p>
           {onBrowseCatalog && (
             <button
@@ -665,7 +665,7 @@ export default function WatchlistView({ onSelectStock, onBrowseCatalog }) {
               className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer inline-flex items-center gap-2"
             >
               <Layers className="w-4 h-4" />
-              <span>Buka Katalog Saham IDX80</span>
+              <span>Buka Katalog Saham</span>
             </button>
           )}
         </motion.div>

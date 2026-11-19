@@ -4,7 +4,6 @@ import FundamentalPillars from "./FundamentalPillars";
 import FinancialStatementsTable from "./FinancialStatementsTable";
 import FundamentalGlossary from "./FundamentalGlossary";
 import CompanyNewsSection from "./CompanyNewsSection";
-import idxCircleImg from "../../assets/idx-circle.png";
 
 export default function StockDetailCard({
   stockData,
@@ -19,23 +18,64 @@ export default function StockDetailCard({
   const [activeSubTab, setActiveSubTab] = useState("all");
   const [fundamentalData, setFundamentalData] = useState(null);
 
-  // Sync / Fallback fetch data fundamental
+  // Sync / Fallback fetch data fundamental terverifikasi dari laporan audit resmi
   useEffect(() => {
     if (stockData?.stock?.fundamentals) {
       setFundamentalData(stockData.stock.fundamentals);
-    } else if (stockData?.quote?.symbol) {
-      fetch(`http://localhost:5000/api/stocks/${stockData.quote.symbol}/fundamentals`)
-        .then((res) => res.json())
-        .then((json) => {
-          if (json.success && json.data?.fundamentals) {
-            setFundamentalData(json.data.fundamentals);
-          }
-        })
-        .catch((err) => {
-          console.warn("Gagal fetch fallback fundamental:", err);
-        });
     }
-  }, [stockData]);
+
+    const sym = stockData?.quote?.symbol;
+    if (!sym) return;
+
+    let isMounted = true;
+    fetch(`http://localhost:5000/api/stocks/${sym}/financial-history`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (!isMounted || !json.success || !json.data?.annual) return;
+        const annual = json.data.annual;
+        if (!Array.isArray(annual) || annual.length === 0) return;
+
+        const audit = annual[annual.length - 1];
+        const auditIdx = annual.length - 1;
+        const prevAudit = auditIdx > 0 ? annual[auditIdx - 1] : null;
+
+        let revGrowth = null;
+        let netGrowth = null;
+        if (prevAudit?.revenue && audit?.revenue) {
+          revGrowth = Number((((audit.revenue - prevAudit.revenue) / Math.abs(prevAudit.revenue)) * 100).toFixed(1));
+        }
+        if (prevAudit?.netIncome && audit?.netIncome) {
+          netGrowth = Number((((audit.netIncome - prevAudit.netIncome) / Math.abs(prevAudit.netIncome)) * 100).toFixed(1));
+        }
+
+        const stats = json.data.keyStatistics || {};
+
+        setFundamentalData((prev) => ({
+          ...(prev || {}),
+          ...stats,
+          revenue: audit.revenue,
+          netIncome: audit.netIncome,
+          totalAssets: audit.totalAssets,
+          totalEquity: audit.totalEquity,
+          totalLiabilities: audit.totalLiabilities,
+          cashEquivalents: audit.cashEquivalents,
+          netProfitMargin: audit.netProfitMargin,
+          roe: audit.roe,
+          der: audit.der,
+          eps: audit.eps !== null && audit.eps !== undefined ? audit.eps : stats.eps,
+          revenueGrowth: revGrowth !== null ? revGrowth : prev?.revenueGrowth,
+          netIncomeGrowth: netGrowth !== null ? netGrowth : prev?.netIncomeGrowth,
+          financialPeriod: `${audit.period} Audit (Konsolidasian)`,
+        }));
+      })
+      .catch((err) => {
+        console.warn("Gagal sync financial-history di StockDetailCard:", err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [stockData?.quote?.symbol, stockData?.stock?.fundamentals]);
 
   if (isLoading) {
     return (
@@ -67,7 +107,7 @@ export default function StockDetailCard({
   if (!stockData || !stockData.quote) {
     return (
       <div className="p-12 text-center rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c0e14] text-slate-500">
-        Pilih saham konstituen IDX80 untuk memuat data analisis.
+        Pilih saham emiten untuk memuat data analisis.
       </div>
     );
   }
@@ -124,15 +164,15 @@ export default function StockDetailCard({
   const effectiveFundamentals = fundamentalData || stock?.fundamentals;
 
   return (
-    <div className="p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#080808] space-y-6">
+    <div className="w-full bg-transparent p-0 border-0 shadow-none space-y-6">
       {/* ========================================================
           1. STOCK OVERVIEW HEADER
           Logo, Ticker, Nama Perusahaan, Badges, Harga Live, & Perubahan
           ======================================================== */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-5 pb-6 border-b border-slate-100 dark:border-slate-850">
-        {/* Kelompok Kiri: Logo, Ticker, Nama Perusahaan, & Badge Pasar */}
+        {/* Kelompok Kiri: Logo, Ticker, Nama Perusahaan, & Badge Pasar (Tanpa Container Box) */}
         <div className="flex items-start gap-4 min-w-0">
-          <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-xl bg-white dark:bg-[#0c0e14] p-2 border border-slate-200/90 dark:border-slate-800 flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center flex-shrink-0 bg-transparent border-0 p-0">
             <img
               src={stock?.logoUrl || `https://assets.stockbit.com/logos/companies/${quote.symbol}.png`}
               alt={quote.symbol}
@@ -145,31 +185,13 @@ export default function StockDetailCard({
           </div>
 
           <div className="min-w-0 space-y-1.5">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
               <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 leading-none">
                 {quote.symbol}
               </h1>
-              <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold tracking-wide border border-slate-200 dark:border-slate-750 bg-slate-50 dark:bg-slate-850 text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <span>{stock?.exchange || "IDX"}</span>
-                <img src={idxCircleImg} alt="IDX" className="w-3.5 h-3.5 rounded-full object-cover shrink-0" />
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 select-none">
+                {stock?.exchange || "IDX"}
               </span>
-              {stock?.isIdx80 && (
-                <span className="px-2 py-0.5 rounded-md text-[11px] font-medium border border-[#0e4429] bg-[#062c19] text-[#2fe695]">
-                  Konstituen IDX80
-                </span>
-              )}
-              {fromCache ? (
-                <span
-                  className="px-2 py-0.5 rounded-md text-[11px] font-medium border border-slate-200 dark:border-slate-750 bg-slate-50 dark:bg-slate-850 text-slate-400"
-                  title="Data disajikan instan dari cache PostgreSQL"
-                >
-                  PostgreSQL Cache
-                </span>
-              ) : (
-                <span className="px-2 py-0.5 rounded-md text-[11px] font-medium border border-slate-200 dark:border-slate-750 bg-slate-50 dark:bg-slate-850 text-slate-400">
-                  Live Feed
-                </span>
-              )}
             </div>
 
             <h2 className="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-medium truncate">
@@ -219,44 +241,168 @@ export default function StockDetailCard({
       </div>
 
       {/* ========================================================
-          3. RINGKASAN DATA PASAR (MARKET SNAPSHOT)
+          3. RINGKASAN DATA PASAR (MARKET SNAPSHOT - 4 KARTU HORISONTAL SESUAI REFERENSI YAHOO FINANCE)
           ======================================================== */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-4 border-t border-slate-200 dark:border-slate-850 text-xs">
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0c0e14] border border-slate-200/60 dark:border-slate-800">
-          <span className="text-slate-400 block mb-1">Penutupan Kemarin</span>
-          <span className="font-mono font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200">
-            Rp {Number(quote.chartPreviousClose).toLocaleString("id-ID")}
-          </span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-4 border-t border-slate-200 dark:border-white/[0.08] text-xs">
+        {/* Kartu 1: Previous Close, Open, Bid, Ask */}
+        <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">Previous Close</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 text-right">
+              {effectiveFundamentals?.previousClose
+                ? Number(effectiveFundamentals.previousClose).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : quote.chartPreviousClose
+                ? Number(quote.chartPreviousClose).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : "-"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">Open</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 text-right">
+              {effectiveFundamentals?.open
+                ? Number(effectiveFundamentals.open).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : quote.regularMarketOpen
+                ? Number(quote.regularMarketOpen).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : "-"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">Bid</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 text-right">
+              {(effectiveFundamentals?.bid || quote.bid)
+                ? `${Number(effectiveFundamentals?.bid || quote.bid).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${(effectiveFundamentals?.bidSize || quote.bidSize) ? `x ${effectiveFundamentals?.bidSize || quote.bidSize}` : "x 100"}`
+                : "-"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">Ask</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 text-right">
+              {(effectiveFundamentals?.ask || quote.ask)
+                ? `${Number(effectiveFundamentals?.ask || quote.ask).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${(effectiveFundamentals?.askSize || quote.askSize) ? `x ${effectiveFundamentals?.askSize || quote.askSize}` : "x 100"}`
+                : "-"}
+            </span>
+          </div>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0c0e14] border border-slate-200/60 dark:border-slate-800">
-          <span className="text-slate-400 block mb-1">Rentang Hari Ini</span>
-          <span className="font-mono font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200">
-            {quote.regularMarketDayLow ? `Rp ${Number(quote.regularMarketDayLow).toLocaleString("id-ID")}` : "-"} -{" "}
-            {quote.regularMarketDayHigh ? `Rp ${Number(quote.regularMarketDayHigh).toLocaleString("id-ID")}` : "-"}
-          </span>
+        {/* Kartu 2: Day's Range, 52 Week Range, Volume, Avg. Volume */}
+        <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">Day's Range</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 text-right">
+              {(effectiveFundamentals?.dayLow || quote.regularMarketDayLow) && (effectiveFundamentals?.dayHigh || quote.regularMarketDayHigh)
+                ? `${Number(effectiveFundamentals?.dayLow || quote.regularMarketDayLow).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - ${Number(effectiveFundamentals?.dayHigh || quote.regularMarketDayHigh).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                : "-"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">52 Week Range</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 text-right">
+              {(effectiveFundamentals?.fiftyTwoWeekLow || quote.fiftyTwoWeekLow) && (effectiveFundamentals?.fiftyTwoWeekHigh || quote.fiftyTwoWeekHigh)
+                ? `${Number(effectiveFundamentals?.fiftyTwoWeekLow || quote.fiftyTwoWeekLow).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - ${Number(effectiveFundamentals?.fiftyTwoWeekHigh || quote.fiftyTwoWeekHigh).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                : "-"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">Volume</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 text-right">
+              {(effectiveFundamentals?.volume || quote.regularMarketVolume)
+                ? Number(effectiveFundamentals?.volume || quote.regularMarketVolume).toLocaleString("id-ID")
+                : "-"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">Avg. Volume</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 text-right">
+              {(effectiveFundamentals?.averageVolume || quote.averageVolume)
+                ? Number(effectiveFundamentals?.averageVolume || quote.averageVolume).toLocaleString("id-ID")
+                : "-"}
+            </span>
+          </div>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0c0e14] border border-slate-200/60 dark:border-slate-800">
-          <span className="text-slate-400 block mb-1">Rentang 52 Minggu</span>
-          <span className="font-mono font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200">
-            {quote.fiftyTwoWeekLow ? `Rp ${Number(quote.fiftyTwoWeekLow).toLocaleString("id-ID")}` : "-"} -{" "}
-            {quote.fiftyTwoWeekHigh ? `Rp ${Number(quote.fiftyTwoWeekHigh).toLocaleString("id-ID")}` : "-"}
-          </span>
+        {/* Kartu 3: Market Cap, Beta, PE Ratio, EPS */}
+        <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">Market Cap (intraday)</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 text-right">
+              {formatMarketCap(effectiveFundamentals?.marketCap || quote.marketCap)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">Beta (5Y Monthly)</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 text-right">
+              {(effectiveFundamentals?.beta !== null && effectiveFundamentals?.beta !== undefined)
+                ? Number(effectiveFundamentals.beta).toFixed(2)
+                : quote.beta !== null && quote.beta !== undefined
+                ? Number(quote.beta).toFixed(2)
+                : "-"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">PE Ratio (TTM)</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 text-right">
+              {(effectiveFundamentals?.peRatio !== null && effectiveFundamentals?.peRatio !== undefined)
+                ? Number(effectiveFundamentals.peRatio).toFixed(2)
+                : quote.peRatio !== null && quote.peRatio !== undefined
+                ? Number(quote.peRatio).toFixed(2)
+                : "-"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">EPS (TTM)</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 text-right">
+              {(() => {
+                const isForeign = effectiveFundamentals?.financialCurrency === "USD";
+                const epsVal = (effectiveFundamentals?.eps !== null && effectiveFundamentals?.eps !== undefined)
+                  ? effectiveFundamentals.eps
+                  : quote.eps;
+                if (epsVal === null || epsVal === undefined) return "-";
+                if (isForeign) {
+                  return `$ ${Number(epsVal).toFixed(4)}`;
+                }
+                return Number(epsVal).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              })()}
+            </span>
+          </div>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0c0e14] border border-slate-200/60 dark:border-slate-800">
-          <span className="text-slate-400 block mb-1">Volume Perdagangan</span>
-          <span className="font-mono font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200">
-            {quote.regularMarketVolume ? Number(quote.regularMarketVolume).toLocaleString("id-ID") : "-"}
-          </span>
-        </div>
-
-        <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0c0e14] border border-slate-200/60 dark:border-slate-800 col-span-2 sm:col-span-1">
-          <span className="text-slate-400 block mb-1">Kapitalisasi Pasar</span>
-          <span className="font-mono font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200">
-            {formatMarketCap(effectiveFundamentals?.marketCap)}
-          </span>
+        {/* Kartu 4: Earnings Date, Forward Dividend & Yield, Ex-Dividend Date, 1y Target Est */}
+        <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">Earnings Date</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 truncate ml-2 text-right">
+              {effectiveFundamentals?.earningsDate || quote.earningsDate || "--"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">Forward Dividend & Yield</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 text-right">
+              {(() => {
+                const dy = effectiveFundamentals?.dividendYield !== null && effectiveFundamentals?.dividendYield !== undefined
+                  ? effectiveFundamentals.dividendYield
+                  : quote.dividendYield;
+                const dr = effectiveFundamentals?.dividendRate !== null && effectiveFundamentals?.dividendRate !== undefined
+                  ? effectiveFundamentals.dividendRate
+                  : quote.dividendRate;
+                if (!dy || Number(dy) <= 0) return "--";
+                return `${dr ? `${Number(dr).toLocaleString("id-ID")} ` : ""}(${Number(dy).toFixed(2)}%)`;
+              })()}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">Ex-Dividend Date</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 truncate ml-2 text-right">
+              {effectiveFundamentals?.exDividendDate || quote.exDividendDate || "--"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500 dark:text-slate-400 font-normal">1y Target Est</span>
+            <span className="font-mono font-medium text-slate-900 dark:text-slate-100 text-right">
+              {(effectiveFundamentals?.targetMeanPrice || quote.targetMeanPrice)
+                ? Number(effectiveFundamentals?.targetMeanPrice || quote.targetMeanPrice).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : "--"}
+            </span>
+          </div>
         </div>
       </div>
 

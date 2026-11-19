@@ -504,7 +504,7 @@ export default function StockTableView({
                 <tr>
                   <td colSpan="12" className="text-center py-16 text-slate-400">
                     <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-slate-500" />
-                    <span>Memuat data fundamental 80 emiten IDX80...</span>
+                    <span>Memuat data fundamental emiten bursa...</span>
                   </td>
                 </tr>
               ) : filteredStocks.length === 0 ? (

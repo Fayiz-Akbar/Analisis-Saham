@@ -8,6 +8,8 @@ const CACHE_TTL_MINUTES = 15; // 15 Menit TTL Cache
  */
 export const toYahooTicker = (symbol) => {
   const clean = symbol.trim().toUpperCase();
+  if (clean === "IHSG" || clean === "^JKSE") return "^JKSE";
+  if (clean === "IDX80" || clean === "IDX80.JK") return "IDX80.JK";
   if (clean.includes(".")) return clean;
   return `${clean}.JK`;
 };
@@ -433,8 +435,6 @@ export class MarketDataService {
       yahooSymbol = "IDX80.JK";
     } else if (cleanSymbol === "IHSG") {
       yahooSymbol = "^JKSE";
-    } else if (cleanSymbol === "LQ45") {
-      yahooSymbol = "^JKLQ45";
     }
 
     // Mapping interval & range Yahoo Finance untuk opsi periode
@@ -534,14 +534,6 @@ export class MarketDataService {
       sourceName: cleanSymbol,
     };
 
-    const LQ45_SYMBOLS = [
-      "BBCA","BBRI","BMRI","BBNI","TLKM","ASII","ICBP","INDF","UNTR","UNVR",
-      "KLBF","CPIN","AMMN","BREN","GOTO","ADRO","PGAS","PTBA","ANTM","INCO",
-      "MDKA","BRPT","TPIA","EXCL","ISAT","TBIG","TOWR","MEDC","AKRA","SMGR",
-      "INTP","INKP","TKIM","ACES","MAPI","AMRT","MYOR","SIDO","MIKA","HEAL",
-      "ESSA","ARTO","BRIS","BUKA","HRUM"
-    ];
-
     try {
       if (cleanSymbol === "^JKSE" || cleanSymbol === "IHSG") {
         // Statistik agregat pasar reguler seluruh BEI (IHSG - 900+ emiten)
@@ -572,13 +564,8 @@ export class MarketDataService {
           sourceName: "Seluruh Pasar Reguler BEI (IHSG)",
         };
       } else {
-        // Query database lokal untuk IDX80 atau LQ45
-        const queryFilter =
-          cleanSymbol === "^JKLQ45" || cleanSymbol === "LQ45"
-            ? { where: { symbol: { in: LQ45_SYMBOLS } } }
-            : {};
-
-        const dailyPrices = await prisma.stockDailyPrice.findMany(queryFilter);
+        // Query database lokal untuk konstituen IDX80
+        const dailyPrices = await prisma.stockDailyPrice.findMany({});
         if (dailyPrices.length > 0) {
           let advancing = 0;
           let declining = 0;
@@ -598,14 +585,13 @@ export class MarketDataService {
             totalTurnover += vol * close;
           }
 
-          const isLQ45 = cleanSymbol === "^JKLQ45" || cleanSymbol === "LQ45";
           const count = dailyPrices.length;
 
           statistics = {
             turnover: totalTurnover > 0 ? totalTurnover : 13730681275700,
-            turnoverSubtext: isLQ45 ? "+14.1% vs rata-rata harian" : "+12.4% vs rata-rata harian",
+            turnoverSubtext: "+12.4% vs rata-rata harian",
             volume: totalVolume > 0 ? totalVolume : 8952507336,
-            volumeSubtext: isLQ45 ? "+10.5% vs sesi kemarin" : "+8.2% vs sesi kemarin",
+            volumeSubtext: "+8.2% vs sesi kemarin",
             frequency: null,
             marketCap: 8920300000000000, // Rp 8.920,30 Triliun IDR (Konstituen IDX80)
             netIncome: 385600000000000,  // Rp 385,60 Triliun IDR (FY IDX80)
@@ -624,8 +610,8 @@ export class MarketDataService {
             decliningSubtext: `−${((declining / count) * 100).toFixed(1)}% dari ${count} saham`,
             unchanged,
             trackedCount: count,
-            basisLabel: isLQ45 ? "Basis 45 Saham Likuid LQ45" : `Basis ${count} Saham IDX80 BEI`,
-            sourceName: isLQ45 ? "Konstituen LQ45" : "Konstituen IDX80",
+            basisLabel: `Basis ${count} Saham IDX80 BEI`,
+            sourceName: "Konstituen IDX80",
           };
         }
       }
@@ -663,21 +649,33 @@ export class MarketDataService {
           }
         }
 
-        // Skalakan ke level indeks 143.25 jika Yahoo mengembalikan level 72.05 atau berbasis IHSG
-        if (result && result.indicators?.quote?.[0]?.close) {
+        // Skalakan seluruh deret harga OHLC ke level indeks 143.25 secara proporsional
+        if (result && result.indicators?.quote?.[0]) {
           const currentBase = result.meta?.regularMarketPrice || 72.05;
           const ratio = 143.25 / currentBase;
-          result.indicators.quote[0].close = result.indicators.quote[0].close.map(
-            (v) => (v != null ? Number((v * ratio).toFixed(2)) : v)
-          );
+          const q = result.indicators.quote[0];
+
+          if (Array.isArray(q.close)) {
+            q.close = q.close.map((v) => (v != null ? Number((v * ratio).toFixed(4)) : v));
+          }
+          if (Array.isArray(q.open)) {
+            q.open = q.open.map((v) => (v != null ? Number((v * ratio).toFixed(4)) : v));
+          }
+          if (Array.isArray(q.high)) {
+            q.high = q.high.map((v) => (v != null ? Number((v * ratio).toFixed(4)) : v));
+          }
+          if (Array.isArray(q.low)) {
+            q.low = q.low.map((v) => (v != null ? Number((v * ratio).toFixed(4)) : v));
+          }
+
           if (result.meta) {
-            result.meta.regularMarketPrice = 143.25;
-            result.meta.chartPreviousClose = Number(((result.meta.chartPreviousClose || currentBase) * ratio).toFixed(2));
-            result.meta.previousClose = Number(((result.meta.previousClose || currentBase) * ratio).toFixed(2));
-            result.meta.regularMarketDayHigh = 143.90;
-            result.meta.regularMarketDayLow = 141.80;
-            result.meta.fiftyTwoWeekHigh = 156.20;
-            result.meta.fiftyTwoWeekLow = 124.50;
+            result.meta.regularMarketPrice = Number((currentBase * ratio).toFixed(4));
+            result.meta.chartPreviousClose = Number(((result.meta.chartPreviousClose || currentBase) * ratio).toFixed(4));
+            result.meta.previousClose = Number(((result.meta.previousClose || currentBase) * ratio).toFixed(4));
+            result.meta.regularMarketDayHigh = Number(((result.meta.regularMarketDayHigh || currentBase) * ratio).toFixed(4));
+            result.meta.regularMarketDayLow = Number(((result.meta.regularMarketDayLow || currentBase) * ratio).toFixed(4));
+            result.meta.fiftyTwoWeekHigh = Number(((result.meta.fiftyTwoWeekHigh || currentBase) * ratio).toFixed(4));
+            result.meta.fiftyTwoWeekLow = Number(((result.meta.fiftyTwoWeekLow || currentBase) * ratio).toFixed(4));
           }
         }
       }
@@ -705,6 +703,9 @@ export class MarketDataService {
           // 09.00, 09.30, 10.00, 10.30, 11.00, 11.30, 13.30, 14.00, 14.30, 15.00, 15.30, 16.00
           // 11.30 (idx 30) dan 13.30 (idx 54) terpisah 24 slot istirahat siang sehingga TIDAK bertabrakan!
           const priceMap = {};
+          const openMap = {};
+          const highMap = {};
+          const lowMap = {};
           const volMap = {};
           for (let i = 0; i < timestamps.length; i++) {
             const jStr = new Date(timestamps[i] * 1000).toLocaleString("en-US", { timeZone: "Asia/Jakarta" });
@@ -714,6 +715,9 @@ export class MarketDataService {
             const key = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
             if (quote.close?.[i] != null && !isNaN(quote.close[i])) {
               priceMap[key] = quote.close[i];
+              openMap[key] = quote.open?.[i] ?? quote.close[i];
+              highMap[key] = quote.high?.[i] ?? quote.close[i];
+              lowMap[key] = quote.low?.[i] ?? quote.close[i];
             }
             if (quote.volume?.[i] != null && !isNaN(quote.volume[i])) {
               volMap[key] = quote.volume[i];
@@ -774,10 +778,20 @@ export class MarketDataService {
             const finalVolBar = isSpike ? volBar * 1.55 : volBar;
             const turnoverEstimate = cleanSymbol === "IHSG" ? 11.85 : 13.73;
 
+            const prevCloseItem = idx > 0 && chartData[idx - 1] ? chartData[idx - 1].close : pVal;
+            const oVal = openMap[timeStr] != null ? Number(openMap[timeStr].toFixed(4)) : prevCloseItem;
+            const hVal = highMap[timeStr] != null ? Number(Math.max(highMap[timeStr], oVal, pVal).toFixed(4)) : Number(Math.max(oVal, pVal, pVal * 1.0006).toFixed(4));
+            const lVal = lowMap[timeStr] != null ? Number(Math.min(lowMap[timeStr], oVal, pVal).toFixed(4)) : Number(Math.min(oVal, pVal, pVal * 0.9994).toFixed(4));
+
+            const slotTs = timestamps[idx] || (Math.floor(baseDate.getTime() / 1000) + idx * 300);
             chartData.push({
-              time: idx,
+              time: slotTs,
               index: idx,
               price: pVal,
+              open: oVal,
+              high: hVal,
+              low: lVal,
+              close: pVal,
               volume: Number(finalVolBar.toFixed(2)),
               vol24hFormatted: `Rp ${(turnoverEstimate * (0.82 + (idx % 6) * 0.06)).toFixed(2)}T`,
               isSpike,
@@ -870,10 +884,18 @@ export class MarketDataService {
               const finalVolBar = isSpike ? volBar * 1.55 : volBar;
               const turnoverEstimate = cleanSymbol === "IHSG" ? 11.85 : 13.73;
 
+              const oVal = quote.open?.[i] != null ? Number(quote.open[i].toFixed(4)) : pVal;
+              const hVal = quote.high?.[i] != null ? Number(Math.max(quote.high[i], oVal, pVal).toFixed(4)) : pVal;
+              const lVal = quote.low?.[i] != null ? Number(Math.min(quote.low[i], oVal, pVal).toFixed(4)) : pVal;
+
               chartData.push({
-                time: i,
+                time: timestamps[i],
                 index: i,
                 price: pVal,
+                open: oVal,
+                high: hVal,
+                low: lVal,
+                close: pVal,
                 volume: Number(finalVolBar.toFixed(2)),
                 vol24hFormatted: `Rp ${(turnoverEstimate * (0.82 + (i % 6) * 0.06)).toFixed(2)}T`,
                 isSpike,
@@ -958,12 +980,6 @@ export class MarketDataService {
         fullName: "Indeks Harga Saham Gabungan",
         displayName: "IHSG — Indeks Harga Saham Gabungan",
         subText: "IHSG • IDX Composite Index (^JKSE)",
-      },
-      "^JKLQ45": {
-        code: "LQ45",
-        fullName: "Indeks LQ45",
-        displayName: "LQ45 — 45 Saham Paling Likuid",
-        subText: "LQ45 • 45 Saham Likuid Terpilih (^JKLQ45)",
       },
       "^JKII": {
         code: "JKII",

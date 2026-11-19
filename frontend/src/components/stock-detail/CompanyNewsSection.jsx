@@ -175,10 +175,15 @@ export default function CompanyNewsSection({ symbol, companyName }) {
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty State: Jujur & Transparan Jika Belum Ada Berita Khusus Emiten */}
       {!isLoading && !error && filteredNews.length === 0 && (
-        <div className="p-8 text-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c0e14] text-slate-500 text-xs">
-          Tidak ada berita dengan filter ini untuk emiten {symbol}.
+        <div className="py-12 px-6 text-center rounded-2xl border border-dashed border-slate-200 dark:border-white/10 bg-transparent text-slate-500 dark:text-slate-400 text-xs space-y-1.5">
+          <p className="font-semibold text-slate-700 dark:text-slate-200 text-sm">
+            Belum ada publikasi berita terbaru khusus emiten {symbol} ({companyName}).
+          </p>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 max-w-md mx-auto">
+            Arus berita disaring ketat berdasarkan relevansi langsung dengan aksi korporasi dan kinerja {symbol} tanpa pencampuran berita bursa acak.
+          </p>
         </div>
       )}
 
@@ -189,6 +194,10 @@ export default function CompanyNewsSection({ symbol, companyName }) {
             const sentiment = (item.sentiment || "neutral").toLowerCase();
             const isPos = sentiment === "positive" || sentiment === "positif";
             const isNeg = sentiment === "negative" || sentiment === "negatif";
+            const cleanSource = (item.source || "Media Finansial")
+              .replace(/^https?:\/\//i, "")
+              .replace(/^www\./i, "")
+              .replace(/\/.*$/, "");
 
             return (
               <article
@@ -196,17 +205,17 @@ export default function CompanyNewsSection({ symbol, companyName }) {
                 className="group flex flex-col rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0e14] overflow-hidden hover:border-slate-400 dark:hover:border-white/25 transition-colors"
               >
                 {/* 1. Gambar Artikel Full Bleed di Bagian Atas */}
-                <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900">
+                <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900 flex items-center justify-center">
                   <img
                     src={
                       item.imageUrl ||
-                      "https://foto.kontan.co.id/IiOs-O1hRpgtIi4fFQeI_TpN_cQ=/smart/2025/05/27/15854717p.jpg"
+                      "https://awsimages.detik.net.id/visual/2026/10/19/layar-menampilkan-pergerakan-indeks-harga-saham-gabungan-ihsg-di-gedung-bursa-efek-indonesia-bei-jakarta-senin-19102026-1792382405134_169.jpeg?w=1200&q=90"
                     }
                     alt={item.title}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-103"
                     onError={(e) => {
                       e.target.src =
-                        "https://foto.kontan.co.id/IiOs-O1hRpgtIi4fFQeI_TpN_cQ=/smart/2025/05/27/15854717p.jpg";
+                        "https://awsimages.detik.net.id/visual/2026/10/19/layar-menampilkan-pergerakan-indeks-harga-saham-gabungan-ihsg-di-gedung-bursa-efek-indonesia-bei-jakarta-senin-19102026-1792382405134_169.jpeg?w=1200&q=90";
                     }}
                   />
 
@@ -215,9 +224,9 @@ export default function CompanyNewsSection({ symbol, companyName }) {
 
                   {/* Badge Sumber di Pojok Kiri Atas dengan Logo Penerbit */}
                   <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-xs border border-white/10 select-none">
-                    <PublisherLogo source={item.source} className="w-3.5 h-3.5" />
+                    <PublisherLogo source={cleanSource} className="w-3.5 h-3.5" />
                     <span className="text-white text-[10px] font-semibold">
-                      {item.source || "Media Finansial"}
+                      {cleanSource}
                     </span>
                   </div>
 

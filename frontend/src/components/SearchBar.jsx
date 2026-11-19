@@ -65,7 +65,7 @@ export default function SearchBar({ onSelectStock, selectedSymbol = "BBCA" }) {
             setIsOpen(true);
             if (results.length === 0) fetchStocks("");
           }}
-          placeholder="Cari kode ticker atau nama emiten IDX80..."
+          placeholder="Cari kode ticker atau nama emiten..."
           className="w-full px-4 pr-10 py-2.5 rounded-2xl text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all shadow-sm"
         />
 
@@ -84,7 +84,7 @@ export default function SearchBar({ onSelectStock, selectedSymbol = "BBCA" }) {
       {isOpen && (
         <div className="absolute left-0 right-0 mt-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-2xl z-50 overflow-hidden max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
           <div className="px-4 py-2 bg-slate-50/80 dark:bg-slate-800/80 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
-            <span>Konstituen Indeks IDX80</span>
+            <span>Daftar Emiten Terdaftar</span>
             {isLoading && <span className="text-blue-500 text-[11px] font-medium normal-case animate-pulse">Memuat...</span>}
           </div>
 
@@ -119,11 +119,7 @@ export default function SearchBar({ onSelectStock, selectedSymbol = "BBCA" }) {
                   </div>
                 </div>
 
-                {stock.isIdx80 && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 flex-shrink-0">
-                    IDX80
-                  </span>
-                )}
+
               </button>
             ))
           ) : (

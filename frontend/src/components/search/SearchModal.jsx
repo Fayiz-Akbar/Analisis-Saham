@@ -233,7 +233,7 @@ export default function SearchModal({
               : "border-slate-200 bg-slate-50 text-slate-500"
           }`}
         >
-          <span>Gunakan ticker konstituen IDX80, nama perusahaan, atau sektor bisnis</span>
+          <span>Gunakan kode ticker saham, nama perusahaan, atau sektor bisnis</span>
         </div>
       </div>
     </div>

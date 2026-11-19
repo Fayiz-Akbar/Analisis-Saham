@@ -8,12 +8,13 @@ import {
   getStockDetail,
   getTickerTape,
   getMarketOverview,
+  getStockFinancialHistory,
 } from "../controllers/stockController.js";
 import { getLatestNews } from "../controllers/newsController.js";
 
 const router = Router();
 
-// Endpoint Ringkasan Indeks Pasar (Market Overview: IHSG, LQ45)
+// Endpoint Ringkasan Indeks Pasar (Market Overview: IHSG, IDX80)
 router.get("/market-overview", getMarketOverview);
 
 // Endpoint ticker tape ringkasan pasar terpopuler
@@ -33,6 +34,9 @@ router.get("/:symbol/history", getStockHistory);
 
 // Endpoint rasio 4 pilar & laporan keuangan fundamental
 router.get("/:symbol/fundamentals", getStockFundamentals);
+
+// Endpoint laporan keuangan historis multi-tahun & kuartalan riil
+router.get("/:symbol/financial-history", getStockFinancialHistory);
 
 // Endpoint berita spesifik emiten dengan label sentimen
 router.get("/:symbol/news", (req, res, next) => {
