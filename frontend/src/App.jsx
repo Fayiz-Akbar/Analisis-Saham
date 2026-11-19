@@ -57,6 +57,7 @@ const parseRouteFromLocation = () => {
     range: "1y",
     detailSubTab: "all",
     sector: "ALL",
+    compareSymbols: [],
   };
   if (typeof window === "undefined") return fallback;
 
@@ -76,6 +77,7 @@ const parseRouteFromLocation = () => {
       range: VALID_RANGES.has(rawRange) ? rawRange : "1y",
       detailSubTab: VALID_DETAIL_TABS.has(rawSubTab) ? rawSubTab : "all",
       sector: "ALL",
+      compareSymbols: [],
     };
   }
 
@@ -92,7 +94,15 @@ const parseRouteFromLocation = () => {
   }
   if (lowerPath === "/watchlist") return { ...fallback, tab: "watchlist" };
   if (lowerPath === "/market") return { ...fallback, tab: "market" };
-  if (lowerPath === "/komparasi") return { ...fallback, tab: "komparasi" };
+  if (lowerPath === "/komparasi") {
+    const rawSyms = params.get("symbols") || "";
+    const compareSymbols = rawSyms
+      .split(",")
+      .map((s) => s.trim().toUpperCase())
+      .filter(Boolean)
+      .slice(0, 4);
+    return { ...fallback, tab: "komparasi", compareSymbols };
+  }
   if (lowerPath === "/portofolio") return { ...fallback, tab: "portofolio" };
   if (lowerPath === "/simulasi") return { ...fallback, tab: "simulasi" };
   if (lowerPath === "/learning") return { ...fallback, tab: "learning" };
@@ -117,6 +127,13 @@ const buildUrlFromRoute = (route) => {
     if (route.sector && route.sector !== "ALL") params.set("sector", route.sector);
     const qs = params.toString();
     return `${basePath}${qs ? `?${qs}` : ""}`;
+  }
+
+  if (route.tab === "komparasi") {
+    const syms = Array.isArray(route.compareSymbols)
+      ? route.compareSymbols.filter(Boolean).slice(0, 4)
+      : [];
+    return syms.length > 0 ? `/komparasi?symbols=${encodeURIComponent(syms.join(","))}` : "/komparasi";
   }
 
   return TAB_TO_PATH[route.tab] || "/";
@@ -418,6 +435,25 @@ export default function App() {
     [commitRoute]
   );
 
+  // Aksi membuka halaman Stock Comparison dengan daftar emiten terpilih dari Screener
+  const handleCompareStocks = useCallback(
+    (symbols = []) => {
+      const cleaned = (Array.isArray(symbols) ? symbols : [])
+        .map((s) => String(s || "").trim().toUpperCase())
+        .filter(Boolean)
+        .slice(0, 4);
+      commitRoute((prev) => ({
+        ...prev,
+        tab: "komparasi",
+        compareSymbols: cleaned,
+      }));
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }
+    },
+    [commitRoute]
+  );
+
   return (
     <AuthProvider>
       <div
@@ -503,9 +539,10 @@ export default function App() {
                     ======================================================== */}
                 {(activeTab === "category-table" || activeTab === "screener") && (
                   <StockTableView
+                    key={`screener-${tableSector}`}
                     initialSector={tableSector}
                     onSelectStock={handleSelectFromAnywhere}
-                    onBackToDashboard={() => setActiveTab("dashboard")}
+                    onCompareStocks={handleCompareStocks}
                   />
                 )}
 
@@ -520,20 +557,31 @@ export default function App() {
                 )}
 
                 {/* ========================================================
+                    6. STOCK COMPARISON (MASIH DALAM PENGEMBANGAN)
+                    ======================================================== */}
+                {activeTab === "komparasi" && (
+                  <PlaceholderView
+                    title="Stock Comparison"
+                    description={
+                      route.compareSymbols?.length > 0
+                        ? `Halaman perbandingan fundamental multi-emiten (${route.compareSymbols.join(", ")}) masih dalam tahap pengembangan dan akan hadir pada pembaruan mendatang.`
+                        : "Halaman perbandingan fundamental multi-emiten (2–4 saham) secara side-by-side masih dalam tahap pengembangan dan akan hadir pada pembaruan mendatang."
+                    }
+                    onBackToDashboard={() => setActiveTab("dashboard")}
+                    secondaryLabel={route.compareSymbols?.length > 0 ? "← Kembali ke Stock Screener" : undefined}
+                    onSecondaryAction={
+                      route.compareSymbols?.length > 0 ? () => setActiveTab("screener") : undefined
+                    }
+                  />
+                )}
+
+                {/* ========================================================
                     HALAMAN LAIN (Sprint Mendatang)
                     ======================================================== */}
                 {activeTab === "market" && (
                   <PlaceholderView
                     title="Market & Sentiment"
                     description="Dasbor makroekonomi pergerakan IHSG, bursa global, komoditas, dan sentimen berita pasar akan diimplementasikan pada sprint mendatang."
-                    onBackToDashboard={() => setActiveTab("dashboard")}
-                  />
-                )}
-
-                {activeTab === "komparasi" && (
-                  <PlaceholderView
-                    title="Stock Comparison"
-                    description="Komparasi multi-emiten (2–4 saham) secara side-by-side akan diimplementasikan pada sprint mendatang."
                     onBackToDashboard={() => setActiveTab("dashboard")}
                   />
                 )}

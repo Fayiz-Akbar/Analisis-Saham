@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   searchStocks,
   getAllStocks,
+  screenStocks,
   getStockQuote,
   getStockHistory,
   getStockFundamentals,
@@ -27,6 +28,9 @@ router.get("/ticker-tape", getTickerTape);
 
 // Endpoint pencarian saham (Search bar autocomplete)
 router.get("/search", searchStocks);
+
+// Endpoint penyaringan saham IDX80 dengan filter fundamental & null-safe query
+router.get("/screener", screenStocks);
 
 // Endpoint katalog seluruh saham (IDX80)
 router.get("/", getAllStocks);

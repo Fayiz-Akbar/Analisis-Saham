@@ -99,31 +99,211 @@ export const getAllStocks = async (req, res) => {
 };
 
 /**
- * Helper untuk sanitasi nilai Decimal fundamental ke tipe Number
+ * Helper untuk sanitasi nilai Decimal fundamental ke tipe Number (aman terhadap null/undefined)
  */
 export const sanitizeFundamental = (f) => {
   if (!f) return null;
+  const toNum = (v) => {
+    if (v === null || v === undefined) return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
   return {
     ...f,
-    marketCap: f.marketCap !== null && f.marketCap !== undefined ? Number(f.marketCap) : null,
-    peRatio: f.peRatio !== null && f.peRatio !== undefined ? Number(f.peRatio) : null,
-    pbvRatio: f.pbvRatio !== null && f.pbvRatio !== undefined ? Number(f.pbvRatio) : null,
-    roe: f.roe !== null && f.roe !== undefined ? Number(f.roe) : null,
-    roa: f.roa !== null && f.roa !== undefined ? Number(f.roa) : null,
-    der: f.der !== null && f.der !== undefined ? Number(f.der) : null,
-    netProfitMargin: f.netProfitMargin !== null && f.netProfitMargin !== undefined ? Number(f.netProfitMargin) : null,
-    eps: f.eps !== null && f.eps !== undefined ? Number(f.eps) : null,
-    dividendYield: f.dividendYield !== null && f.dividendYield !== undefined ? Number(f.dividendYield) : null,
-    revenue: f.revenue !== null && f.revenue !== undefined ? Number(f.revenue) : null,
-    netIncome: f.netIncome !== null && f.netIncome !== undefined ? Number(f.netIncome) : null,
-    totalAssets: f.totalAssets !== null && f.totalAssets !== undefined ? Number(f.totalAssets) : null,
-    totalEquity: f.totalEquity !== null && f.totalEquity !== undefined ? Number(f.totalEquity) : null,
-    totalLiabilities: f.totalLiabilities !== null && f.totalLiabilities !== undefined ? Number(f.totalLiabilities) : null,
-    cashEquivalents: f.cashEquivalents !== null && f.cashEquivalents !== undefined ? Number(f.cashEquivalents) : null,
-    revenueGrowth: f.revenueGrowth !== null && f.revenueGrowth !== undefined ? Number(f.revenueGrowth) : null,
-    netIncomeGrowth: f.netIncomeGrowth !== null && f.netIncomeGrowth !== undefined ? Number(f.netIncomeGrowth) : null,
+    marketCap: toNum(f.marketCap),
+    peRatio: toNum(f.peRatio),
+    pbvRatio: toNum(f.pbvRatio),
+    roe: toNum(f.roe),
+    roa: toNum(f.roa),
+    der: toNum(f.der),
+    netProfitMargin: toNum(f.netProfitMargin),
+    eps: toNum(f.eps),
+    dividendYield: toNum(f.dividendYield),
+    revenue: toNum(f.revenue),
+    netIncome: toNum(f.netIncome),
+    totalAssets: toNum(f.totalAssets),
+    totalEquity: toNum(f.totalEquity),
+    totalLiabilities: toNum(f.totalLiabilities),
+    cashEquivalents: toNum(f.cashEquivalents),
+    revenueGrowth: toNum(f.revenueGrowth),
+    netIncomeGrowth: toNum(f.netIncomeGrowth),
     financialPeriod: f.financialPeriod || "FY2024 Audit (Konsolidasian)",
   };
+};
+
+const SCREENER_RANGE_FIELDS = [
+  { minKey: "perMin", maxKey: "perMax", dbField: "peRatio" },
+  { minKey: "pbvMin", maxKey: "pbvMax", dbField: "pbvRatio" },
+  { minKey: "roeMin", maxKey: "roeMax", dbField: "roe" },
+  { minKey: "roaMin", maxKey: "roaMax", dbField: "roa" },
+  { minKey: "npmMin", maxKey: "npmMax", dbField: "netProfitMargin" },
+  { minKey: "derMin", maxKey: "derMax", dbField: "der" },
+  { minKey: "divYieldMin", maxKey: "divYieldMax", dbField: "dividendYield" },
+  { minKey: "marketCapMin", maxKey: "marketCapMax", dbField: "marketCap" },
+  { minKey: "revenueMin", maxKey: "revenueMax", dbField: "revenue" },
+  { minKey: "netIncomeMin", maxKey: "netIncomeMax", dbField: "netIncome" },
+  { minKey: "epsMin", maxKey: "epsMax", dbField: "eps" },
+];
+
+const parseScreenerNumber = (raw) => {
+  if (raw === undefined || raw === null) return null;
+  const normalized = String(raw).trim().replace(",", ".");
+  if (!normalized) return null;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const parseSectorList = (sectorParam, sectorsParam) => {
+  const combined = [
+    ...(Array.isArray(sectorsParam) ? sectorsParam : sectorsParam ? [sectorsParam] : []),
+    ...(Array.isArray(sectorParam) ? sectorParam : sectorParam ? [sectorParam] : []),
+  ]
+    .flatMap((entry) => String(entry).split(","))
+    .map((s) => s.trim())
+    .filter((s) => s && s.toUpperCase() !== "ALL");
+  return Array.from(new Set(combined));
+};
+
+const getSortableStockMetric = (stock, sortBy) => {
+  const dp = stock.dailyPrice || {};
+  const f = stock.fundamentals || {};
+  const map = {
+    price: dp.closePrice !== null && dp.closePrice !== undefined ? Number(dp.closePrice) : null,
+    changePercent:
+      dp.changePercent !== null && dp.changePercent !== undefined ? Number(dp.changePercent) : null,
+    marketCap: f.marketCap,
+    peRatio: f.peRatio,
+    pbvRatio: f.pbvRatio,
+    roe: f.roe,
+    roa: f.roa,
+    netProfitMargin: f.netProfitMargin,
+    der: f.der,
+    revenue: f.revenue,
+    netIncome: f.netIncome,
+    eps: f.eps,
+    dividendYield: f.dividendYield,
+  };
+  const val = map[sortBy];
+  return val !== undefined && val !== null && Number.isFinite(Number(val)) ? Number(val) : null;
+};
+
+/**
+ * Penyaringan Fundamental Saham IDX80 (Null-Safe Backend Filter & Sorting)
+ * GET /api/stocks/screener
+ */
+export const screenStocks = async (req, res) => {
+  try {
+    await syncIdx80Constituents();
+
+    const search = String(req.query.q || req.query.search || "").trim();
+    const sectorList = parseSectorList(req.query.sector, req.query.sectors);
+    const sortBy = String(req.query.sortBy || "marketCap").trim();
+    const sortOrder = String(req.query.sortOrder || "desc").toLowerCase() === "asc" ? "asc" : "desc";
+
+    const where = { isIdx80: true };
+
+    if (search) {
+      where.OR = [
+        { symbol: { contains: search, mode: "insensitive" } },
+        { companyName: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    if (sectorList.length > 0) {
+      where.sector = { in: sectorList };
+    }
+
+    // Filter rentang fundamental dengan penanganan aman untuk nilai null di database
+    const fundamentalWhere = {};
+    let hasFundamentalFilter = false;
+    for (const cfg of SCREENER_RANGE_FIELDS) {
+      const minVal = parseScreenerNumber(req.query[cfg.minKey]);
+      const maxVal = parseScreenerNumber(req.query[cfg.maxKey]);
+      if (minVal !== null || maxVal !== null) {
+        fundamentalWhere[cfg.dbField] = {
+          not: null,
+          ...(minVal !== null ? { gte: minVal } : {}),
+          ...(maxVal !== null ? { lte: maxVal } : {}),
+        };
+        hasFundamentalFilter = true;
+      }
+    }
+
+    if (hasFundamentalFilter) {
+      where.fundamentals = { is: fundamentalWhere };
+    }
+
+    const [matchedStocks, totalIdx80, sectorGroups] = await Promise.all([
+      prisma.stock.findMany({
+        where,
+        orderBy: { symbol: "asc" },
+        include: {
+          dailyPrice: true,
+          fundamentals: true,
+        },
+      }),
+      prisma.stock.count({ where: { isIdx80: true } }),
+      prisma.stock.groupBy({
+        by: ["sector"],
+        where: { isIdx80: true },
+        _count: { sector: true },
+        orderBy: { sector: "asc" },
+      }),
+    ]);
+
+    const sanitized = matchedStocks.map((s) => ({
+      ...s,
+      dailyPrice: s.dailyPrice
+        ? {
+            ...s.dailyPrice,
+            closePrice: s.dailyPrice.closePrice !== null ? Number(s.dailyPrice.closePrice) : null,
+            changeAmount: s.dailyPrice.changeAmount !== null ? Number(s.dailyPrice.changeAmount) : null,
+            changePercent: s.dailyPrice.changePercent !== null ? Number(s.dailyPrice.changePercent) : null,
+            openPrice: s.dailyPrice.openPrice !== null ? Number(s.dailyPrice.openPrice) : null,
+            highPrice: s.dailyPrice.highPrice !== null ? Number(s.dailyPrice.highPrice) : null,
+            lowPrice: s.dailyPrice.lowPrice !== null ? Number(s.dailyPrice.lowPrice) : null,
+            volume: s.dailyPrice.volume ? s.dailyPrice.volume.toString() : null,
+          }
+        : null,
+      fundamentals: sanitizeFundamental(s.fundamentals),
+    }));
+
+    // Urutkan hasil secara deterministik dengan menempatkan nilai null selalu di bawah
+    sanitized.sort((a, b) => {
+      if (sortBy === "symbol") {
+        return sortOrder === "asc"
+          ? a.symbol.localeCompare(b.symbol)
+          : b.symbol.localeCompare(a.symbol);
+      }
+      if (sortBy === "sector") {
+        const cmp = (a.sector || "").localeCompare(b.sector || "");
+        return sortOrder === "asc" ? cmp : -cmp;
+      }
+
+      const valA = getSortableStockMetric(a, sortBy);
+      const valB = getSortableStockMetric(b, sortBy);
+      if (valA === null && valB === null) return a.symbol.localeCompare(b.symbol);
+      if (valA === null) return 1;
+      if (valB === null) return -1;
+      if (valA === valB) return a.symbol.localeCompare(b.symbol);
+      return sortOrder === "asc" ? valA - valB : valB - valA;
+    });
+
+    const sectors = sectorGroups.map((g) => ({
+      sector: g.sector,
+      count: g._count.sector,
+    }));
+
+    return sendSuccess(res, 200, "Penyaringan saham IDX80 berhasil diproses", {
+      items: sanitized,
+      matchedCount: sanitized.length,
+      totalIdx80,
+      sectors,
+    });
+  } catch (error) {
+    console.error("Screen Stocks Error:", error);
+    return sendError(res, 500, "Gagal memproses penyaringan saham.");
+  }
 };
 
 /**
