@@ -1,4 +1,5 @@
 import prisma from "../lib/prisma.js";
+import { syncIdx80Constituents, getLastIdx80SyncStatus } from "./idx80SyncService.js";
 
 const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 const CACHE_TTL_MINUTES = 15; // 15 Menit TTL Cache
@@ -13,6 +14,85 @@ export const toYahooTicker = (symbol) => {
   if (clean.includes(".")) return clean;
   return `${clean}.JK`;
 };
+
+/**
+ * Menggabungkan deret lilin per jam (1h) dari Yahoo Finance menjadi lilin harian/mingguan/bulanan
+ * Khusus untuk indeks IDX80.JK yang menyediakan histori 1h lengkap hingga 2 tahun
+ */
+function aggregateHourlyOhlcResult(result, bucketMode = "day") {
+  if (!result || !Array.isArray(result.timestamp) || !result.indicators?.quote?.[0]) {
+    return result;
+  }
+
+  const timestamps = result.timestamp;
+  const q = result.indicators.quote[0];
+  const buckets = new Map();
+
+  for (let i = 0; i < timestamps.length; i++) {
+    const c = q.close?.[i];
+    if (c == null || isNaN(c)) continue;
+
+    const jStr = new Date(timestamps[i] * 1000).toLocaleString("en-US", { timeZone: "Asia/Jakarta" });
+    const d = new Date(jStr);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+
+    let key;
+    if (bucketMode === "month") {
+      key = `${y}-${m}`;
+    } else if (bucketMode === "week") {
+      const monday = new Date(d);
+      const diffToMonday = (d.getDay() + 6) % 7;
+      monday.setDate(d.getDate() - diffToMonday);
+      key = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, "0")}-${String(
+        monday.getDate()
+      ).padStart(2, "0")}`;
+    } else {
+      key = `${y}-${m}-${day}`;
+    }
+
+    const o = q.open?.[i] ?? c;
+    const h = Math.max(q.high?.[i] ?? c, o, c);
+    const l = Math.min(q.low?.[i] ?? c, o, c);
+    const v = q.volume?.[i] ?? 0;
+
+    if (!buckets.has(key)) {
+      buckets.set(key, {
+        time: timestamps[i],
+        open: o,
+        high: h,
+        low: l,
+        close: c,
+        volume: v,
+      });
+    } else {
+      const b = buckets.get(key);
+      b.time = timestamps[i];
+      b.high = Math.max(b.high, h);
+      b.low = Math.min(b.low, l);
+      b.close = c;
+      b.volume += v;
+    }
+  }
+
+  const aggList = Array.from(buckets.values());
+  return {
+    ...result,
+    timestamp: aggList.map((b) => b.time),
+    indicators: {
+      quote: [
+        {
+          open: aggList.map((b) => b.open),
+          high: aggList.map((b) => b.high),
+          low: aggList.map((b) => b.low),
+          close: aggList.map((b) => b.close),
+          volume: aggList.map((b) => b.volume),
+        },
+      ],
+    },
+  };
+}
 
 /**
  * Service untuk penarikan data pasar modal Yahoo Finance dengan caching PostgreSQL JSONB
@@ -93,6 +173,9 @@ export class MarketDataService {
     });
 
     if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error(`Data pasar untuk ${symbol} tidak ditemukan (emiten kemungkinan sudah delisting atau tersuspensi di bursa).`);
+      }
       throw new Error(`Gagal mengambil data pasar Yahoo Finance (${response.status}: ${response.statusText})`);
     }
 
@@ -288,6 +371,9 @@ export class MarketDataService {
    * Menghitung performa MINGGUAN (Weekly Performance)
    */
   static async getTickerTape(symbols) {
+    // 0. Pastikan daftar konstituen IDX80 tersinkronisasi (TTL 24 jam)
+    await syncIdx80Constituents();
+
     // 1. Cek PostgreSQL Cache untuk seluruh emiten IDX80
     let cachedAll = null;
     try {
@@ -297,17 +383,18 @@ export class MarketDataService {
       if (cachedAll && new Date(cachedAll.expiresAt) > new Date() && Array.isArray(cachedAll.responseData) && cachedAll.responseData.length > 0) {
         if (symbols && Array.isArray(symbols) && symbols.length > 0) {
           const symSet = new Set(symbols);
-          return cachedAll.responseData.filter((item) => symSet.has(item.symbol));
+          return cachedAll.responseData.filter((item) => symSet.has(item.symbol) && item.price > 0);
         }
-        return cachedAll.responseData;
+        return cachedAll.responseData.filter((item) => item.price > 0);
       }
     } catch (e) {
       console.warn("Peringatan membaca cache ticker tape:", e.message);
     }
 
-    // Pastikan daftar simbol terisi (default seluruh 80 emiten IDX80)
+    // Pastikan daftar simbol terisi (hanya konstituen IDX80 aktif)
     if (!symbols || !Array.isArray(symbols) || symbols.length === 0) {
       const allStocks = await prisma.stock.findMany({
+        where: { isIdx80: true },
         select: { symbol: true },
         orderBy: { symbol: "asc" },
       });
@@ -321,15 +408,23 @@ export class MarketDataService {
     });
     const stockMap = new Map(dbStocks.map((s) => [s.symbol, s]));
 
-    // 2. Fetch parallel ke Yahoo Finance API query2 (5d / 1d)
+    // 2. Fetch parallel ke Yahoo Finance API query2 (5d / 1h untuk sparkline presisi tinggi ~30-35 titik)
     const tapeItems = await Promise.all(
       symbols.map(async (sym) => {
         const dbStock = stockMap.get(sym);
         try {
           const res = await fetch(
-            `https://query2.finance.yahoo.com/v8/finance/chart/${sym}.JK?interval=1d&range=5d`,
+            `https://query2.finance.yahoo.com/v8/finance/chart/${sym}.JK?interval=1h&range=5d`,
             { headers: { "User-Agent": USER_AGENT } }
           );
+
+          if (res.status === 404) {
+            // Emiten tidak ditemukan / delisting di Yahoo Finance -> tandai non-IDX80 & lewati dari tape
+            await prisma.stock
+              .updateMany({ where: { symbol: sym }, data: { isIdx80: false } })
+              .catch(() => {});
+            return null;
+          }
 
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -339,6 +434,7 @@ export class MarketDataService {
           const closes = (result?.indicators?.quote?.[0]?.close || []).filter((c) => c != null && !isNaN(c));
 
           const price = meta?.regularMarketPrice || (closes.length > 0 ? closes[closes.length - 1] : dbStock?.dailyPrice?.closePrice) || 0;
+          if (!price || price <= 0) return null;
           
           // Perhitungan MINGGUAN (Weekly): Selisih harga awal minggu (closes[0]) vs harga terkini
           const startOfWeekPrice = closes.length > 0 ? closes[0] : (meta?.chartPreviousClose || price);
@@ -355,50 +451,55 @@ export class MarketDataService {
             sparkline: closes.length >= 2 ? closes : [startOfWeekPrice, price],
           };
         } catch (err) {
-          // Fallback ke data cachedAll jika tersedia
-          const cachedItem = Array.isArray(cachedAll?.responseData) ? cachedAll.responseData.find((c) => c.symbol === sym) : null;
+          // Fallback ke data cachedAll jika tersedia dan harganya valid
+          const cachedItem = Array.isArray(cachedAll?.responseData) ? cachedAll.responseData.find((c) => c.symbol === sym && c.price > 0) : null;
           if (cachedItem) {
             return cachedItem;
           }
 
-          // Fallback ke data database jika Yahoo Finance offline/error
+          // Fallback ke data database jika Yahoo Finance offline/error sementara
           const dp = dbStock?.dailyPrice;
-          const price = dp?.closePrice || 0;
+          const price = Number(dp?.closePrice || 0);
+          if (price <= 0) return null;
           return {
             symbol: sym,
             companyName: dbStock?.companyName || sym,
             logoUrl: dbStock?.logoUrl || `https://assets.stockbit.com/logos/companies/${sym}.png`,
-            price: Number(price),
-            changeAmount: dp?.changeAmount || 0,
-            changePercent: dp?.changePercent || 0,
+            price,
+            changeAmount: Number(dp?.changeAmount || 0),
+            changePercent: Number(dp?.changePercent || 0),
             sparkline: [price, price],
           };
         }
       })
     );
 
+    const validTapeItems = tapeItems.filter((item) => item && item.price > 0);
+
     // 3. Simpan ke Cache PostgreSQL (TTL 2 Jam)
     try {
-      const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
-      await prisma.apiCache.upsert({
-        where: { endpointKey: "market_ticker_tape_all_idx80" },
-        update: {
-          responseData: tapeItems,
-          fetchedAt: new Date(),
-          expiresAt,
-        },
-        create: {
-          provider: "yahoo_finance",
-          endpointKey: "market_ticker_tape_all_idx80",
-          responseData: tapeItems,
-          expiresAt,
-        },
-      });
+      if (validTapeItems.length > 0) {
+        const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
+        await prisma.apiCache.upsert({
+          where: { endpointKey: "market_ticker_tape_all_idx80" },
+          update: {
+            responseData: validTapeItems,
+            fetchedAt: new Date(),
+            expiresAt,
+          },
+          create: {
+            provider: "yahoo_finance",
+            endpointKey: "market_ticker_tape_all_idx80",
+            responseData: validTapeItems,
+            expiresAt,
+          },
+        });
+      }
     } catch (cacheErr) {
       console.warn("Peringatan: Gagal menyimpan cache ticker tape:", cacheErr.message);
     }
 
-    return tapeItems;
+    return validTapeItems;
   }
 
   /**
@@ -536,7 +637,9 @@ export class MarketDataService {
 
     try {
       if (cleanSymbol === "^JKSE" || cleanSymbol === "IHSG") {
-        // Statistik agregat pasar reguler seluruh BEI (IHSG - 900+ emiten)
+        const syncStatus = await getLastIdx80SyncStatus();
+        const activeCount = syncStatus?.totalActiveIdx || 880;
+        // Statistik agregat pasar reguler seluruh BEI (IHSG)
         statistics = {
           turnover: 11850000000000,
           turnoverSubtext: "+15.2% vs rata-rata harian",
@@ -555,17 +658,19 @@ export class MarketDataService {
           pbvRatio: 2.14,
           averageVolume: 16900000000,
           advancing: 248,
-          advancingSubtext: "+27.0% dari 920 saham",
+          advancingSubtext: `+28.2% dari ${activeCount} saham`,
           declining: 295,
-          decliningSubtext: "−32.1% dari 920 saham",
+          decliningSubtext: `−33.5% dari ${activeCount} saham`,
           unchanged: 215,
-          trackedCount: 920,
-          basisLabel: "Basis 900+ Emiten Komposit BEI",
+          trackedCount: activeCount,
+          basisLabel: `Basis ${activeCount} Emiten Aktif BEI`,
           sourceName: "Seluruh Pasar Reguler BEI (IHSG)",
         };
       } else {
-        // Query database lokal untuk konstituen IDX80
-        const dailyPrices = await prisma.stockDailyPrice.findMany({});
+        // Query database lokal untuk konstituen IDX80 aktif
+        const dailyPrices = await prisma.stockDailyPrice.findMany({
+          where: { stock: { isIdx80: true } },
+        });
         if (dailyPrices.length > 0) {
           let advancing = 0;
           let declining = 0;
@@ -595,12 +700,12 @@ export class MarketDataService {
             frequency: null,
             marketCap: 8920300000000000, // Rp 8.920,30 Triliun IDR (Konstituen IDX80)
             netIncome: 385600000000000,  // Rp 385,60 Triliun IDR (FY IDX80)
-            previousClose: 142.10,
-            openPrice: 142.65,
-            dayHigh: 143.90,
-            dayLow: 141.80,
-            fiftyTwoWeekHigh: 156.20,
-            fiftyTwoWeekLow: 124.50,
+            previousClose: 78.144,
+            openPrice: 77.871,
+            dayHigh: 78.638,
+            dayLow: 76.782,
+            fiftyTwoWeekHigh: 140.967,
+            fiftyTwoWeekLow: 70.881,
             peRatio: 14.10,
             pbvRatio: 2.35,
             averageVolume: 8400000000,
@@ -619,16 +724,23 @@ export class MarketDataService {
       console.warn("Gagal mengambil statistik saham DB:", dbErr.message);
     }
 
+    const isIdx80Index = cleanSymbol === "IDX80" || cleanSymbol === "IDX80.JK";
+    // IDX80.JK pada Yahoo Finance menyediakan data 1h lengkap hingga 2 tahun, lalu diagregasi ke harian/mingguan/bulanan
+    const fetchInterval =
+      isIdx80Index && normPeriod !== "1d" && normPeriod !== "1w" ? "1h" : interval;
+    const fetchRange =
+      isIdx80Index && (normPeriod === "5y" || normPeriod === "max") ? "2y" : range;
+
     const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
       yahooSymbol
-    )}?interval=${interval}&range=${range}`;
+    )}?interval=${fetchInterval}&range=${fetchRange}`;
 
     let chartData = [];
-    let price = cleanSymbol === "IHSG" || cleanSymbol === "^JKSE" ? 7420.50 : 143.25;
-    let changeAmount = cleanSymbol === "IHSG" || cleanSymbol === "^JKSE" ? 64.20 : 1.15;
-    let changePercent = cleanSymbol === "IHSG" || cleanSymbol === "^JKSE" ? 0.87 : 0.81;
-    let dayHigh = statistics.dayHigh || (cleanSymbol === "IHSG" ? 7435.80 : 143.90);
-    let dayLow = statistics.dayLow || (cleanSymbol === "IHSG" ? 7348.15 : 141.80);
+    let price = cleanSymbol === "IHSG" || cleanSymbol === "^JKSE" ? 7420.50 : 77.54;
+    let changeAmount = cleanSymbol === "IHSG" || cleanSymbol === "^JKSE" ? 64.20 : -0.60;
+    let changePercent = cleanSymbol === "IHSG" || cleanSymbol === "^JKSE" ? 0.87 : -0.77;
+    let dayHigh = statistics.dayHigh || (cleanSymbol === "IHSG" ? 7435.80 : 78.64);
+    let dayLow = statistics.dayLow || (cleanSymbol === "IHSG" ? 7348.15 : 76.78);
     let periodHigh = dayHigh;
     let periodLow = dayLow;
     let comparisonText = "Perubahan harian vs penutupan sebelumnya";
@@ -638,46 +750,10 @@ export class MarketDataService {
       let json = res.ok ? await res.json() : null;
       let result = json?.chart?.result?.[0];
 
-      // Jika IDX80, pastikan tingkat harga konsisten pada level indeks 143.25
-      if ((cleanSymbol === "IDX80" || cleanSymbol === "IDX80.JK")) {
-        if (!result || (result.timestamp || []).length <= 2) {
-          const fallbackUrl = `https://query2.finance.yahoo.com/v8/finance/chart/%5EJKSE?interval=${interval}&range=${range}`;
-          const fbRes = await fetch(fallbackUrl, { headers: { "User-Agent": USER_AGENT } });
-          if (fbRes.ok) {
-            const fbJson = await fbRes.json();
-            result = fbJson?.chart?.result?.[0];
-          }
-        }
-
-        // Skalakan seluruh deret harga OHLC ke level indeks 143.25 secara proporsional
-        if (result && result.indicators?.quote?.[0]) {
-          const currentBase = result.meta?.regularMarketPrice || 72.05;
-          const ratio = 143.25 / currentBase;
-          const q = result.indicators.quote[0];
-
-          if (Array.isArray(q.close)) {
-            q.close = q.close.map((v) => (v != null ? Number((v * ratio).toFixed(4)) : v));
-          }
-          if (Array.isArray(q.open)) {
-            q.open = q.open.map((v) => (v != null ? Number((v * ratio).toFixed(4)) : v));
-          }
-          if (Array.isArray(q.high)) {
-            q.high = q.high.map((v) => (v != null ? Number((v * ratio).toFixed(4)) : v));
-          }
-          if (Array.isArray(q.low)) {
-            q.low = q.low.map((v) => (v != null ? Number((v * ratio).toFixed(4)) : v));
-          }
-
-          if (result.meta) {
-            result.meta.regularMarketPrice = Number((currentBase * ratio).toFixed(4));
-            result.meta.chartPreviousClose = Number(((result.meta.chartPreviousClose || currentBase) * ratio).toFixed(4));
-            result.meta.previousClose = Number(((result.meta.previousClose || currentBase) * ratio).toFixed(4));
-            result.meta.regularMarketDayHigh = Number(((result.meta.regularMarketDayHigh || currentBase) * ratio).toFixed(4));
-            result.meta.regularMarketDayLow = Number(((result.meta.regularMarketDayLow || currentBase) * ratio).toFixed(4));
-            result.meta.fiftyTwoWeekHigh = Number(((result.meta.fiftyTwoWeekHigh || currentBase) * ratio).toFixed(4));
-            result.meta.fiftyTwoWeekLow = Number(((result.meta.fiftyTwoWeekLow || currentBase) * ratio).toFixed(4));
-          }
-        }
+      // Agregasi data riil IDX80.JK per jam menjadi OHLC harian/mingguan/bulanan (TANPA meniru IHSG)
+      if (isIdx80Index && result && normPeriod !== "1d" && normPeriod !== "1w") {
+        const bucketMode = normPeriod === "5y" ? "week" : normPeriod === "max" ? "month" : "day";
+        result = aggregateHourlyOhlcResult(result, bucketMode);
       }
 
       if (result) {
@@ -949,12 +1025,55 @@ export class MarketDataService {
             statistics.fiftyTwoWeekHigh = Number((meta?.fiftyTwoWeekHigh || 9174.47).toFixed(4));
             statistics.fiftyTwoWeekLow = Number((meta?.fiftyTwoWeekLow || 4907.37).toFixed(4));
           } else if (cleanSymbol === "IDX80" || cleanSymbol === "IDX80.JK") {
-            statistics.previousClose = Number((meta?.previousClose || prevClose || 142.10).toFixed(4));
-            statistics.openPrice = Number((meta?.regularMarketOpen || firstPrice || 142.65).toFixed(4));
-            statistics.dayHigh = Number((meta?.regularMarketDayHigh || periodHigh || 143.90).toFixed(4));
-            statistics.dayLow = Number((meta?.regularMarketDayLow || periodLow || 141.80).toFixed(4));
-            statistics.fiftyTwoWeekHigh = Number((meta?.fiftyTwoWeekHigh || 156.20).toFixed(4));
-            statistics.fiftyTwoWeekLow = Number((meta?.fiftyTwoWeekLow || 124.50).toFixed(4));
+            statistics.previousClose = Number((meta?.chartPreviousClose || meta?.previousClose || prevClose || 78.144).toFixed(4));
+            statistics.openPrice = Number((meta?.regularMarketOpen || firstPrice || price).toFixed(4));
+            statistics.dayHigh = Number((meta?.regularMarketDayHigh || periodHigh).toFixed(4));
+            statistics.dayLow = Number((meta?.regularMarketDayLow || periodLow).toFixed(4));
+            // Ambil rentang 52 minggu riil untuk IDX80.JK (karena meta 1d Yahoo sering mengisi 52W hanya dengan rentang hari ini)
+            let w52High = Math.max(meta?.fiftyTwoWeekHigh || 0, periodHigh || 0);
+            let w52Low = Math.min(meta?.fiftyTwoWeekLow || Infinity, periodLow || Infinity);
+            try {
+              const cached52w = await prisma.apiCache.findUnique({ where: { endpointKey: "idx80_52w_range" } });
+              if (cached52w && new Date(cached52w.expiresAt) > new Date() && cached52w.responseData) {
+                w52High = Math.max(w52High, cached52w.responseData.high || 0);
+                w52Low = Math.min(w52Low, cached52w.responseData.low || Infinity);
+              } else {
+                const r52 = await fetch(
+                  "https://query2.finance.yahoo.com/v8/finance/chart/IDX80.JK?interval=1h&range=1y",
+                  { headers: { "User-Agent": USER_AGENT } }
+                );
+                if (r52.ok) {
+                  const j52 = await r52.json();
+                  const q52 = j52?.chart?.result?.[0]?.indicators?.quote?.[0];
+                  const hVals = (q52?.high || []).filter((v) => v != null && !isNaN(v));
+                  const lVals = (q52?.low || []).filter((v) => v != null && !isNaN(v));
+                  if (hVals.length > 0 && lVals.length > 0) {
+                    const real52High = Math.max(...hVals);
+                    const real52Low = Math.min(...lVals);
+                    w52High = Math.max(w52High, real52High);
+                    w52Low = Math.min(w52Low, real52Low);
+                    await prisma.apiCache.upsert({
+                      where: { endpointKey: "idx80_52w_range" },
+                      update: {
+                        responseData: { high: real52High, low: real52Low },
+                        fetchedAt: new Date(),
+                        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                      },
+                      create: {
+                        provider: "yahoo_finance",
+                        endpointKey: "idx80_52w_range",
+                        responseData: { high: real52High, low: real52Low },
+                        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                      },
+                    });
+                  }
+                }
+              }
+            } catch {
+              // Abaikan jika gagal mengambil 52W range tambahan
+            }
+            statistics.fiftyTwoWeekHigh = Number((w52High > 0 ? w52High : periodHigh).toFixed(4));
+            statistics.fiftyTwoWeekLow = Number((isFinite(w52Low) ? w52Low : periodLow).toFixed(4));
           }
         }
       }

@@ -191,9 +191,6 @@ export default function CompanyNewsSection({ symbol, companyName }) {
       {!isLoading && !error && filteredNews.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredNews.map((item) => {
-            const sentiment = (item.sentiment || "neutral").toLowerCase();
-            const isPos = sentiment === "positive" || sentiment === "positif";
-            const isNeg = sentiment === "negative" || sentiment === "negatif";
             const cleanSource = (item.source || "Media Finansial")
               .replace(/^https?:\/\//i, "")
               .replace(/^www\./i, "")
@@ -202,7 +199,7 @@ export default function CompanyNewsSection({ symbol, companyName }) {
             return (
               <article
                 key={item.id}
-                className="group flex flex-col rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0e14] overflow-hidden hover:border-slate-400 dark:hover:border-white/25 transition-colors"
+                className="group flex flex-col rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] overflow-hidden hover:border-slate-300 dark:hover:border-white/25 transition-colors"
               >
                 {/* 1. Gambar Artikel Full Bleed di Bagian Atas */}
                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-900 flex items-center justify-center">
@@ -223,7 +220,7 @@ export default function CompanyNewsSection({ symbol, companyName }) {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40 pointer-events-none"></div>
 
                   {/* Badge Sumber di Pojok Kiri Atas dengan Logo Penerbit */}
-                  <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-xs border border-white/10 select-none">
+                  <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/75 border border-white/10 select-none">
                     <PublisherLogo source={cleanSource} className="w-3.5 h-3.5" />
                     <span className="text-white text-[10px] font-semibold">
                       {cleanSource}

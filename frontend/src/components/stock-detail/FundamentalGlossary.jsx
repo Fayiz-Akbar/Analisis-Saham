@@ -1,164 +1,266 @@
 import React from "react";
 
 /**
- * Kamus Indikator Fundamental & Panduan Evaluasi
- * Format tabel rapi, bersih tanpa ikon berlebih, dan tanpa box shadow.
+ * Panduan Indikator Fundamental
+ * Menyajikan nilai aktual emiten, status evaluasi langsung, dan cara baca praktis 1 kalimat
+ * tanpa penjelasan buku teks yang bertele-tele.
  */
 export default function FundamentalGlossary({ fundamentals, symbol }) {
   const f = fundamentals || {};
 
-  const formatRupiahAbbr = (val) => {
+  const positiveBadge =
+    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-[#062c19] dark:text-[#2fe695] dark:border-[#0e4429]";
+  const negativeBadge =
+    "bg-rose-50 text-rose-700 border-rose-200 dark:bg-[#2a0e12] dark:text-[#f87171] dark:border-[#4c151c]";
+  const neutralBadge =
+    "bg-slate-100 text-slate-700 border-slate-200 dark:bg-white/[0.06] dark:text-slate-300 dark:border-white/[0.1]";
+
+  const formatNum = (val, suffix = "") => {
+    if (val === null || val === undefined || isNaN(val)) return "-";
+    return `${Number(val).toLocaleString("id-ID", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 2,
+    })}${suffix}`;
+  };
+
+  const formatEps = (val) => {
     if (val === null || val === undefined || isNaN(val)) return "-";
     const num = Number(val);
-    if (Math.abs(num) >= 1e12) {
-      return `Rp ${(num / 1e12).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} T`;
-    }
-    if (Math.abs(num) >= 1e9) {
-      return `Rp ${(num / 1e9).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} M`;
-    }
-    return `Rp ${num.toLocaleString("id-ID")}`;
+    return `Rp ${num.toLocaleString("id-ID", {
+      minimumFractionDigits: Math.abs(num) < 10 ? 2 : 0,
+      maximumFractionDigits: 2,
+    })}`;
   };
+
+  const pe = f.peRatio !== null && f.peRatio !== undefined ? Number(f.peRatio) : null;
+  const pbv = f.pbvRatio !== null && f.pbvRatio !== undefined ? Number(f.pbvRatio) : null;
+  const roe = f.roe !== null && f.roe !== undefined ? Number(f.roe) : null;
+  const roa = f.roa !== null && f.roa !== undefined ? Number(f.roa) : null;
+  const npm =
+    f.netProfitMargin !== null && f.netProfitMargin !== undefined ? Number(f.netProfitMargin) : null;
+  const der = f.der !== null && f.der !== undefined ? Number(f.der) : null;
+  const eps = f.eps !== null && f.eps !== undefined ? Number(f.eps) : null;
+  const dy =
+    f.dividendYield !== null && f.dividendYield !== undefined ? Number(f.dividendYield) : null;
 
   const GLOSSARY_ITEMS = [
     {
-      indicator: "PE Ratio / PER",
-      fullName: "Price to Earnings Ratio",
-      utility: "Melihat valuasi berdasarkan laba",
-      currentValue: f.peRatio !== null && f.peRatio !== undefined ? `${Number(f.peRatio).toFixed(1)}x` : "-",
-      interpretation: "Membandingkan harga per lembar saham dengan laba per lembar (EPS). Menilai apakah harga saham saat ini murah atau mahal terhadap laba.",
-      category: "Valuasi",
+      code: "PER",
+      name: "Price to Earnings Ratio",
+      currentValue: formatNum(pe, "x"),
+      status:
+        pe === null
+          ? "Data -"
+          : pe < 0
+          ? "Rugi Bersih"
+          : pe < 12
+          ? "Murah"
+          : pe <= 22
+          ? "Wajar"
+          : "Premium",
+      badgeStyle:
+        pe === null
+          ? neutralBadge
+          : pe < 0
+          ? negativeBadge
+          : pe < 12
+          ? positiveBadge
+          : neutralBadge,
+      guide:
+        "Berapa kali lipat harga saham dibanding laba tahunannya. Umumnya wajar di kisaran 10x sampai 20x.",
     },
     {
-      indicator: "PB Ratio / PBV",
-      fullName: "Price to Book Value",
-      utility: "Membandingkan harga dengan nilai buku",
-      currentValue: f.pbvRatio !== null && f.pbvRatio !== undefined ? `${Number(f.pbvRatio).toFixed(1)}x` : "-",
-      interpretation: "Membandingkan harga pasar saham dengan nilai ekuitas bersih per saham. PBV < 1x mengindikasikan harga saham di bawah nilai bukunya.",
-      category: "Valuasi",
+      code: "PBV",
+      name: "Price to Book Value",
+      currentValue: formatNum(pbv, "x"),
+      status:
+        pbv === null
+          ? "Data -"
+          : pbv < 1
+          ? "Di Bawah Modal"
+          : pbv <= 2.5
+          ? "Wajar"
+          : "Premium",
+      badgeStyle:
+        pbv === null ? neutralBadge : pbv < 1.2 ? positiveBadge : neutralBadge,
+      guide:
+        "Perbandingan harga saham terhadap modal bersih perusahaan. PBV di bawah 1x menandakan harga diskon terhadap nilai buku.",
     },
     {
-      indicator: "ROE",
-      fullName: "Return on Equity",
-      utility: "Melihat imbal hasil terhadap ekuitas",
-      currentValue: f.roe !== null && f.roe !== undefined ? `${Number(f.roe).toFixed(1)}%` : "-",
-      interpretation: "Mengukur kemampuan manajemen mencetak laba bersih dari setiap rupiah modal yang disetor pemegang saham. ROE > 15% mencerminkan efisiensi tinggi.",
-      category: "Profitabilitas",
+      code: "ROE",
+      name: "Return on Equity",
+      currentValue: formatNum(roe, "%"),
+      status:
+        roe === null
+          ? "Data -"
+          : roe >= 15
+          ? "Efisien"
+          : roe > 0
+          ? "Moderat"
+          : "Negatif",
+      badgeStyle:
+        roe === null
+          ? neutralBadge
+          : roe >= 15
+          ? positiveBadge
+          : roe < 0
+          ? negativeBadge
+          : neutralBadge,
+      guide:
+        "Seberapa besar laba bersih yang dihasilkan dari modal pemegang saham. Standar emiten unggulan berada di atas 15%.",
     },
     {
-      indicator: "ROA",
-      fullName: "Return on Assets",
-      utility: "Melihat imbal hasil terhadap aset",
-      currentValue: f.roa !== null && f.roa !== undefined ? `${Number(f.roa).toFixed(1)}%` : "-",
-      interpretation: "Menilai seberapa efektif seluruh aset perusahaan (kombinasi modal dan utang) dikelola untuk menghasilkan laba bersih tahunan.",
-      category: "Profitabilitas",
+      code: "ROA",
+      name: "Return on Assets",
+      currentValue: formatNum(roa, "%"),
+      status:
+        roa === null
+          ? "Data -"
+          : roa >= 5
+          ? "Produktif"
+          : roa > 0
+          ? "Cukup"
+          : "Negatif",
+      badgeStyle:
+        roa === null
+          ? neutralBadge
+          : roa >= 5
+          ? positiveBadge
+          : roa < 0
+          ? negativeBadge
+          : neutralBadge,
+      guide:
+        "Kemampuan seluruh aset perusahaan menghasilkan laba bersih. ROA di atas 5% tergolong produktif (atau di atas 2% untuk bank).",
     },
     {
-      indicator: "Net Margin",
-      fullName: "Net Profit Margin (NPM)",
-      utility: "Melihat persentase laba bersih dari pendapatan",
-      currentValue: f.netProfitMargin !== null && f.netProfitMargin !== undefined ? `${Number(f.netProfitMargin).toFixed(1)}%` : "-",
-      interpretation: "Menunjukkan persentase pendapatan yang berhasil dikonversi menjadi laba murni setelah memotong seluruh beban usaha, pajak, dan bunga.",
-      category: "Profitabilitas",
+      code: "NPM",
+      name: "Net Profit Margin",
+      currentValue: formatNum(npm, "%"),
+      status:
+        npm === null
+          ? "Data -"
+          : npm >= 15
+          ? "Marjin Tebal"
+          : npm > 0
+          ? "Positif"
+          : "Defisit",
+      badgeStyle:
+        npm === null
+          ? neutralBadge
+          : npm >= 15
+          ? positiveBadge
+          : npm < 0
+          ? negativeBadge
+          : neutralBadge,
+      guide:
+        "Porsi pendapatan usaha yang tersisa menjadi laba bersih setelah dikurangi semua biaya operasional, bunga, dan pajak.",
     },
     {
-      indicator: "Debt-to-Equity",
-      fullName: "Debt to Equity Ratio (DER)",
-      utility: "Melihat perbandingan utang dan ekuitas",
-      currentValue: f.der !== null && f.der !== undefined ? `${Number(f.der).toFixed(2)}x` : "-",
-      interpretation: "Mengukur tingkat solvabilitas dan risiko leverage. DER < 1,0x menunjukkan perusahaan didanai lebih banyak oleh modal sendiri daripada utang.",
-      category: "Solvabilitas",
+      code: "DER",
+      name: "Debt to Equity Ratio",
+      currentValue: formatNum(der, "x"),
+      status:
+        der === null
+          ? "Data -"
+          : der <= 1.0
+          ? "Utang Rendah"
+          : der <= 2.0
+          ? "Terkendali"
+          : "Leverage Tinggi",
+      badgeStyle:
+        der === null
+          ? neutralBadge
+          : der <= 1.0
+          ? positiveBadge
+          : der > 2.5
+          ? negativeBadge
+          : neutralBadge,
+      guide:
+        "Perbandingan total kewajiban terhadap modal sendiri. DER di bawah 1,0x berarti modal bersih lebih besar daripada total utang.",
     },
     {
-      indicator: "Revenue",
-      fullName: "Pendapatan Usaha (Omset)",
-      utility: "Pendapatan perusahaan",
-      currentValue: formatRupiahAbbr(f.revenue),
-      interpretation: "Arus total penerimaan bruto yang diperoleh dari operasional penjualan barang atau jasa utama emiten sepanjang periode laporan.",
-      category: "Kinerja Absolut",
+      code: "EPS",
+      name: "Earnings Per Share",
+      currentValue: formatEps(eps),
+      status:
+        eps === null ? "Data -" : eps > 0 ? "Laba Positif" : "Rugi / Saham",
+      badgeStyle:
+        eps === null ? neutralBadge : eps > 0 ? positiveBadge : negativeBadge,
+      guide:
+        "Nominal laba bersih yang menjadi hak setiap 1 lembar saham beredar. EPS yang naik konsisten menjadi pendorong kenaikan harga saham.",
     },
     {
-      indicator: "Net Income",
-      fullName: "Laba Bersih Tahun Berjalan",
-      utility: "Laba bersih perusahaan",
-      currentValue: formatRupiahAbbr(f.netIncome),
-      interpretation: "Hasil keuntungan bersih riil perusahaan setelah dikurangi seluruh beban pokok penjualan, biaya operasional, pajak penghasilan, dan bunga.",
-      category: "Kinerja Absolut",
-    },
-    {
-      indicator: "EPS",
-      fullName: "Earnings Per Share",
-      utility: "Laba per lembar saham",
-      currentValue: f.eps !== null && f.eps !== undefined ? `Rp ${Number(f.eps).toLocaleString("id-ID")}` : "-",
-      interpretation: "Porsi laba bersih yang dialokasikan untuk setiap satu lembar saham beredar. Merupakan dasar utama perhitungan dividen dan PER.",
-      category: "Kinerja Absolut",
+      code: "Yield",
+      name: "Dividend Yield",
+      currentValue: dy && dy > 0 ? formatNum(dy, "%") : "-",
+      status:
+        !dy || dy <= 0
+          ? "Tanpa Dividen"
+          : dy >= 4
+          ? "Dividen Tinggi"
+          : "Rutin Bagi",
+      badgeStyle:
+        !dy || dy <= 0 ? neutralBadge : dy >= 4 ? positiveBadge : neutralBadge,
+      guide:
+        "Persentase pembagian dividen tunai tahunan dibandingkan harga saham saat ini. Yield di atas 4% menarik bagi investor dividen.",
     },
   ];
 
   return (
-    <div className="space-y-4">
-      {/* Header Kamus */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
+    <div className="space-y-3.5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2.5 border-b border-slate-200 dark:border-white/[0.08]">
         <div>
           <h2 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Kamus Indikator Fundamental & Panduan Evaluasi
+            Panduan Baca Indikator ({symbol})
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Tabel panduan indikator fundamental finansial emiten beserta kegunaan dan nilai riil untuk saham {symbol}.
+            Arti praktis setiap rasio utama beserta patokan angka wajar untuk menilai saham {symbol}.
           </p>
-        </div>
-        <div className="text-xs text-slate-400 font-sans">
-          Panduan Analisis Finansial Terakreditasi IDX
         </div>
       </div>
 
-      {/* Tabel Kamus */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c0e14] overflow-hidden">
+      <div className="rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead className="bg-slate-50 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/[0.08] text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">
               <tr>
-                <th className="px-4 py-3 font-bold">Indikator</th>
-                <th className="px-4 py-3 font-bold">Kegunaan Utama</th>
-                <th className="px-4 py-3 font-bold text-right">Nilai {symbol}</th>
-                <th className="px-4 py-3 font-bold hidden md:table-cell">Interpretasi Finansial</th>
+                <th className="px-4 py-3 font-bold min-w-[170px]">Indikator</th>
+                <th className="px-4 py-3 font-bold text-right min-w-[110px]">Nilai {symbol}</th>
+                <th className="px-4 py-3 font-bold min-w-[125px]">Status</th>
+                <th className="px-4 py-3 font-bold">Cara Baca & Patokan Wajar</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {GLOSSARY_ITEMS.map((item, idx) => (
+            <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
+              {GLOSSARY_ITEMS.map((item) => (
                 <tr
-                  key={idx}
-                  className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
+                  key={item.code}
+                  className="hover:bg-slate-50/70 dark:hover:bg-white/[0.02] transition-colors"
                 >
-                  {/* Indikator */}
-                  <td className="px-4 py-3.5">
-                    <div className="font-bold text-slate-900 dark:text-slate-100 text-sm">
-                      {item.indicator}
+                  <td className="px-4 py-3 align-middle">
+                    <div className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">
+                      {item.code}
                     </div>
-                    <div className="text-[11px] text-slate-400 font-normal">
-                      {item.fullName}
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {item.name}
                     </div>
                   </td>
 
-                  {/* Kegunaan */}
-                  <td className="px-4 py-3.5">
-                    <span className="font-medium text-slate-700 dark:text-slate-300">
-                      {item.utility}
-                    </span>
-                    <span className="inline-block mt-1 ml-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400">
-                      {item.category}
-                    </span>
-                  </td>
-
-                  {/* Nilai Terkini Emiten */}
-                  <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                    <span className="font-mono font-bold text-sm text-slate-900 dark:text-slate-100 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+                  <td className="px-4 py-3 text-right whitespace-nowrap align-middle">
+                    <span className="font-mono font-bold tabular-nums text-xs sm:text-sm text-slate-900 dark:text-slate-100">
                       {item.currentValue}
                     </span>
                   </td>
 
-                  {/* Interpretasi */}
-                  <td className="px-4 py-3.5 text-slate-500 dark:text-slate-400 hidden md:table-cell max-w-md leading-relaxed">
-                    {item.interpretation}
+                  <td className="px-4 py-3 whitespace-nowrap align-middle">
+                    <span
+                      className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-md border ${item.badgeStyle}`}
+                    >
+                      {item.status}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-300 leading-relaxed align-middle max-w-xl">
+                    {item.guide}
                   </td>
                 </tr>
               ))}

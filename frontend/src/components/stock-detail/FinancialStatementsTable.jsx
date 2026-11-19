@@ -8,56 +8,61 @@ import {
   Tooltip,
   Legend,
   CartesianGrid,
-  AreaChart,
-  Area,
-  PieChart,
-  Pie,
-  Cell,
+  ReferenceLine,
 } from "recharts";
-import { BarChart3, TrendingUp, PieChart as PieIcon, Table as TableIcon } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 /**
- * Ringkasan Laporan Keuangan Multi-Periode & Visualisasi Data Interaktif
- * Sesuai Permintaan Pengguna:
- * 1. Mengambil beberapa data periode sebelumnya (4 Tahun Historis: FY2021 - FY2024 & Kuartalan Q1-Q4)
- *    yang relevan dan pas untuk analisis investasi jangka panjang.
- * 2. Visualisasi data finansial komprehensif menggunakan grafik (Bar Chart, Area Chart, Donut/Pie Chart).
- * 3. Tabel komparatif multi-periode yang rapi dan presisi.
+ * Laporan Keuangan Konsolidasian & Ringkasan Visual
+ * - Panel Kiri (7 kolom): Grafik Batang Pendapatan Usaha vs Laba Bersih Multi-Periode
+ * - Panel Kanan (5 kolom): Struktur Neraca Proporsional (Aset = Ekuitas + Liabilitas), Kas, & Rasio Efisiensi
+ * - Tabel Komparatif: Data historis tahunan/kuartalan + TTM dengan kalkulasi Perubahan YoY/QoQ nyata di setiap baris
  */
-export default function FinancialStatementsTable({ fundamentals, stock, quote }) {
+export default function FinancialStatementsTable({
+  fundamentals,
+  stock,
+  quote,
+  apiHistory: propHistory,
+  isLoadingHistory: propLoading,
+  historyError: propError,
+  onRetryHistory,
+}) {
   const f = fundamentals || {};
   const [periodMode, setPeriodMode] = useState("annual"); // "annual" | "quarterly"
   const [activeView, setActiveView] = useState("both"); // "both" | "charts" | "table"
   const [currencyMode, setCurrencyMode] = useState("IDR"); // "IDR" | "ORIGINAL"
-  const [apiHistory, setApiHistory] = useState(null);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [localHistory, setLocalHistory] = useState(null);
+  const [localLoading, setLocalLoading] = useState(false);
 
-  // Tarik data laporan keuangan historis asli dari backend (Yahoo Finance official disclosures)
   useEffect(() => {
+    if (propHistory !== undefined) return;
     const sym = quote?.symbol || stock?.symbol;
     if (!sym) return;
 
     let isMounted = true;
-    setIsLoadingHistory(true);
+    setLocalLoading(true);
 
     fetch(`http://localhost:5000/api/stocks/${sym}/financial-history`)
       .then((res) => res.json())
       .then((json) => {
         if (isMounted && json.success && json.data) {
-          setApiHistory(json.data);
+          setLocalHistory(json.data);
         }
       })
       .catch((err) => {
         console.warn("Gagal fetch financial-history:", err);
       })
       .finally(() => {
-        if (isMounted) setIsLoadingHistory(false);
+        if (isMounted) setLocalLoading(false);
       });
 
     return () => {
       isMounted = false;
     };
-  }, [quote?.symbol, stock?.symbol]);
+  }, [propHistory, quote?.symbol, stock?.symbol]);
+
+  const apiHistory = propHistory ?? localHistory;
+  const isLoading = propLoading ?? localLoading;
 
   const financialCurrency = apiHistory?.financialCurrency || f?.financialCurrency || "IDR";
   const usdRate = Number(apiHistory?.usdToIdrRate || f?.usdToIdrRate || 16200);
@@ -70,29 +75,49 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
     if (isForeignCurrency && mode === "ORIGINAL") {
       const absNum = Math.abs(num);
       if (absNum >= 1e9) {
-        return `$ ${(num / 1e9).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} B`;
+        return `$ ${(num / 1e9).toLocaleString("id-ID", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })} B`;
       }
       if (absNum >= 1e6) {
-        return `$ ${(num / 1e6).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} M`;
+        return `$ ${(num / 1e6).toLocaleString("id-ID", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })} M`;
       }
       if (absNum < 1 && absNum > 0) {
-        return `$ ${num.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
+        return `$ ${num.toLocaleString("id-ID", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 4,
+        })}`;
       }
-      return `$ ${num.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      return `$ ${num.toLocaleString("id-ID", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
     }
 
-    // IDR Mode (converted if foreign currency)
     const idrNum = isForeignCurrency ? num * usdRate : num;
     const absIdr = Math.abs(idrNum);
 
     if (absIdr >= 1e12) {
-      return `Rp ${(idrNum / 1e12).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} T`;
+      return `Rp ${(idrNum / 1e12).toLocaleString("id-ID", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })} T`;
     }
     if (absIdr >= 1e9) {
-      return `Rp ${(idrNum / 1e9).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} M`;
+      return `Rp ${(idrNum / 1e9).toLocaleString("id-ID", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })} M`;
     }
     if (absIdr < 1000 && absIdr > 0) {
-      return `Rp ${idrNum.toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 2 })}`;
+      return `Rp ${idrNum.toLocaleString("id-ID", {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 2,
+      })}`;
     }
     return `Rp ${Math.round(idrNum).toLocaleString("id-ID")}`;
   };
@@ -101,31 +126,38 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
     if (val === null || val === undefined || isNaN(val)) return "-";
     const num = Number(val);
     if (isForeignCurrency && mode === "ORIGINAL") {
-      return `$ ${num.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
+      return `$ ${num.toLocaleString("id-ID", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4,
+      })}`;
     }
     const idrNum = isForeignCurrency ? num * usdRate : num;
-    return `Rp ${Number(idrNum).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+    return `Rp ${Number(idrNum).toLocaleString("id-ID", {
+      minimumFractionDigits: Math.abs(idrNum) < 10 ? 2 : 0,
+      maximumFractionDigits: 2,
+    })}`;
   };
 
-  const formatPct = (val) => {
+  const formatPct = (val, showPlus = false) => {
     if (val === null || val === undefined || isNaN(val)) return "-";
     const n = Number(val);
-    const prefix = n > 0 ? "+" : "";
-    return `${prefix}${n.toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 2 })}%`;
+    const prefix = showPlus && n > 0 ? "+" : "";
+    return `${prefix}${n.toLocaleString("id-ID", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 2,
+    })}%`;
   };
 
-  // =========================================================================
-  // DATA LAPORAN KEUANGAN HISTORIS 100% RIIL DARI BURSA (YAHOO FINANCE API)
-  // Tidak ada data dummy / mock / countdown seed
-  // =========================================================================
   const activePeriods = useMemo(() => {
     let list = [];
     if (periodMode === "annual") {
-      list = (apiHistory?.annual && Array.isArray(apiHistory.annual)) ? [...apiHistory.annual] : [];
+      list = apiHistory?.annual && Array.isArray(apiHistory.annual) ? [...apiHistory.annual] : [];
     } else {
-      list = (apiHistory?.quarterly && Array.isArray(apiHistory.quarterly)) ? [...apiHistory.quarterly] : [];
+      list =
+        apiHistory?.quarterly && Array.isArray(apiHistory.quarterly)
+          ? [...apiHistory.quarterly]
+          : [];
     }
-    // Sisipkan kolom TTM (Trailing Twelve Months) dari data resmi Yahoo Finance
     if (apiHistory?.ttm) {
       list.push({
         ...apiHistory.ttm,
@@ -136,88 +168,82 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
     return list;
   }, [periodMode, apiHistory]);
 
-  const currentSnapshot = useMemo(() => {
-    return apiHistory?.ttm || activePeriods[activePeriods.length - 1] || {};
-  }, [apiHistory, activePeriods]);
-
-  // Deteksi outlier pos luar biasa (misalnya impairment goodwill Tokopedia -Rp 90T pada GOTO FY2023)
-  const hasGoodwillOutlier = useMemo(() => {
-    return activePeriods.some((p) => (p.netIncomeT || 0) <= -40);
+  const regularPeriods = useMemo(() => {
+    return activePeriods.filter((p) => !p.isTTM);
   }, [activePeriods]);
 
-  const [scaleMode, setScaleMode] = useState("operational"); // "operational" | "full"
+  const latestAuditPeriod = useMemo(() => {
+    return regularPeriods[regularPeriods.length - 1] || apiHistory?.ttm || {};
+  }, [regularPeriods, apiHistory]);
 
-  // Data display bar chart dengan normalisasi visual outlier jika mode operasional aktif
   const chartDisplayPeriods = useMemo(() => {
     const isUsdMode = currencyMode === "ORIGINAL" && isForeignCurrency;
-    // Pada mode kuartalan, sembunyikan bar kumulatif TTM (~150T) agar batang kuartal individu (~37T) tidak gepeng
-    const chartSource = periodMode === "quarterly" ? activePeriods.filter((p) => !p.isTTM) : activePeriods;
+    const chartSource = periodMode === "quarterly" ? regularPeriods : activePeriods;
     return chartSource.map((p) => {
-      const revVal = isUsdMode ? Number(p.revenueOriginalM || (p.revenue ? p.revenue / 1e6 : 0)) : Number(p.revenueT || 0);
-      const netVal = isUsdMode ? Number(p.netIncomeOriginalM || (p.netIncome ? p.netIncome / 1e6 : 0)) : Number(p.netIncomeT || 0);
+      const revVal = isUsdMode
+        ? Number(p.revenueOriginalM || (p.revenue ? p.revenue / 1e6 : 0))
+        : Number(p.revenueT || 0);
+      const netVal = isUsdMode
+        ? Number(p.netIncomeOriginalM || (p.netIncome ? p.netIncome / 1e6 : 0))
+        : Number(p.netIncomeT || 0);
 
-      let displayNet = netVal;
-      if (!isUsdMode && scaleMode === "operational" && hasGoodwillOutlier && netVal <= -30) {
-        displayNet = -25;
-      }
       return {
         ...p,
         chartRevenue: revVal,
-        chartNetIncome: displayNet,
+        chartNetIncome: netVal,
       };
     });
-  }, [activePeriods, scaleMode, hasGoodwillOutlier, currencyMode, isForeignCurrency, periodMode]);
+  }, [activePeriods, regularPeriods, currencyMode, isForeignCurrency, periodMode]);
 
-  // Perhitungan dinamis pertumbuhan YoY aktual antar periode berturut-turut (abaikan TTM)
-  const dynamicYoY = useMemo(() => {
-    const regularPeriods = activePeriods.filter((p) => !p.isTTM);
-    if (regularPeriods.length < 2) return { revYoY: null, netYoY: null };
-    const curr = regularPeriods[regularPeriods.length - 1];
-    const prev = regularPeriods[regularPeriods.length - 2];
+  const hasNegativeChartValue = useMemo(() => {
+    return chartDisplayPeriods.some((p) => p.chartNetIncome < 0 || p.chartRevenue < 0);
+  }, [chartDisplayPeriods]);
 
-    if (!curr || !prev) return { revYoY: null, netYoY: null };
+  // Kalkulasi perubahan periode terakhir terhadap periode sebelumnya (YoY untuk tahunan, QoQ untuk kuartalan)
+  const computeMetricDelta = (fieldKey, isPointDiff = false) => {
+    if (regularPeriods.length < 2) return null;
+    const curr = regularPeriods[regularPeriods.length - 1]?.[fieldKey];
+    const prev = regularPeriods[regularPeriods.length - 2]?.[fieldKey];
+    if (curr === null || curr === undefined || prev === null || prev === undefined) return null;
+    const currNum = Number(curr);
+    const prevNum = Number(prev);
+    if (isNaN(currNum) || isNaN(prevNum)) return null;
 
-    const revYoY = prev.revenue && curr.revenue
-      ? Number((((curr.revenue - prev.revenue) / Math.abs(prev.revenue)) * 100).toFixed(1))
-      : null;
+    if (isPointDiff) {
+      return Number((currNum - prevNum).toFixed(1));
+    }
+    if (prevNum === 0) return null;
+    return Number((((currNum - prevNum) / Math.abs(prevNum)) * 100).toFixed(1));
+  };
 
-    const netYoY = prev.netIncome && curr.netIncome
-      ? Number((((curr.netIncome - prev.netIncome) / Math.abs(prev.netIncome)) * 100).toFixed(1))
-      : null;
+  const revDelta = computeMetricDelta("revenue", false);
+  const deltaHeaderLabel = periodMode === "annual" ? "Perubahan YoY" : "Perubahan QoQ";
 
-    return { revYoY, netYoY, currPeriod: curr.period, prevPeriod: prev.period };
-  }, [activePeriods]);
+  // Proporsi Ekuitas vs Liabilitas terhadap Total Aset
+  const balanceStructure = useMemo(() => {
+    const eq = Math.max(0, Number(latestAuditPeriod.totalEquity || 0));
+    const liab = Math.max(0, Number(latestAuditPeriod.totalLiabilities || 0));
+    const total = eq + liab;
+    if (total <= 0) {
+      return { equityPct: 50, liabPct: 50, hasData: false };
+    }
+    const equityPct = Math.round((eq / total) * 1000) / 10;
+    const liabPct = Math.max(0, Math.round((100 - equityPct) * 10) / 10);
+    return { equityPct, liabPct, hasData: true };
+  }, [latestAuditPeriod]);
 
-  // Data Pie Chart: Komposisi Neraca Keuangan (Total Ekuitas vs Total Liabilitas & Porsi Kas)
-  const balanceSheetPieData = useMemo(() => {
-    const isUsdMode = currencyMode === "ORIGINAL" && isForeignCurrency;
-    const eq = isUsdMode ? Number(currentSnapshot.totalEquity || 0) : Number(currentSnapshot.totalEquityIdr || currentSnapshot.totalEquity || 0);
-    const liab = isUsdMode ? Number(currentSnapshot.totalLiabilities || 0) : Number(currentSnapshot.totalLiabilitiesIdr || currentSnapshot.totalLiabilities || 0);
-    const cash = isUsdMode ? Number(currentSnapshot.cashEquivalents || 0) : Number(currentSnapshot.cashEquivalentsIdr || currentSnapshot.cashEquivalents || 0);
-
-    const divisor = isUsdMode ? 1e6 : 1e12; // Juta USD atau Triliun IDR
-    const unitLabel = isUsdMode ? "Juta USD" : "Triliun";
-
-    return [
-      { name: "Total Ekuitas (Modal Bersih)", value: Number((eq / divisor).toFixed(2)), color: "#10b981", unit: unitLabel },
-      { name: "Total Liabilitas (Kewajiban)", value: Number((liab / divisor).toFixed(2)), color: "#f59e0b", unit: unitLabel },
-      { name: "Kas & Setara Kas", value: Number((cash / divisor).toFixed(2)), color: "#3b82f6", unit: unitLabel },
-    ];
-  }, [currentSnapshot, currencyMode, isForeignCurrency]);
-
-  // Custom Tooltip Recharts dengan Tema Gelap/Terang Otentik
   const CustomBarTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const pData = payload[0]?.payload;
       return (
-        <div className="bg-[#0c1017] border border-white/10 p-3 rounded-xl shadow-xl text-xs space-y-1.5 font-sans">
+        <div className="bg-[#0c1017] border border-white/10 p-3 rounded-xl text-xs space-y-1.5 font-sans">
           <p className="font-bold text-white border-b border-white/10 pb-1">{label}</p>
           <div className="flex items-center justify-between gap-4">
             <span className="flex items-center gap-1.5 text-slate-300">
               <span className="w-2.5 h-2.5 rounded-xs inline-block bg-[#3b82f6]" />
               <span>Pendapatan Usaha:</span>
             </span>
-            <span className="font-mono font-bold text-white">
+            <span className="font-mono font-bold tabular-nums text-white">
               {formatFinancialValue(pData?.revenue)}
             </span>
           </div>
@@ -226,16 +252,13 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
               <span className="w-2.5 h-2.5 rounded-xs inline-block bg-[#10b981]" />
               <span>Laba Bersih:</span>
             </span>
-            <div className="text-right">
-              <span className="font-mono font-bold text-white">
-                {formatFinancialValue(pData?.netIncome)}
-              </span>
-              {pData?.netIncomeT <= -40 && (
-                <span className="text-[10px] text-amber-400 font-normal block">
-                  (Non-kas Goodwill Impairment)
-                </span>
-              )}
-            </div>
+            <span
+              className={`font-mono font-bold tabular-nums ${
+                Number(pData?.netIncome || 0) < 0 ? "text-[#f87171]" : "text-white"
+              }`}
+            >
+              {formatFinancialValue(pData?.netIncome)}
+            </span>
           </div>
         </div>
       );
@@ -243,696 +266,527 @@ export default function FinancialStatementsTable({ fundamentals, stock, quote })
     return null;
   };
 
-  const CustomAreaTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-[#0c1017] border border-white/10 p-3 rounded-xl shadow-xl text-xs space-y-1.5 font-sans">
-          <p className="font-bold text-white border-b border-white/10 pb-1">{label}</p>
-          {payload.map((entry, idx) => (
-            <div key={`item-${idx}`} className="flex items-center justify-between gap-4">
-              <span className="flex items-center gap-1.5 text-slate-300">
-                <span className="w-2.5 h-2.5 rounded-xs inline-block" style={{ backgroundColor: entry.color }} />
-                <span>{entry.name}:</span>
-              </span>
-              <span className="font-mono font-bold text-white">{entry.value}%</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
+  const getValueColorClass = (val) => {
+    if (val === null || val === undefined || isNaN(val)) return "text-slate-400";
+    const num = Number(val);
+    if (num > 0) return "text-emerald-600 dark:text-[#2fe695]";
+    if (num < 0) return "text-rose-600 dark:text-[#f87171]";
+    return "text-slate-600 dark:text-slate-300";
   };
 
+  const formatDeltaCell = (deltaVal, isPointDiff = false) => {
+    if (deltaVal === null || deltaVal === undefined || isNaN(deltaVal)) return "-";
+    const num = Number(deltaVal);
+    const sign = num > 0 ? "+" : "";
+    const formatted = num.toLocaleString("id-ID", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    });
+    return isPointDiff ? `${sign}${formatted} pt` : `${sign}${formatted}%`;
+  };
+
+  const stickyLabelCellClass =
+    "py-2.5 px-4 sticky left-0 z-10 bg-white dark:bg-[#0c0e14] border-r border-slate-100 dark:border-white/[0.04] font-medium text-slate-800 dark:text-slate-200";
+
+  const TABLE_SECTIONS = [
+    {
+      title: "Laporan Laba Rugi (Income Statement)",
+      rows: [
+        {
+          key: "revenue",
+          label: "Pendapatan Usaha (Revenue)",
+          type: "currency",
+          isBold: true,
+        },
+        {
+          key: "netIncome",
+          label: "Laba Bersih (Net Income)",
+          type: "currency",
+          isBold: true,
+          colorBySign: true,
+        },
+        {
+          key: "netProfitMargin",
+          label: "Marjin Laba Bersih (NPM)",
+          type: "percent",
+          isPointDiff: true,
+          colorBySign: true,
+        },
+        {
+          key: "eps",
+          label: "Laba per Saham (EPS)",
+          type: "eps",
+          colorBySign: true,
+        },
+      ],
+    },
+    {
+      title: "Neraca Keuangan (Balance Sheet)",
+      rows: [
+        {
+          key: "totalAssets",
+          label: "Total Aset",
+          type: "currency",
+          isBold: true,
+        },
+        {
+          key: "totalEquity",
+          label: "Total Ekuitas (Modal Bersih)",
+          type: "currency",
+          isBold: true,
+        },
+        {
+          key: "totalLiabilities",
+          label: "Total Liabilitas (Kewajiban)",
+          type: "currency",
+        },
+        {
+          key: "cashEquivalents",
+          label: "Kas & Setara Kas",
+          type: "currency",
+        },
+      ],
+    },
+    {
+      title: "Rasio Pengembalian & Solvabilitas",
+      rows: [
+        {
+          key: "roe",
+          label: "Return on Equity (ROE)",
+          type: "percent",
+          isPointDiff: true,
+          colorBySign: true,
+        },
+        {
+          key: "roa",
+          label: "Return on Assets (ROA)",
+          type: "percent",
+          isPointDiff: true,
+          colorBySign: true,
+        },
+      ],
+    },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* ========================================================
           1. HEADER LAPORAN KEUANGAN & CONTROLLER FILTER
           ======================================================== */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2.5 border-b border-slate-200 dark:border-white/[0.08]">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              Laporan Keuangan Konsolidasian & Visualisasi Data
-            </h2>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-[#2fe695] border border-emerald-500/20">
-              Multi-Periode
-            </span>
-          </div>
+          <h2 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            Laporan Keuangan & Struktur Neraca
+          </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Snapshot kinerja dan tren komparatif {stock?.companyName || quote?.symbol} ({quote?.symbol}) berdasarkan {apiHistory?.source || "pelaporan resmi audit BEI"}.
-            {apiHistory && (
-              <span className="ml-2 font-mono text-[10px] text-emerald-600 dark:text-[#2fe695]">
-                (Data Riil Terverifikasi)
-              </span>
-            )}
+            Rekam jejak pendapatan, laba bersih, posisi neraca, dan rasio efisiensi{" "}
+            {stock?.companyName || quote?.symbol}.
           </p>
         </div>
 
-        {/* Action Controls: Periode (Tahunan / Kuartalan), Currency Switcher (jika USD), & Switcher View */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Toggle Mata Uang Pelaporan (Khusus Emiten Pelaporan USD seperti INCO, MEDC, ITMG) */}
           {isForeignCurrency && (
-            <div className="inline-flex items-center bg-slate-100 dark:bg-white/[0.04] p-1 rounded-xl border border-slate-200 dark:border-white/[0.08] text-xs">
+            <div className="inline-flex items-center bg-slate-100 dark:bg-white/[0.04] p-0.5 rounded-lg border border-slate-200 dark:border-white/[0.08] text-xs">
               <button
+                type="button"
                 onClick={() => setCurrencyMode("IDR")}
-                title={`Konversi kurs resmi BEI (1 USD ≈ Rp ${Math.round(usdRate).toLocaleString("id-ID")})`}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                title={`Konversi kurs resmi (1 USD ≈ Rp ${Math.round(usdRate).toLocaleString("id-ID")})`}
+                className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
                   currencyMode === "IDR"
-                    ? "bg-white text-slate-900 shadow-xs dark:bg-slate-800 dark:text-white"
+                    ? "bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                Konversi IDR
+                IDR
               </button>
               <button
+                type="button"
                 onClick={() => setCurrencyMode("ORIGINAL")}
                 title={`Mata uang pelaporan resmi emiten (${financialCurrency})`}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
                   currencyMode === "ORIGINAL"
-                    ? "bg-white text-slate-900 shadow-xs dark:bg-slate-800 dark:text-white"
+                    ? "bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                Asli ({financialCurrency})
+                {financialCurrency}
               </button>
             </div>
           )}
 
           {/* Toggle Periode: Tahunan vs Kuartalan */}
-          <div className="inline-flex items-center bg-slate-100 dark:bg-white/[0.04] p-1 rounded-xl border border-slate-200 dark:border-white/[0.08] text-xs">
+          <div className="inline-flex items-center bg-slate-100 dark:bg-white/[0.04] p-0.5 rounded-lg border border-slate-200 dark:border-white/[0.08] text-xs">
             <button
+              type="button"
               onClick={() => setPeriodMode("annual")}
-              className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+              className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
                 periodMode === "annual"
-                  ? "bg-white text-slate-900 shadow-xs dark:bg-slate-800 dark:text-white"
+                  ? "bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
-              Tahunan (4 Tahun)
+              Tahunan
             </button>
             <button
+              type="button"
               onClick={() => setPeriodMode("quarterly")}
-              className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+              className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
                 periodMode === "quarterly"
-                  ? "bg-white text-slate-900 shadow-xs dark:bg-slate-800 dark:text-white"
+                  ? "bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
-              Kuartalan (Q1-Q4)
+              Kuartalan
             </button>
           </div>
 
-          {/* Switcher Tampilan: Grafik / Tabel / Keduanya */}
-          <div className="inline-flex items-center bg-slate-100 dark:bg-white/[0.04] p-1 rounded-xl border border-slate-200 dark:border-white/[0.08] text-xs">
-            <button
-              onClick={() => setActiveView(activeView === "charts" ? "both" : "charts")}
-              title="Tampilkan Khusus Visualisasi Grafik"
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                activeView === "charts"
-                  ? "bg-white text-slate-900 shadow-xs dark:bg-slate-800 dark:text-white"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              <BarChart3 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setActiveView(activeView === "table" ? "both" : "table")}
-              title="Tampilkan Khusus Tabel Rincian Data"
-              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                activeView === "table"
-                  ? "bg-white text-slate-900 shadow-xs dark:bg-slate-800 dark:text-white"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              <TableIcon className="w-4 h-4" />
-            </button>
+          {/* Switcher Tampilan (Semua / Grafik / Tabel) */}
+          <div className="inline-flex items-center bg-slate-100 dark:bg-white/[0.04] p-0.5 rounded-lg border border-slate-200 dark:border-white/[0.08] text-xs">
+            {[
+              { id: "both", label: "Semua" },
+              { id: "charts", label: "Grafik" },
+              { id: "table", label: "Tabel" },
+            ].map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveView(item.id)}
+                className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
+                  activeView === item.id
+                    ? "bg-white text-slate-900 dark:bg-slate-800 dark:text-white"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Banner Khusus Emiten dengan Pelaporan USD */}
-      {isForeignCurrency && (
-        <div className="p-3.5 rounded-xl border border-blue-500/25 bg-blue-500/[0.05] text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-blue-400">Mata Uang Pelaporan:</span>
-            <span className="text-slate-200">
-              Emiten ini secara resmi membukukan laporan auditnya dalam <strong>{financialCurrency} (Dolar AS)</strong>.
-            </span>
-          </div>
-          <div className="text-[11px] font-mono text-slate-400 shrink-0">
-            Estimasi Kurs: 1 USD ≈ Rp {Math.round(usdRate).toLocaleString("id-ID")}
-          </div>
+      {/* Loading / Error State */}
+      {isLoading && !apiHistory && (
+        <div className="p-8 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex items-center justify-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+          <RefreshCw className="w-4 h-4 animate-spin text-slate-400" aria-hidden="true" />
+          <span>Memuat laporan keuangan historis...</span>
+        </div>
+      )}
+
+      {propError && !apiHistory && !isLoading && (
+        <div className="p-5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50/30 dark:bg-rose-950/20 flex items-center justify-between gap-4 text-xs">
+          <span className="text-rose-700 dark:text-rose-300">{propError}</span>
+          {onRetryHistory && (
+            <button
+              type="button"
+              onClick={onRetryHistory}
+              className="px-3 py-1.5 rounded-lg bg-rose-600 text-white font-semibold hover:bg-rose-700 transition-colors cursor-pointer shrink-0"
+            >
+              Muat Ulang
+            </button>
+          )}
         </div>
       )}
 
       {/* ========================================================
-          2. BAGIAN VISUALISASI DATA (CHARTS: BAR, AREA, & DONUT PIE)
+          2. RINGKASAN VISUAL (2 PANEL BERSIH & AKURAT)
           ======================================================== */}
-      {(activeView === "both" || activeView === "charts") && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <BarChart3 className="w-4 h-4 text-emerald-500" />
-              <span>Visualisasi Data Finansial Multi-Periode</span>
-            </h3>
-            <span className="text-[11px] font-mono text-slate-400">
-              Satuan: {currencyMode === "ORIGINAL" && isForeignCurrency ? `Juta ${financialCurrency}` : "Triliun Rupiah (IDR)"} & Persen (%)
-            </span>
-          </div>
-
-          {/* Grid 3 Grafik Finansial Interaktif */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            
-            {/* Grafik 1: Bar Chart (Omset vs Laba Bersih) - 7 Kolom */}
-            <div className="lg:col-span-7 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                    Tren Pertumbuhan Omset & Laba Bersih
-                  </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Perbandingan Pendapatan Usaha (Revenue) vs Laba Bersih (Net Income)
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2 flex-wrap justify-start sm:justify-end">
-                  {hasGoodwillOutlier && (
-                    <div className="inline-flex items-center gap-1 bg-slate-100 dark:bg-white/[0.04] p-0.5 rounded-lg border border-slate-200 dark:border-white/[0.08] text-[11px]">
-                      <button
-                        onClick={() => setScaleMode("operational")}
-                        title="Normalkan lonjakan non-kas impairment agar tren pendapatan terlihat proporsional"
-                        className={`px-2 py-0.5 rounded font-medium transition-colors cursor-pointer ${
-                          scaleMode === "operational"
-                            ? "bg-slate-800 text-white font-bold"
-                            : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                        }`}
-                      >
-                        Fokus Operasional
-                      </button>
-                      <button
-                        onClick={() => setScaleMode("full")}
-                        title="Tampilkan skala penuh tanpa batas Y-Axis"
-                        className={`px-2 py-0.5 rounded font-medium transition-colors cursor-pointer ${
-                          scaleMode === "full"
-                            ? "bg-slate-800 text-white font-bold"
-                            : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                        }`}
-                      >
-                        Skala Penuh
-                      </button>
-                    </div>
-                  )}
-
-                  <span className="text-xs font-bold font-mono text-emerald-600 dark:text-[#2fe695]">
-                    {dynamicYoY.revYoY !== null
-                      ? `${dynamicYoY.revYoY > 0 ? "+" : ""}${dynamicYoY.revYoY}% YoY (Omset)`
-                      : `+${Number(f.revenueGrowth || 4.8).toFixed(1)}% YoY`}
-                  </span>
-                </div>
+      {apiHistory && (activeView === "both" || activeView === "charts") && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          {/* Panel 1 (7 Kolom): Grafik Batang Pendapatan vs Laba Bersih */}
+          <div className="lg:col-span-7 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  Tren Pendapatan & Laba Bersih
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Satuan dalam{" "}
+                  {currencyMode === "ORIGINAL" && isForeignCurrency
+                    ? `Juta ${financialCurrency}`
+                    : "Triliun Rupiah"}
+                </p>
               </div>
 
-              {/* Chart Container */}
-              <div className="w-full h-64 pt-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartDisplayPeriods} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
-                    <XAxis
-                      dataKey="period"
-                      tick={{ fill: "#94a3b8", fontSize: 11 }}
-                      axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fill: "#94a3b8", fontSize: 11 }}
-                      axisLine={false}
-                      tickLine={false}
-                      tickFormatter={(val) => currencyMode === "ORIGINAL" && isForeignCurrency ? `$${val}M` : `Rp ${val}T`}
-                    />
-                    <Tooltip content={<CustomBarTooltip />} />
-                    <Legend
-                      verticalAlign="top"
-                      align="right"
-                      iconType="circle"
-                      iconSize={8}
-                      wrapperStyle={{ paddingBottom: 10, fontSize: 11 }}
-                    />
-                    <Bar
-                      dataKey="chartRevenue"
-                      name="Pendapatan Usaha"
-                      fill="#3b82f6"
-                      radius={[4, 4, 0, 0]}
-                      maxBarSize={36}
-                    />
-                    <Bar
-                      dataKey="chartNetIncome"
-                      name="Laba Bersih"
-                      fill="#10b981"
-                      radius={[4, 4, 0, 0]}
-                      maxBarSize={36}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              {revDelta !== null && (
+                <span
+                  className={`text-xs font-bold font-mono tabular-nums px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] w-fit ${getValueColorClass(
+                    revDelta
+                  )}`}
+                >
+                  Omset {revDelta > 0 ? "+" : ""}
+                  {revDelta.toLocaleString("id-ID")}% {periodMode === "annual" ? "YoY" : "QoQ"}
+                </span>
+              )}
             </div>
 
-            {/* Grafik 2: Area Chart (Margin Keuntungan & ROE) - 5 Kolom */}
-            <div className="lg:col-span-5 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                    Efisiensi & Imbal Hasil (%)
-                  </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Net Profit Margin (NPM) & Return on Equity (ROE)
-                  </p>
-                </div>
-                <span className="text-xs font-bold font-mono text-cyan-600 dark:text-cyan-400">
-                  {currentSnapshot.netProfitMargin}% NPM
+            <div className="w-full h-60 pt-1">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={chartDisplayPeriods}
+                  margin={{ top: 8, right: 8, left: -12, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="rgba(148,163,184,0.14)"
+                  />
+                  <XAxis
+                    dataKey="period"
+                    tick={{ fill: "#94a3b8", fontSize: 11 }}
+                    axisLine={{ stroke: "rgba(148,163,184,0.2)" }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fill: "#94a3b8", fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(val) =>
+                      currencyMode === "ORIGINAL" && isForeignCurrency ? `$${val}M` : `${val}T`
+                    }
+                  />
+                  {hasNegativeChartValue && (
+                    <ReferenceLine y={0} stroke="rgba(148,163,184,0.35)" />
+                  )}
+                  <Tooltip content={<CustomBarTooltip />} />
+                  <Legend
+                    verticalAlign="top"
+                    align="right"
+                    iconType="rect"
+                    iconSize={10}
+                    wrapperStyle={{ paddingBottom: 8, fontSize: 11 }}
+                  />
+                  <Bar
+                    dataKey="chartRevenue"
+                    name="Pendapatan Usaha"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={34}
+                  />
+                  <Bar
+                    dataKey="chartNetIncome"
+                    name="Laba Bersih"
+                    fill="#10b981"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={34}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Panel 2 (5 Kolom): Komposisi Neraca & Rasio Efisiensi */}
+          <div className="lg:col-span-5 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  Komposisi Neraca ({latestAuditPeriod.period || "-"})
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Proporsi pendanaan Aset dari Modal Bersih vs Kewajiban
+                </p>
+              </div>
+              <span className="text-xs font-mono font-bold tabular-nums px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-200">
+                DER{" "}
+                {latestAuditPeriod.der !== null && latestAuditPeriod.der !== undefined
+                  ? `${Number(latestAuditPeriod.der).toLocaleString("id-ID")}x`
+                  : "-"}
+              </span>
+            </div>
+
+            {/* Bar Proporsi Ekuitas vs Liabilitas */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-mono tabular-nums">
+                <span className="text-emerald-600 dark:text-[#2fe695] font-semibold">
+                  Ekuitas {balanceStructure.equityPct}%
+                </span>
+                <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                  Liabilitas {balanceStructure.liabPct}%
                 </span>
               </div>
-
-              {/* Chart Container */}
-              <div className="w-full h-64 pt-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={activePeriods.filter((p) => !p.isTTM)} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="npmGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="roeGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
-                    <XAxis
-                      dataKey="period"
-                      tick={{ fill: "#94a3b8", fontSize: 11 }}
-                      axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fill: "#94a3b8", fontSize: 11 }}
-                      axisLine={false}
-                      tickLine={false}
-                      tickFormatter={(val) => `${val}%`}
-                    />
-                    <Tooltip content={<CustomAreaTooltip />} />
-                    <Legend
-                      verticalAlign="top"
-                      align="right"
-                      iconType="circle"
-                      iconSize={8}
-                      wrapperStyle={{ paddingBottom: 10, fontSize: 11 }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="roe"
-                      name="Return on Equity (ROE)"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#roeGrad)"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="netProfitMargin"
-                      name="Net Profit Margin (NPM)"
-                      stroke="#06b6d4"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#npmGrad)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <div className="w-full h-2.5 rounded-md bg-slate-100 dark:bg-white/[0.06] overflow-hidden flex">
+                <div
+                  className="h-full bg-[#10b981] transition-all duration-300"
+                  style={{ width: `${balanceStructure.equityPct}%` }}
+                  title={`Ekuitas: ${balanceStructure.equityPct}%`}
+                />
+                <div
+                  className="h-full bg-[#f59e0b] transition-all duration-300"
+                  style={{ width: `${balanceStructure.liabPct}%` }}
+                  title={`Liabilitas: ${balanceStructure.liabPct}%`}
+                />
               </div>
             </div>
 
-            {/* Grafik 3: Donut / Pie Chart - Struktur Komposisi Neraca Keuangan (Full Width 12 Kolom) */}
-            <div className="lg:col-span-12 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center gap-2">
-                  <PieIcon className="w-4 h-4 text-amber-500" />
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                    Struktur Komposisi Neraca & Solvabilitas ({currentSnapshot.period})
-                  </h4>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-xl">
-                  Membandingkan porsi <strong>Modal Bersih Ekuitas ({formatFinancialValue(currentSnapshot.totalEquity)})</strong> terhadap <strong>Total Liabilitas ({formatFinancialValue(currentSnapshot.totalLiabilities)})</strong> serta bantalan <strong>Kas Siap Pakai ({formatFinancialValue(currentSnapshot.cashEquivalents)})</strong>. 
-                  Rasio Debt-to-Equity (DER) saat ini berada di level <strong>{currentSnapshot.der}x</strong> ({currentSnapshot.der < 1.0 ? "Struktur Modal Sehat / Utang Rendah" : "Leverage Moderat"}).
-                </p>
-
-                {/* Indikator Pilar Cepat */}
-                <div className="grid grid-cols-3 gap-3 pt-2">
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06]">
-                    <span className="text-[10px] text-slate-400 block mb-0.5">Total Ekuitas</span>
-                    <span className="font-mono font-bold text-xs sm:text-sm text-emerald-600 dark:text-[#2fe695]">
-                      {formatFinancialValue(currentSnapshot.totalEquity)}
-                    </span>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06]">
-                    <span className="text-[10px] text-slate-400 block mb-0.5">Total Liabilitas</span>
-                    <span className="font-mono font-bold text-xs sm:text-sm text-amber-600 dark:text-amber-400">
-                      {formatFinancialValue(currentSnapshot.totalLiabilities)}
-                    </span>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06]">
-                    <span className="text-[10px] text-slate-400 block mb-0.5">Kas & Setara Kas</span>
-                    <span className="font-mono font-bold text-xs sm:text-sm text-blue-600 dark:text-blue-400">
-                      {formatFinancialValue(currentSnapshot.cashEquivalents)}
-                    </span>
-                  </div>
-                </div>
+            {/* 4 Angka Utama Neraca */}
+            <div className="grid grid-cols-2 gap-2.5 text-xs">
+              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-white/[0.025] border border-slate-200/70 dark:border-white/[0.06]">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
+                  Total Aset
+                </span>
+                <span className="font-mono font-bold tabular-nums text-slate-900 dark:text-slate-100 text-xs sm:text-sm">
+                  {formatFinancialValue(latestAuditPeriod.totalAssets)}
+                </span>
               </div>
-
-              {/* Pie Canvas */}
-              <div className="w-56 h-56 flex-shrink-0 flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={balanceSheetPieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={55}
-                      outerRadius={80}
-                      paddingAngle={4}
-                      dataKey="value"
-                    >
-                      {balanceSheetPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} stroke="transparent" />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value, name, item) => [`${currencyMode === "ORIGINAL" && isForeignCurrency ? `$${value} Juta` : `Rp ${value} Triliun`}`, item?.payload?.name || name]} />
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-white/[0.025] border border-slate-200/70 dark:border-white/[0.06]">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
+                  Kas & Setara Kas
+                </span>
+                <span className="font-mono font-bold tabular-nums text-blue-600 dark:text-blue-400 text-xs sm:text-sm">
+                  {formatFinancialValue(latestAuditPeriod.cashEquivalents)}
+                </span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-white/[0.025] border border-slate-200/70 dark:border-white/[0.06]">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
+                  Total Ekuitas
+                </span>
+                <span className="font-mono font-bold tabular-nums text-emerald-600 dark:text-[#2fe695] text-xs sm:text-sm">
+                  {formatFinancialValue(latestAuditPeriod.totalEquity)}
+                </span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-white/[0.025] border border-slate-200/70 dark:border-white/[0.06]">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
+                  Total Liabilitas
+                </span>
+                <span className="font-mono font-bold tabular-nums text-amber-600 dark:text-amber-400 text-xs sm:text-sm">
+                  {formatFinancialValue(latestAuditPeriod.totalLiabilities)}
+                </span>
               </div>
             </div>
 
-            {/* Banner Analisis Pos Luar Biasa (Exceptional Item Impairment) */}
-            {hasGoodwillOutlier && (
-              <div className="lg:col-span-12 p-4 rounded-2xl border border-amber-500/25 bg-amber-500/[0.05] text-amber-200/90 text-xs space-y-1">
-                <div className="font-bold text-amber-300 flex items-center gap-1.5">
-                  <span>Catatan Analisis Pos Luar Biasa (Exceptional Item FY2023)</span>
-                </div>
-                <p className="text-slate-300 leading-relaxed text-[11px]">
-                  Lonjakan rugi bersih pada FY2023 (Rp -90,40 Triliun) dipicu oleh penurunan nilai <em>goodwill</em> non-kas (Goodwill Impairment) Tokopedia pasca-restrukturisasi kemitraan strategis dengan TikTok (beban impairment ~Rp 78,8 T). Pada FY2024, rugi bersih berhasil dipangkas signifikan sebesar <strong>94,3%</strong> ke level <strong>Rp -5,15 Triliun (Induk) / Rp -5,46 T (Konsolidasi)</strong> dengan pertumbuhan omset operasional <strong>+7,5% YoY</strong> ke <strong>Rp 15,89 Triliun</strong>. Anda dapat mengaktifkan toggle <em>"Fokus Operasional"</em> pada grafik batang di atas untuk melihat tren pendapatan usaha tanpa bias skala outlier non-kas.
-                </p>
+            {/* Strip 3 Rasio Efisiensi (ROE, ROA, NPM) */}
+            <div className="pt-2.5 border-t border-slate-100 dark:border-white/[0.06] grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">ROE</span>
+                <span
+                  className={`font-mono font-bold tabular-nums ${getValueColorClass(
+                    latestAuditPeriod.roe
+                  )}`}
+                >
+                  {formatPct(latestAuditPeriod.roe)}
+                </span>
               </div>
-            )}
-
+              <div>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">ROA</span>
+                <span
+                  className={`font-mono font-bold tabular-nums ${getValueColorClass(
+                    latestAuditPeriod.roa
+                  )}`}
+                >
+                  {formatPct(latestAuditPeriod.roa)}
+                </span>
+              </div>
+              <div>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
+                  Marjin (NPM)
+                </span>
+                <span
+                  className={`font-mono font-bold tabular-nums ${getValueColorClass(
+                    latestAuditPeriod.netProfitMargin
+                  )}`}
+                >
+                  {formatPct(latestAuditPeriod.netProfitMargin)}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* ========================================================
-          3. TABEL KOMPARATIF MULTI-PERIODE (4 PERIODE BERDAMPINGAN)
+          3. TABEL KOMPARATIF MULTI-PERIODE
           ======================================================== */}
-      {(activeView === "both" || activeView === "table") && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <TableIcon className="w-4 h-4 text-blue-500" />
-              <span>Tabel Rincian Data Komparatif Multi-Periode</span>
-            </h3>
-            <span className="text-[11px] font-mono text-slate-400">
-              Audit Resmi BEI (Konsolidasian)
-            </span>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 font-semibold">
-                    <th className="py-3 px-4 min-w-[220px]">Pos Laporan Keuangan</th>
-                    {activePeriods.map((p) => (
-                      <th
-                        key={p.period}
-                        className={`py-3 px-4 font-mono text-right min-w-[130px] ${
-                          p.isTTM
-                            ? "bg-emerald-500/[0.06] text-emerald-600 dark:text-[#2fe695] font-bold border-l border-emerald-500/20"
-                            : ""
-                        }`}
-                      >
-                        <div className="flex items-center justify-end gap-1.5">
-                          <span>{p.label}</span>
-                          {p.isTTM && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-[#2fe695] font-bold uppercase tracking-wider">
-                              TTM
-                            </span>
-                          )}
-                        </div>
-                      </th>
-                    ))}
-                    <th className="py-3 px-4 text-right min-w-[100px]">Pertumbuhan</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
-                  
-                  {/* --- KATEGORI 1: LAPORAN LABA RUGI --- */}
-                  <tr className="bg-slate-50/60 dark:bg-white/[0.01]">
-                    <td colSpan={activePeriods.length + 2} className="py-2 px-4 font-bold text-slate-900 dark:text-slate-200 text-[11px] uppercase tracking-wider">
-                      Laporan Laba Rugi (Income Statement)
-                    </td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 px-4">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 block">Pendapatan Usaha (Revenue)</span>
-                      <span className="text-[11px] text-slate-400">Total penjualan dan penerimaan operasional</span>
-                    </td>
-                    {activePeriods.map((p) => (
+      {apiHistory && (activeView === "both" || activeView === "table") && (
+        <div className="rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 font-semibold">
+                  <th className="py-3 px-4 min-w-[200px] sticky left-0 z-20 bg-slate-50 dark:bg-[#10131b] border-r border-slate-200/70 dark:border-white/[0.06]">
+                    Pos Laporan Keuangan
+                  </th>
+                  {activePeriods.map((p) => (
+                    <th
+                      key={p.period}
+                      className={`py-3 px-4 font-mono text-right min-w-[125px] ${
+                        p.isTTM
+                          ? "bg-emerald-500/[0.06] text-emerald-700 dark:text-[#2fe695] font-bold border-l border-emerald-500/20"
+                          : ""
+                      }`}
+                    >
+                      {p.label}
+                    </th>
+                  ))}
+                  <th className="py-3 px-4 text-right min-w-[115px] font-mono">
+                    {deltaHeaderLabel}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
+                {TABLE_SECTIONS.map((section) => (
+                  <React.Fragment key={section.title}>
+                    <tr className="bg-slate-50/70 dark:bg-white/[0.015]">
                       <td
-                        key={p.period}
-                        className={`py-3 px-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-right ${
-                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15 text-emerald-700 dark:text-emerald-300" : ""
-                        }`}
+                        colSpan={activePeriods.length + 2}
+                        className="py-2 px-4 font-bold text-slate-700 dark:text-slate-300 text-[11px] uppercase tracking-wider"
                       >
-                        {formatFinancialValue(p.revenue)}
-                        {isForeignCurrency && (
-                          <span className="block text-[10px] text-slate-400 font-normal">
-                            {currencyMode === "ORIGINAL" ? `(≈ ${formatFinancialValue(p.revenue, "IDR")})` : `(${formatFinancialValue(p.revenue, "ORIGINAL")})`}
-                          </span>
-                        )}
+                        {section.title}
                       </td>
-                    ))}
-                    <td className="py-3 px-4 font-mono font-bold text-right text-emerald-600 dark:text-[#2fe695]">
-                      {dynamicYoY.revYoY !== null
-                        ? `${dynamicYoY.revYoY > 0 ? "+" : ""}${dynamicYoY.revYoY}% YoY`
-                        : `+${Number(f.revenueGrowth || 4.8).toFixed(1)}% YoY`}
-                    </td>
-                  </tr>
+                    </tr>
 
-                  <tr className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 px-4">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 block">Laba Bersih (Net Income)</span>
-                      <span className="text-[11px] text-slate-400">Keuntungan final yang diatribusikan ke induk</span>
-                    </td>
-                    {activePeriods.map((p) => (
-                      <td
-                        key={p.period}
-                        className={`py-3 px-4 font-mono font-bold text-emerald-600 dark:text-[#2fe695] text-right ${
-                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15" : ""
-                        }`}
-                      >
-                        {formatFinancialValue(p.netIncome)}
-                        {isForeignCurrency && (
-                          <span className="block text-[10px] text-slate-400 font-normal">
-                            {currencyMode === "ORIGINAL" ? `(≈ ${formatFinancialValue(p.netIncome, "IDR")})` : `(${formatFinancialValue(p.netIncome, "ORIGINAL")})`}
-                          </span>
-                        )}
-                      </td>
-                    ))}
-                    <td className="py-3 px-4 font-mono font-bold text-right text-emerald-600 dark:text-[#2fe695]">
-                      {dynamicYoY.netYoY !== null
-                        ? `${dynamicYoY.netYoY > 0 ? "+" : ""}${dynamicYoY.netYoY}% YoY`
-                        : `+${Number(f.netIncomeGrowth || 6.5).toFixed(1)}% YoY`}
-                    </td>
-                  </tr>
+                    {section.rows.map((row) => {
+                      const rowDelta = computeMetricDelta(row.key, Boolean(row.isPointDiff));
+                      return (
+                        <tr
+                          key={row.key}
+                          className="hover:bg-slate-50/60 dark:hover:bg-white/[0.02] transition-colors"
+                        >
+                          <td className={stickyLabelCellClass}>{row.label}</td>
 
-                  <tr className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 px-4">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 block">Marjin Laba Bersih (NPM)</span>
-                      <span className="text-[11px] text-slate-400">Rasio laba bersih terhadap omset penjualan</span>
-                    </td>
-                    {activePeriods.map((p) => (
-                      <td
-                        key={p.period}
-                        className={`py-3 px-4 font-mono font-semibold text-slate-800 dark:text-slate-200 text-right ${
-                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold" : ""
-                        }`}
-                      >
-                        {p.netProfitMargin}%
-                      </td>
-                    ))}
-                    <td className="py-3 px-4 text-right text-[11px] text-slate-400 font-sans">
-                      {currentSnapshot.netProfitMargin >= 20 ? "Sangat Prima" : "Stabil"}
-                    </td>
-                  </tr>
+                          {activePeriods.map((p) => {
+                            const rawVal = p[row.key];
+                            let formattedCell = "-";
+                            if (row.type === "currency") {
+                              formattedCell = formatFinancialValue(rawVal);
+                            } else if (row.type === "eps") {
+                              formattedCell = formatEpsValue(rawVal);
+                            } else if (row.type === "percent") {
+                              formattedCell = formatPct(rawVal);
+                            }
 
-                  <tr className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 px-4">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 block">Laba per Saham (EPS)</span>
-                      <span className="text-[11px] text-slate-400">Laba bersih per lembar saham yang beredar</span>
-                    </td>
-                    {activePeriods.map((p) => (
-                      <td
-                        key={p.period}
-                        className={`py-3 px-4 font-mono font-semibold text-slate-800 dark:text-slate-200 text-right ${
-                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold" : ""
-                        }`}
-                      >
-                        {formatEpsValue(p.eps)}
-                        {isForeignCurrency && (
-                          <span className="block text-[10px] text-slate-400 font-normal">
-                            {currencyMode === "ORIGINAL" ? `(≈ ${formatEpsValue(p.eps, "IDR")})` : `(${formatEpsValue(p.eps, "ORIGINAL")})`}
-                          </span>
-                        )}
-                      </td>
-                    ))}
-                    <td className="py-3 px-4 text-right text-[11px] text-slate-400 font-sans">
-                      Per Lembar
-                    </td>
-                  </tr>
+                            const cellColor = row.colorBySign
+                              ? getValueColorClass(rawVal)
+                              : "text-slate-900 dark:text-slate-100";
 
-                  {/* --- KATEGORI 2: NERACA KEUANGAN --- */}
-                  <tr className="bg-slate-50/60 dark:bg-white/[0.01]">
-                    <td colSpan={activePeriods.length + 2} className="py-2 px-4 font-bold text-slate-900 dark:text-slate-200 text-[11px] uppercase tracking-wider">
-                      Neraca Keuangan (Balance Sheet)
-                    </td>
-                  </tr>
+                            return (
+                              <td
+                                key={p.period}
+                                className={`py-2.5 px-4 font-mono tabular-nums text-right ${
+                                  row.isBold ? "font-bold" : "font-semibold"
+                                } ${cellColor} ${
+                                  p.isTTM
+                                    ? "bg-emerald-500/[0.02] border-l border-emerald-500/15"
+                                    : ""
+                                }`}
+                              >
+                                {formattedCell}
+                              </td>
+                            );
+                          })}
 
-                  <tr className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 px-4">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 block">Total Aset (Total Assets)</span>
-                      <span className="text-[11px] text-slate-400">Total kekayaan aset lancar & aset tidak lancar</span>
-                    </td>
-                    {activePeriods.map((p) => (
-                      <td
-                        key={p.period}
-                        className={`py-3 px-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-right ${
-                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15" : ""
-                        }`}
-                      >
-                        {formatFinancialValue(p.totalAssets)}
-                        {isForeignCurrency && (
-                          <span className="block text-[10px] text-slate-400 font-normal">
-                            {currencyMode === "ORIGINAL" ? `(≈ ${formatFinancialValue(p.totalAssets, "IDR")})` : `(${formatFinancialValue(p.totalAssets, "ORIGINAL")})`}
-                          </span>
-                        )}
-                      </td>
-                    ))}
-                    <td className="py-3 px-4 text-right text-[11px] text-slate-400 font-sans">
-                      Aset Produktif
-                    </td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 px-4">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 block">Total Ekuitas (Total Equity)</span>
-                      <span className="text-[11px] text-slate-400">Modal bersih pemegang saham dan saldo laba</span>
-                    </td>
-                    {activePeriods.map((p) => (
-                      <td
-                        key={p.period}
-                        className={`py-3 px-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-right ${
-                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15" : ""
-                        }`}
-                      >
-                        {formatFinancialValue(p.totalEquity)}
-                        {isForeignCurrency && (
-                          <span className="block text-[10px] text-slate-400 font-normal">
-                            {currencyMode === "ORIGINAL" ? `(≈ ${formatFinancialValue(p.totalEquity, "IDR")})` : `(${formatFinancialValue(p.totalEquity, "ORIGINAL")})`}
-                          </span>
-                        )}
-                      </td>
-                    ))}
-                    <td className="py-3 px-4 text-right text-[11px] text-slate-400 font-sans">
-                      Nilai Buku Modal
-                    </td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 px-4">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 block">Total Liabilitas (Total Liabilities)</span>
-                      <span className="text-[11px] text-slate-400">Kewajiban jangka pendek dan jangka panjang</span>
-                    </td>
-                    {activePeriods.map((p) => (
-                      <td
-                        key={p.period}
-                        className={`py-3 px-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-right ${
-                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15" : ""
-                        }`}
-                      >
-                        {formatFinancialValue(p.totalLiabilities)}
-                        {isForeignCurrency && (
-                          <span className="block text-[10px] text-slate-400 font-normal">
-                            {currencyMode === "ORIGINAL" ? `(≈ ${formatFinancialValue(p.totalLiabilities, "IDR")})` : `(${formatFinancialValue(p.totalLiabilities, "ORIGINAL")})`}
-                          </span>
-                        )}
-                      </td>
-                    ))}
-                    <td className="py-3 px-4 font-mono font-semibold text-right text-slate-500">
-                      DER: {currentSnapshot.der}x
-                    </td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 px-4">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 block">Kas & Setara Kas (Cash & Equivalents)</span>
-                      <span className="text-[11px] text-slate-400">Cadangan likuiditas kas siap pakai</span>
-                    </td>
-                    {activePeriods.map((p) => (
-                      <td
-                        key={p.period}
-                        className={`py-3 px-4 font-mono font-bold text-blue-600 dark:text-blue-400 text-right ${
-                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15" : ""
-                        }`}
-                      >
-                        {formatFinancialValue(p.cashEquivalents)}
-                        {isForeignCurrency && (
-                          <span className="block text-[10px] text-slate-400 font-normal">
-                            {currencyMode === "ORIGINAL" ? `(≈ ${formatFinancialValue(p.cashEquivalents, "IDR")})` : `(${formatFinancialValue(p.cashEquivalents, "ORIGINAL")})`}
-                          </span>
-                        )}
-                      </td>
-                    ))}
-                    <td className="py-3 px-4 text-right text-[11px] text-slate-400 font-sans">
-                      Kas Siap Pakai
-                    </td>
-                  </tr>
-
-                  {/* --- KATEGORI 3: RASIO PROFITABILITAS --- */}
-                  <tr className="bg-slate-50/60 dark:bg-white/[0.01]">
-                    <td colSpan={activePeriods.length + 2} className="py-2 px-4 font-bold text-slate-900 dark:text-slate-200 text-[11px] uppercase tracking-wider">
-                      Rasio Pengembalian Investasi
-                    </td>
-                  </tr>
-
-                  <tr className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 px-4">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 block">Return on Equity (ROE)</span>
-                      <span className="text-[11px] text-slate-400">Efektivitas modal ekuitas mencetak laba</span>
-                    </td>
-                    {activePeriods.map((p) => (
-                      <td
-                        key={p.period}
-                        className={`py-3 px-4 font-mono font-bold text-emerald-600 dark:text-[#2fe695] text-right ${
-                          p.isTTM ? "bg-emerald-500/[0.02] border-l border-emerald-500/15" : ""
-                        }`}
-                      >
-                        {p.roe}%
-                      </td>
-                    ))}
-                    <td className="py-3 px-4 text-right text-[11px] text-emerald-600 dark:text-[#2fe695] font-semibold">
-                      {currentSnapshot.roe >= 15 ? "Sangat Efisien" : "Moderat"}
-                    </td>
-                  </tr>
-
-                </tbody>
-              </table>
-            </div>
+                          <td
+                            className={`py-2.5 px-4 font-mono font-semibold tabular-nums text-right ${getValueColorClass(
+                              rowDelta
+                            )}`}
+                          >
+                            {formatDeltaCell(rowDelta, Boolean(row.isPointDiff))}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

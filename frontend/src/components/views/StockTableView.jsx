@@ -57,6 +57,10 @@ export default function StockTableView({
   const [sortField, setSortField] = useState("marketCap");
   const [sortOrder, setSortOrder] = useState("desc");
 
+  useEffect(() => {
+    setSelectedSector(initialSector || "ALL");
+  }, [initialSector]);
+
   // Watchlist State (Tersinkronisasi dengan localStorage)
   const [watchlistSymbols, setWatchlistSymbols] = useState(() => {
     try {

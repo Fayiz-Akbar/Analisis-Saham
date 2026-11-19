@@ -9,10 +9,15 @@ import {
   getTickerTape,
   getMarketOverview,
   getStockFinancialHistory,
+  syncIdx80Endpoint,
 } from "../controllers/stockController.js";
 import { getLatestNews } from "../controllers/newsController.js";
 
 const router = Router();
+
+// Endpoint sinkronisasi otomatis daftar konstituen IDX80 & deteksi delisting
+router.get("/sync-idx80", syncIdx80Endpoint);
+router.post("/sync-idx80", syncIdx80Endpoint);
 
 // Endpoint Ringkasan Indeks Pasar (Market Overview: IHSG, IDX80)
 router.get("/market-overview", getMarketOverview);
