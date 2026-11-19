@@ -1,11 +1,22 @@
 import { Router } from "express";
 import {
+  createCmsCourse,
+  createCmsLesson,
   createModule,
   createQuiz,
+  deleteCmsCourse,
+  deleteCmsLesson,
   deleteModule,
   deleteQuiz,
+  duplicateCmsLesson,
+  getCmsLessonDetail,
+  getCmsTree,
   getModuleQuizzes,
   getModules,
+  reorderCms,
+  restoreCmsLessonRevision,
+  updateCmsCourse,
+  updateCmsLesson,
   updateModule,
   updateQuiz,
 } from "../controllers/adminController.js";
@@ -28,5 +39,18 @@ router.post("/quizzes", createQuiz);
 router.put("/quizzes/:id", updateQuiz);
 router.delete("/quizzes/:id", deleteQuiz);
 
-export default router;
+// Learning Content Studio (CMS Hierarchy, Visual Block Editor, Versioning & Reorder)
+router.get("/cms/tree", getCmsTree);
+router.post("/cms/courses", createCmsCourse);
+router.put("/cms/courses/:id", updateCmsCourse);
+router.delete("/cms/courses/:id", deleteCmsCourse);
 
+router.get("/cms/lessons/:id", getCmsLessonDetail);
+router.post("/cms/lessons", createCmsLesson);
+router.put("/cms/lessons/:id", updateCmsLesson);
+router.post("/cms/lessons/:id/duplicate", duplicateCmsLesson);
+router.delete("/cms/lessons/:id", deleteCmsLesson);
+router.post("/cms/lessons/:id/revisions/:revisionId/restore", restoreCmsLessonRevision);
+router.patch("/cms/reorder", reorderCms);
+
+export default router;

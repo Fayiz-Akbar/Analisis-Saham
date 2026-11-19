@@ -399,18 +399,20 @@ async function main() {
   console.log("🌱 Memulai Seeding Basis Data...");
 
   // 1. Akun Pengguna Demo (Admin + Investor Pemula & Berpengalaman)
+  const adminPasswordHash = await bcrypt.hash("admin123", 10);
   const passwordHash = await bcrypt.hash("Password123!", 10);
 
   const demoAdmin = await prisma.user.upsert({
-    where: { email: "admin.investai@example.com" },
+    where: { email: "admin@email.com" },
     update: {
       name: "Administrator Kurikulum InvestAI",
+      passwordHash: adminPasswordHash,
       role: "ADMIN",
     },
     create: {
       name: "Administrator Kurikulum InvestAI",
-      email: "admin.investai@example.com",
-      passwordHash,
+      email: "admin@email.com",
+      passwordHash: adminPasswordHash,
       role: "ADMIN",
       investorProfile: "EXPERIENCED",
     },
