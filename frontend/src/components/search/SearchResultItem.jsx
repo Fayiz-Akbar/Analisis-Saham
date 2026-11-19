@@ -1,5 +1,4 @@
 import React from "react";
-import idxCircleImg from "../../assets/idx-circle.png";
 
 /**
  * SearchResultItem: Komponen baris hasil pencarian saham bergaya TradingView
@@ -71,7 +70,7 @@ export default function SearchResultItem({
           {stock.type || "stock"}
         </span>
 
-        {/* Badge Bursa Efek Indonesia (IDX + Logo Bulat Marun) Sesuai Referensi Pengguna */}
+        {/* Badge Bursa Efek Indonesia (IDX) */}
         <div className="flex items-center gap-1.5 font-bold tracking-wider">
           <span
             className={`text-xs font-semibold ${
@@ -80,13 +79,6 @@ export default function SearchResultItem({
           >
             IDX
           </span>
-
-          {/* Ikon Bulat Marun Resmi Bursa Efek Indonesia */}
-          <img
-            src={idxCircleImg}
-            alt="Bursa Efek Indonesia"
-            className="w-4 h-4 rounded-full object-cover shadow-2xs shrink-0"
-          />
         </div>
       </div>
     </div>

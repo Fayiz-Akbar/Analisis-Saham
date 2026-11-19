@@ -1,6 +1,5 @@
 import React from "react";
 import TradingViewChart from "./TradingViewChart";
-import idxCircleImg from "../../assets/idx-circle.png";
 
 export default function StockDetailCard({
   stockData,
@@ -42,7 +41,7 @@ export default function StockDetailCard({
   if (!stockData || !stockData.quote) {
     return (
       <div className="p-12 text-center rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500">
-        Pilih saham konstituen IDX80 untuk memuat data analisis.
+        Pilih saham emiten untuk memuat data analisis.
       </div>
     );
   }
@@ -109,15 +108,9 @@ export default function StockDetailCard({
               <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 leading-none">
                 {quote.symbol}
               </h1>
-              <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold tracking-wide border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <span>{stock?.exchange || "IDX"}</span>
-                <img src={idxCircleImg} alt="IDX" className="w-3.5 h-3.5 rounded-full object-cover shrink-0" />
+              <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold tracking-wide border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 select-none">
+                {stock?.exchange || "IDX"}
               </span>
-              {stock?.isIdx80 && (
-                <span className="px-2 py-0.5 rounded-md text-[11px] font-medium border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400">
-                  Konstituen IDX80
-                </span>
-              )}
               {fromCache ? (
                 <span className="px-2 py-0.5 rounded-md text-[11px] font-medium border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400" title="Data disajikan instan dari cache PostgreSQL">
                   PostgreSQL Cache

@@ -649,21 +649,33 @@ export class MarketDataService {
           }
         }
 
-        // Skalakan ke level indeks 143.25 jika Yahoo mengembalikan level 72.05 atau berbasis IHSG
-        if (result && result.indicators?.quote?.[0]?.close) {
+        // Skalakan seluruh deret harga OHLC ke level indeks 143.25 secara proporsional
+        if (result && result.indicators?.quote?.[0]) {
           const currentBase = result.meta?.regularMarketPrice || 72.05;
           const ratio = 143.25 / currentBase;
-          result.indicators.quote[0].close = result.indicators.quote[0].close.map(
-            (v) => (v != null ? Number((v * ratio).toFixed(2)) : v)
-          );
+          const q = result.indicators.quote[0];
+
+          if (Array.isArray(q.close)) {
+            q.close = q.close.map((v) => (v != null ? Number((v * ratio).toFixed(4)) : v));
+          }
+          if (Array.isArray(q.open)) {
+            q.open = q.open.map((v) => (v != null ? Number((v * ratio).toFixed(4)) : v));
+          }
+          if (Array.isArray(q.high)) {
+            q.high = q.high.map((v) => (v != null ? Number((v * ratio).toFixed(4)) : v));
+          }
+          if (Array.isArray(q.low)) {
+            q.low = q.low.map((v) => (v != null ? Number((v * ratio).toFixed(4)) : v));
+          }
+
           if (result.meta) {
-            result.meta.regularMarketPrice = 143.25;
-            result.meta.chartPreviousClose = Number(((result.meta.chartPreviousClose || currentBase) * ratio).toFixed(2));
-            result.meta.previousClose = Number(((result.meta.previousClose || currentBase) * ratio).toFixed(2));
-            result.meta.regularMarketDayHigh = 143.90;
-            result.meta.regularMarketDayLow = 141.80;
-            result.meta.fiftyTwoWeekHigh = 156.20;
-            result.meta.fiftyTwoWeekLow = 124.50;
+            result.meta.regularMarketPrice = Number((currentBase * ratio).toFixed(4));
+            result.meta.chartPreviousClose = Number(((result.meta.chartPreviousClose || currentBase) * ratio).toFixed(4));
+            result.meta.previousClose = Number(((result.meta.previousClose || currentBase) * ratio).toFixed(4));
+            result.meta.regularMarketDayHigh = Number(((result.meta.regularMarketDayHigh || currentBase) * ratio).toFixed(4));
+            result.meta.regularMarketDayLow = Number(((result.meta.regularMarketDayLow || currentBase) * ratio).toFixed(4));
+            result.meta.fiftyTwoWeekHigh = Number(((result.meta.fiftyTwoWeekHigh || currentBase) * ratio).toFixed(4));
+            result.meta.fiftyTwoWeekLow = Number(((result.meta.fiftyTwoWeekLow || currentBase) * ratio).toFixed(4));
           }
         }
       }

@@ -4,7 +4,6 @@ import FundamentalPillars from "./FundamentalPillars";
 import FinancialStatementsTable from "./FinancialStatementsTable";
 import FundamentalGlossary from "./FundamentalGlossary";
 import CompanyNewsSection from "./CompanyNewsSection";
-import idxCircleImg from "../../assets/idx-circle.png";
 
 export default function StockDetailCard({
   stockData,
@@ -108,7 +107,7 @@ export default function StockDetailCard({
   if (!stockData || !stockData.quote) {
     return (
       <div className="p-12 text-center rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c0e14] text-slate-500">
-        Pilih saham konstituen IDX80 untuk memuat data analisis.
+        Pilih saham emiten untuk memuat data analisis.
       </div>
     );
   }
@@ -190,15 +189,9 @@ export default function StockDetailCard({
               <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 leading-none">
                 {quote.symbol}
               </h1>
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1 select-none">
-                <span>{stock?.exchange || "IDX"}</span>
-                <img src={idxCircleImg} alt="IDX" className="w-3.5 h-3.5 rounded-full object-cover shrink-0" />
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 select-none">
+                {stock?.exchange || "IDX"}
               </span>
-              {stock?.isIdx80 && (
-                <span className="text-xs font-bold text-emerald-600 dark:text-[#2fe695] select-none">
-                  IDX80
-                </span>
-              )}
             </div>
 
             <h2 className="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-medium truncate">

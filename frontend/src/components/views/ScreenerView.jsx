@@ -58,7 +58,7 @@ export default function ScreenerView({ onSelectStock }) {
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Penyaring 80 konstituen likuid Bursa Efek Indonesia berdasarkan sektor, profil kapitalisasi, dan kriteria fundamental.
+            Penyaring emiten likuid Bursa Efek Indonesia berdasarkan sektor, profil kapitalisasi, dan kriteria fundamental.
           </p>
         </div>
 
@@ -117,7 +117,7 @@ export default function ScreenerView({ onSelectStock }) {
               {isLoading ? (
                 <tr>
                   <td colSpan="6" className="text-center py-12 text-slate-400">
-                    Memuat data emiten IDX80...
+                    Memuat data emiten bursa...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
@@ -178,8 +178,8 @@ export default function ScreenerView({ onSelectStock }) {
                         )}
                       </td>
                       <td className="px-5 py-3.5 text-center">
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                          IDX80
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          IDX
                         </span>
                       </td>
                       <td className="px-5 py-3.5 text-center">

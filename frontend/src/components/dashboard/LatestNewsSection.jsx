@@ -529,7 +529,7 @@ export default function LatestNewsSection({ className = "" }) {
                   <span>Seluruh Arus Berita Finansial</span>
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Katalog lengkap berita pasar modal BEI dan emiten IDX80 dengan foto artikel dan label sentimen.
+                  Katalog lengkap berita pasar modal BEI dan emiten bursa dengan foto artikel dan label sentimen.
                 </p>
               </div>
 

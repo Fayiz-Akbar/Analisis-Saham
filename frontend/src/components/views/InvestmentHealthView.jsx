@@ -10,7 +10,7 @@ export default function InvestmentHealthView({ onSelectStock }) {
         name: "Diversifikasi Emiten",
         score: 85,
         status: "Baik",
-        desc: "Portofolio terdiri dari 4 emiten IDX80 dengan bobot berimbang.",
+        desc: "Portofolio terdiri dari 4 emiten dengan bobot berimbang.",
       },
       {
         name: "Konsentrasi Aset Tunggal",
@@ -41,7 +41,7 @@ export default function InvestmentHealthView({ onSelectStock }) {
       {
         level: "Rendah",
         title: "Likuiditas Saham Sangat Tinggi",
-        desc: "Seluruh saham portofolio berada dalam indeks konstituen likuid IDX80 sehingga risiko likuiditas saat likuidasi posisi sangat rendah.",
+        desc: "Seluruh saham portofolio berada dalam jajaran saham likuid Bursa Efek Indonesia sehingga risiko likuiditas saat likuidasi posisi sangat rendah.",
         recommendation: "Pertahankan alokasi pada saham-saham likuid berkapitalisasi pasar besar.",
       },
     ],
