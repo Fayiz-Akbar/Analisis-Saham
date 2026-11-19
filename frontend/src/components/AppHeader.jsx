@@ -1,1 +1,308 @@
-export { default } from "./layout/AppHeader";
+import React, { useState, useRef, useEffect } from "react";
+import { LogOut, ShieldCheck, UserCheck, UserPlus } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+
+export default function AppHeader({
+  activeTab,
+  setActiveTab,
+  onOpenSearch,
+  darkMode,
+  toggleDarkMode,
+}) {
+  const { user, isAuthenticated, isAdmin, logout, openAuthModal } = useAuth();
+  const [showAuthMenu, setShowAuthMenu] = useState(false);
+  const authRef = useRef(null);
+
+  // Close auth dropdown saat klik di luar
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (authRef.current && !authRef.current.contains(event.target)) {
+        setShowAuthMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // 9 Menu Utama Header Sesuai Ketetapan PRD Tabel A:
+  const navTabs = [
+    { id: "dashboard", label: "Dashboard" },
+    { id: "market", label: "Market & Sentiment" },
+    { id: "screener", label: "Stock Screener" },
+    { id: "komparasi", label: "Stock Comparison" },
+    { id: "watchlist", label: "Watchlist" },
+    { id: "portofolio", label: "Portfolio" },
+    { id: "simulasi", label: "Simulasi" },
+    { id: "learning", label: "Learning" },
+    { id: "ai", label: "AI Assistant" },
+  ];
+
+  const roleBadgeLabel = isAdmin
+    ? "Administrator"
+    : user?.investorProfile === "EXPERIENCED"
+      ? "Investor (Expert)"
+      : "Investor (Pemula)";
+
+  return (
+    <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-[#080808]/95 border-b border-slate-200 dark:border-[#272727] backdrop-blur-md transition-colors shadow-xs dark:shadow-none">
+      <div className="max-w-[98%] mx-auto px-3 sm:px-4 lg:px-6 h-16 flex items-center justify-between gap-3">
+        {/* ========================================================
+            KIRI: Logo Investpedia Resmi (Dukungan Light & Dark Mode)
+            ======================================================== */}
+        <div
+          onClick={() => setActiveTab("dashboard")}
+          className="flex items-center cursor-pointer select-none flex-shrink-0"
+        >
+          <img
+            src={darkMode ? "/investpedia-full-dark.png" : "/investpedia-full.png"}
+            alt="Investpedia"
+            className="h-8 sm:h-9 w-auto object-contain transition-opacity"
+          />
+        </div>
+
+        {/* ========================================================
+            TENGAH: Floating Pill Bar Navigasi (9 Menu Header PRD)
+            ======================================================== */}
+        <nav className="flex-1 flex justify-center max-w-5xl min-w-0 mx-2 sm:mx-4">
+          <div className="bg-slate-100 border border-slate-200/90 dark:bg-[#12151e] dark:border-slate-800/90 rounded-full p-1 shadow-xs dark:shadow-md flex items-center gap-0.5 sm:gap-1 max-w-full overflow-x-auto scrollbar-none">
+            {navTabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                    isActive
+                      ? "bg-slate-900 text-white shadow-xs dark:bg-white dark:text-slate-950"
+                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+
+        {/* ========================================================
+            KANAN: Portal Admin Pill + Global Search + User Auth + Theme
+            ======================================================== */}
+        <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
+          {/* Pintasan Switch Admin <-> Sistem Utama (HANYA TAMPIL KETIKA SUDAH LOGIN SEBAGAI ADMIN) */}
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setActiveTab(activeTab === "admin" ? "dashboard" : "admin")}
+              className={`h-9 px-3 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                activeTab === "admin"
+                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-slate-900 dark:border-white"
+                  : "bg-slate-100 dark:bg-[#161922] text-slate-700 dark:text-slate-200 border-slate-200 dark:border-[#272727] hover:border-slate-400 dark:hover:border-slate-500"
+              }`}
+              title={activeTab === "admin" ? "Beralih ke Sistem Utama (Publik)" : "Beralih ke Portal Administrator"}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+              <span className="hidden sm:inline">
+                {activeTab === "admin" ? "Ke Sistem Utama" : "Portal Admin"}
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            </button>
+          )}
+
+          {/* 1. Global Stock Search Bar Button */}
+          <button
+            onClick={onOpenSearch}
+            className="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border border-slate-200 dark:border-[#272727] hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center text-slate-700 dark:text-white transition-all cursor-pointer"
+            title="Cari Saham IDX (Global Search)"
+            aria-label="Cari Saham"
+          >
+            <svg
+              className="w-4 h-4 stroke-slate-700 dark:stroke-white stroke-2 fill-none"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <line x1="16.5" y1="16.5" x2="21" y2="21" strokeLinecap="round" />
+            </svg>
+          </button>
+
+          {/* 2. User Profile / Auth Button (Login, Register, Logout, Role Badge) */}
+          <div ref={authRef} className="relative">
+            <button
+              onClick={() => setShowAuthMenu(!showAuthMenu)}
+              className={`h-9 px-2.5 rounded-lg border flex items-center gap-2 transition-all cursor-pointer ${
+                isAuthenticated
+                  ? isAdmin
+                    ? "bg-slate-100 dark:bg-[#161922] border-slate-300 dark:border-[#333333] text-slate-800 dark:text-slate-200"
+                    : "bg-[#062c19] border-[#0e4429] text-[#34d399]"
+                  : "w-9 justify-center bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border-slate-200 dark:border-[#272727] hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-white"
+              }`}
+              title="Profil Pengguna & Autentikasi"
+              aria-label="Akun Pengguna"
+            >
+              <svg
+                className="w-4 h-4 stroke-current stroke-2 fill-none shrink-0"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle
+                  cx="12"
+                  cy="7"
+                  r="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              {isAuthenticated && (
+                <span className="hidden md:inline text-[11px] font-bold tracking-tight max-w-[110px] truncate">
+                  {user?.name?.split(" ")[0]}
+                </span>
+              )}
+            </button>
+
+            {/* Auth Dropdown Popover */}
+            {showAuthMenu && (
+              <div className="absolute right-0 mt-2 w-72 rounded-xl border border-slate-200 dark:border-[#272727] bg-white dark:bg-[#101010] p-4 z-50 text-xs space-y-3">
+                {isAuthenticated ? (
+                  <>
+                    <div className="border-b border-slate-200 dark:border-[#272727] pb-3 space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-bold text-slate-900 dark:text-white text-sm truncate">
+                          {user?.name}
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider shrink-0 ${
+                            isAdmin
+                              ? "bg-slate-200 dark:bg-[#1e2230] text-slate-800 dark:text-slate-300 border border-slate-300 dark:border-[#2b3247]"
+                              : "bg-[#062c19] text-[#34d399] border border-[#0e4429]"
+                          }`}
+                        >
+                          {roleBadgeLabel}
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 block truncate">
+                        {user?.email}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveTab(activeTab === "admin" ? "dashboard" : "admin");
+                            setShowAuthMenu(false);
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-[#161922] dark:hover:bg-[#1f2430] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-[#272727] transition-colors flex items-center justify-between cursor-pointer"
+                        >
+                          <span className="flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                            {activeTab === "admin" ? "Beralih ke Sistem Utama" : "Buka Portal Administrator"}
+                          </span>
+                          <span>→</span>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          logout();
+                          setShowAuthMenu(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold bg-[#2a0e12]/40 hover:bg-[#2a0e12] text-rose-500 dark:text-rose-400 border border-rose-200 dark:border-[#4c151c] transition-colors flex items-center gap-2 cursor-pointer"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        Keluar (Logout Sesi)
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="border-b border-slate-200 dark:border-[#272727] pb-2.5">
+                      <span className="font-bold text-slate-900 dark:text-white text-sm block">
+                        Autentikasi Pengguna
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                        Masuk ke akun investor Anda
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          openAuthModal("login");
+                          setShowAuthMenu(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-lg text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer"
+                      >
+                        <UserCheck className="w-3.5 h-3.5" />
+                        Masuk (Login Investor)
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          openAuthModal("register");
+                          setShowAuthMenu(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-[#161922] dark:hover:bg-[#1f2430] text-slate-800 dark:text-white border border-slate-200 dark:border-[#272727] transition-colors flex items-center gap-2 cursor-pointer"
+                      >
+                        <UserPlus className="w-3.5 h-3.5" />
+                        Daftar Akun Investor Baru
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 block leading-tight">
+                    Investpedia AI • Analisis Fundamental Pasar Modal IDX
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 3. Dark / Light Mode Toggle Button */}
+          <button
+            onClick={toggleDarkMode}
+            className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center text-slate-700 dark:text-white transition-all cursor-pointer shadow-xs dark:shadow-2xs"
+            title={darkMode ? "Ganti ke Mode Terang" : "Ganti ke Mode Gelap"}
+            aria-label="Ganti Tema"
+          >
+            {darkMode ? (
+              <svg
+                className="w-4 h-4 stroke-slate-700 dark:stroke-white stroke-2 fill-none"
+                viewBox="0 0 24 24"
+              >
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" strokeLinecap="round" />
+                <line x1="12" y1="21" x2="12" y2="23" strokeLinecap="round" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" strokeLinecap="round" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" strokeLinecap="round" />
+                <line x1="1" y1="12" x2="3" y2="12" strokeLinecap="round" />
+                <line x1="21" y1="12" x2="23" y2="12" strokeLinecap="round" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" strokeLinecap="round" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg
+                className="w-4 h-4 stroke-slate-700 dark:stroke-white stroke-2 fill-none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            )}
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}

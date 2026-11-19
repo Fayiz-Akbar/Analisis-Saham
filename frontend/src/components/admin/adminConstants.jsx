@@ -1,38 +1,30 @@
 import React from "react";
 
 /**
- * Konfigurasi 3 Tingkat Kurikulum sesuai design.md §7.1 & KF-02
+ * Konfigurasi 3 Tingkat Kurikulum sesuai design.md §7.1, anti-ai-slop & KF-02
+ * Menggunakan palet finansial autentik tanpa emoji atau neon gradients.
  */
 export const LEVEL_META = {
   BEGINNER: {
     id: "BEGINNER",
     label: "Pemula",
-    fullLabel: "Level 1 • Pemula (Beginner)",
-    dot: "🟢",
+    fullLabel: "Pemula",
     badgeClass:
-      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25",
-    pillActiveClass:
-      "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40",
+      "bg-slate-100 dark:bg-[#18181b] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#27272a]",
   },
   INTERMEDIATE: {
     id: "INTERMEDIATE",
     label: "Menengah",
-    fullLabel: "Level 2 • Menengah (Intermediate)",
-    dot: "🟡",
+    fullLabel: "Menengah",
     badgeClass:
-      "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25",
-    pillActiveClass:
-      "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40",
+      "bg-slate-100 dark:bg-[#18181b] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#27272a]",
   },
   ADVANCED: {
     id: "ADVANCED",
     label: "Mahir",
-    fullLabel: "Level 3 • Mahir (Advanced)",
-    dot: "🔴",
+    fullLabel: "Mahir",
     badgeClass:
-      "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/25",
-    pillActiveClass:
-      "bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/40",
+      "bg-slate-100 dark:bg-[#18181b] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#27272a]",
   },
 };
 
@@ -49,20 +41,22 @@ export const toSlugClient = (text) =>
     .slice(0, 200)
     .replace(/-+$/g, "");
 
+export const slugifyTitle = toSlugClient;
+
 export function LevelBadge({ level, showFull = false }) {
   const meta = LEVEL_META[level] || LEVEL_META.BEGINNER;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide ${meta.badgeClass}`}
+      className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${meta.badgeClass}`}
     >
-      <span>{meta.dot}</span>
-      <span>{showFull ? meta.fullLabel : meta.label}</span>
+      {showFull ? meta.fullLabel : meta.label}
     </span>
   );
 }
 
 /**
  * Penampil pratinjau artikel markdown & kotak formula finansial (design.md §7.2)
+ * Desain bersih tanpa glow neon atau border berlebihan.
  */
 export function MarkdownArticlePreview({ content }) {
   if (!content || !content.trim()) {
@@ -90,7 +84,7 @@ export function MarkdownArticlePreview({ content }) {
         return (
           <code
             key={idx}
-            className="px-1.5 py-0.5 rounded-md bg-slate-200/80 dark:bg-slate-800 font-mono text-[12px] text-indigo-600 dark:text-indigo-300 font-bold"
+            className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-[#1a1f2c] border border-slate-200 dark:border-slate-800 font-mono text-[11px] text-slate-800 dark:text-slate-200 font-semibold"
           >
             {part.slice(1, -1)}
           </code>
@@ -111,12 +105,12 @@ export function MarkdownArticlePreview({ content }) {
           return (
             <div
               key={idx}
-              className="p-4 my-3 rounded-2xl bg-slate-900 dark:bg-[#12151e] border border-indigo-500/30 shadow-inner flex flex-col items-center justify-center text-center"
+              className="p-4 my-3 rounded-xl bg-slate-900 dark:bg-[#080808] border border-slate-700 dark:border-[#272727] flex flex-col items-center justify-center text-center"
             >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 mb-1.5">
-                Formula / Kaidah Finansial
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Formula Finansial
               </span>
-              <pre className="font-mono font-bold text-xs sm:text-sm text-white tracking-wide whitespace-pre-wrap">
+              <pre className="font-mono font-bold text-xs sm:text-sm text-slate-100 tracking-wide whitespace-pre-wrap">
                 {formulaLines}
               </pre>
             </div>
@@ -154,7 +148,7 @@ export function MarkdownArticlePreview({ content }) {
                 return (
                   <blockquote
                     key={lineIdx}
-                    className="p-3 rounded-xl bg-indigo-500/10 border-l-4 border-indigo-500 text-xs text-slate-700 dark:text-slate-200"
+                    className="p-3 rounded-xl bg-slate-50 dark:bg-[#12151e] border-l-2 border-slate-400 dark:border-slate-600 text-xs text-slate-700 dark:text-slate-300"
                   >
                     {renderInline(line.slice(2))}
                   </blockquote>
@@ -163,7 +157,7 @@ export function MarkdownArticlePreview({ content }) {
               if (line.startsWith("- ") || line.startsWith("* ")) {
                 return (
                   <div key={lineIdx} className="flex items-start gap-2 pl-2">
-                    <span className="text-emerald-500 font-bold mt-0.5">•</span>
+                    <span className="text-slate-400 font-bold mt-0.5">•</span>
                     <span className="flex-1">{renderInline(line.slice(2))}</span>
                   </div>
                 );
@@ -172,7 +166,7 @@ export function MarkdownArticlePreview({ content }) {
                 const match = line.match(/^(\d+\.)\s+(.*)$/);
                 return (
                   <div key={lineIdx} className="flex items-start gap-2 pl-2">
-                    <span className="font-mono font-bold text-indigo-500 dark:text-indigo-400">
+                    <span className="font-mono font-bold text-slate-500 dark:text-slate-400">
                       {match[1]}
                     </span>
                     <span className="flex-1">{renderInline(match[2])}</span>
@@ -188,4 +182,3 @@ export function MarkdownArticlePreview({ content }) {
     </div>
   );
 }
-
