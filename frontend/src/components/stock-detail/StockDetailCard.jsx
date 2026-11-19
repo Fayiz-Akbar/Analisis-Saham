@@ -242,9 +242,9 @@ export default function StockDetailCard({
       {/* ========================================================
           1. STOCK OVERVIEW HEADER
           ======================================================== */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 pb-5 border-b border-slate-200 dark:border-white/[0.08]">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3.5 sm:gap-5 pb-4 sm:pb-5 border-b border-slate-200 dark:border-white/[0.08]">
         {/* Kelompok Kiri: Logo, Ticker, Nama Perusahaan, Sektor */}
-        <div className="flex items-start sm:items-center gap-4 min-w-0">
+        <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
           <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white border border-slate-200 dark:border-white/10 p-1.5 flex items-center justify-center flex-shrink-0 overflow-hidden">
             <img
               src={stock?.logoUrl || `https://assets.stockbit.com/logos/companies/${quote.symbol}.png`}
@@ -286,7 +286,7 @@ export default function StockDetailCard({
               </button>
             </div>
 
-            <h2 className="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-medium truncate">
+            <h2 className="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-medium line-clamp-2 sm:truncate">
               {stock?.companyName || quote.symbol}
             </h2>
 
@@ -310,7 +310,7 @@ export default function StockDetailCard({
 
         {/* Kelompok Kanan: Harga Terkini, Perubahan Nominal & %, Waktu Pembaruan */}
         <div className="flex flex-col md:items-end justify-start md:text-right shrink-0">
-          <div className="text-3xl sm:text-4xl font-extrabold font-mono tracking-tight text-slate-900 dark:text-slate-100 tabular-nums leading-none">
+          <div className="text-2xl sm:text-4xl font-extrabold font-mono tracking-tight text-slate-900 dark:text-slate-100 tabular-nums leading-none">
             Rp {Number(quote.regularMarketPrice).toLocaleString("id-ID")}
           </div>
 
@@ -596,11 +596,11 @@ export default function StockDetailCard({
       {/* ========================================================
           4. SUB-TAB NAVIGASI MODUL ANALISIS MENDALAM
           ======================================================== */}
-      <div className="pt-4 border-t border-slate-200 dark:border-white/[0.08] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="pt-4 border-t border-slate-200 dark:border-white/[0.08] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3">
         <div
           role="tablist"
           aria-label="Navigasi modul analisis saham"
-          className="flex items-center gap-1.5 flex-wrap"
+          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar max-w-full pb-1 sm:pb-0 sm:flex-wrap"
         >
           {SUB_TABS.map((tab) => {
             const isActive = activeSubTab === tab.id;
@@ -611,7 +611,7 @@ export default function StockDetailCard({
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setActiveSubTab(tab.id)}
-                className={`min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
+                className={`min-h-[36px] px-3 sm:px-3.5 py-1.5 rounded-lg text-xs whitespace-nowrap shrink-0 transition-colors cursor-pointer border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
                   isActive
                     ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-transparent font-bold"
                     : "bg-slate-100 dark:bg-[#0c0e14] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/[0.08] hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/70 dark:hover:bg-white/[0.04] font-semibold"

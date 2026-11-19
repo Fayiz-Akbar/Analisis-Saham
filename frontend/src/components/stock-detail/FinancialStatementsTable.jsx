@@ -634,7 +634,7 @@ export default function FinancialStatementsTable({
                   </CardDescription>
                 </div>
 
-                <div className="flex border-t border-zinc-200 dark:border-white/[0.08] sm:border-t-0">
+                <div className="grid grid-cols-3 sm:flex border-t border-zinc-200 dark:border-white/[0.08] sm:border-t-0">
                   {INCOME_HEADER_TABS.map((tab) => {
                     const isActive = activeIncomeChart === tab.id;
                     return (
@@ -644,18 +644,18 @@ export default function FinancialStatementsTable({
                         data-active={isActive}
                         onClick={() => setActiveIncomeChart(tab.id)}
                         className={cn(
-                          "relative flex flex-1 flex-col justify-center gap-0.5 px-3.5 py-3 text-left transition-colors cursor-pointer sm:px-5 sm:py-3.5 sm:border-l border-zinc-200 dark:border-white/[0.08] even:border-l first:border-l-0 sm:first:border-l",
+                          "relative flex flex-1 min-w-0 flex-col justify-center gap-0.5 px-2.5 py-2.5 sm:px-5 sm:py-3.5 text-left transition-colors cursor-pointer border-l border-zinc-200 dark:border-white/[0.08] first:border-l-0 sm:first:border-l",
                           isActive
                             ? "bg-zinc-100/80 dark:bg-white/[0.05]"
                             : "hover:bg-zinc-50 dark:hover:bg-white/[0.02]"
                         )}
                       >
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
+                        <span className="text-[9.5px] sm:text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 truncate">
                           {tab.label}
                         </span>
                         <span
                           className={cn(
-                            "text-xs sm:text-sm font-extrabold font-mono tabular-nums leading-tight whitespace-nowrap",
+                            "text-xs sm:text-sm font-extrabold font-mono tabular-nums leading-tight truncate",
                             tab.valueClass
                           )}
                         >
@@ -670,8 +670,8 @@ export default function FinancialStatementsTable({
                 </div>
               </CardHeader>
 
-              <CardContent className="px-3 pt-4 pb-4 sm:px-5 sm:pt-5 flex-1 flex flex-col justify-center">
-                <ChartContainer config={incomeChartConfig} className="aspect-auto h-[265px] w-full">
+              <CardContent className="px-2.5 pt-4 pb-4 sm:px-5 sm:pt-5 flex-1 flex flex-col justify-center">
+                <ChartContainer config={incomeChartConfig} className="aspect-auto h-[220px] sm:h-[265px] w-full">
                   <BarChart
                     accessibilityLayer
                     data={chartDataset}
@@ -944,7 +944,7 @@ export default function FinancialStatementsTable({
                   </CardDescription>
                 </div>
 
-                <div className="flex border-t border-zinc-200 dark:border-white/[0.08] xl:border-t-0">
+                <div className="grid grid-cols-2 sm:grid-cols-4 xl:flex border-t border-zinc-200 dark:border-white/[0.08] xl:border-t-0">
                   {PROFIT_HEADER_TABS.map((tab) => {
                     const isActive = activeProfitChart === tab.id;
                     return (
@@ -953,18 +953,18 @@ export default function FinancialStatementsTable({
                         type="button"
                         onClick={() => setActiveProfitChart(tab.id)}
                         className={cn(
-                          "relative flex flex-1 flex-col justify-center gap-0.5 px-3 py-2.5 text-left transition-colors cursor-pointer xl:border-l border-zinc-200 dark:border-white/[0.08] even:border-l first:border-l-0 xl:first:border-l",
+                          "relative flex flex-1 min-w-0 flex-col justify-center gap-0.5 px-3 py-2.5 text-left transition-colors cursor-pointer border-zinc-200 dark:border-white/[0.08] [&:nth-child(-n+2)]:border-b sm:[&:nth-child(-n+2)]:border-b-0 odd:border-r sm:odd:border-r-0 sm:border-l sm:first:border-l-0 xl:first:border-l",
                           isActive
                             ? "bg-zinc-100/80 dark:bg-white/[0.05]"
                             : "hover:bg-zinc-50 dark:hover:bg-white/[0.02]"
                         )}
                       >
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 truncate">
                           {tab.label}
                         </span>
                         <span
                           className={cn(
-                            "text-xs font-extrabold font-mono tabular-nums whitespace-nowrap",
+                            "text-xs font-extrabold font-mono tabular-nums truncate",
                             tab.valueClass
                           )}
                         >
@@ -979,8 +979,8 @@ export default function FinancialStatementsTable({
                 </div>
               </CardHeader>
 
-              <CardContent className="px-3 pt-4 pb-4 sm:px-5 sm:pt-5 flex-1">
-                <ChartContainer config={profitChartConfig} className="aspect-auto h-[230px] w-full">
+              <CardContent className="px-2.5 pt-4 pb-4 sm:px-5 sm:pt-5 flex-1">
+                <ChartContainer config={profitChartConfig} className="aspect-auto h-[205px] sm:h-[230px] w-full">
                   <LineChart
                     accessibilityLayer
                     data={profitDataset}
@@ -1098,7 +1098,7 @@ export default function FinancialStatementsTable({
                   </CardDescription>
                 </div>
 
-                <div className="flex border-t border-zinc-200 dark:border-white/[0.08] xl:border-t-0">
+                <div className="grid grid-cols-3 sm:flex border-t border-zinc-200 dark:border-white/[0.08] xl:border-t-0">
                   {BALANCE_HEADER_TABS.map((tab) => {
                     const isActive = activeBalanceChart === tab.id;
                     return (
@@ -1107,18 +1107,18 @@ export default function FinancialStatementsTable({
                         type="button"
                         onClick={() => setActiveBalanceChart(tab.id)}
                         className={cn(
-                          "relative flex flex-1 flex-col justify-center gap-0.5 px-3 py-2.5 text-left transition-colors cursor-pointer xl:border-l border-zinc-200 dark:border-white/[0.08] even:border-l first:border-l-0 xl:first:border-l",
+                          "relative flex flex-1 min-w-0 flex-col justify-center gap-0.5 px-2 sm:px-3 py-2.5 text-left transition-colors cursor-pointer border-l border-zinc-200 dark:border-white/[0.08] first:border-l-0 xl:first:border-l",
                           isActive
                             ? "bg-zinc-100/80 dark:bg-white/[0.05]"
                             : "hover:bg-zinc-50 dark:hover:bg-white/[0.02]"
                         )}
                       >
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
+                        <span className="text-[9.5px] sm:text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 leading-tight sm:whitespace-nowrap">
                           {tab.label}
                         </span>
                         <span
                           className={cn(
-                            "text-xs font-extrabold font-mono tabular-nums whitespace-nowrap",
+                            "text-[11px] sm:text-xs font-extrabold font-mono tabular-nums truncate",
                             tab.valueClass
                           )}
                         >
@@ -1133,8 +1133,8 @@ export default function FinancialStatementsTable({
                 </div>
               </CardHeader>
 
-              <CardContent className="px-3 pt-4 pb-4 sm:px-5 sm:pt-5 flex-1">
-                <ChartContainer config={balanceChartConfig} className="aspect-auto h-[230px] w-full">
+              <CardContent className="px-2.5 pt-4 pb-4 sm:px-5 sm:pt-5 flex-1">
+                <ChartContainer config={balanceChartConfig} className="aspect-auto h-[205px] sm:h-[230px] w-full">
                   <BarChart
                     accessibilityLayer
                     data={chartDataset}
@@ -1261,8 +1261,8 @@ export default function FinancialStatementsTable({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
             {/* GRAFIK 4: LABA PER 1 LEMBAR SAHAM (EPS) */}
             <Card className="lg:col-span-6 flex flex-col justify-between overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-zinc-200 dark:border-white/[0.08] px-5 py-4 space-y-0">
-                <div>
+              <CardHeader className="flex flex-row items-center justify-between gap-3 sm:gap-4 border-b border-zinc-200 dark:border-white/[0.08] px-4 sm:px-5 py-3.5 sm:py-4 space-y-0">
+                <div className="min-w-0">
                   <CardTitle className="text-sm font-bold text-zinc-900 dark:text-white">
                     Laba per 1 Lembar Saham (EPS)
                   </CardTitle>
@@ -1383,8 +1383,8 @@ export default function FinancialStatementsTable({
 
             {/* GRAFIK 5: TREN BEBAN UTANG TERHADAP MODAL (DER) */}
             <Card className="lg:col-span-6 flex flex-col justify-between overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between gap-4 border-b border-zinc-200 dark:border-white/[0.08] px-5 py-4 space-y-0">
-                <div>
+              <CardHeader className="flex flex-row items-center justify-between gap-3 sm:gap-4 border-b border-zinc-200 dark:border-white/[0.08] px-4 sm:px-5 py-3.5 sm:py-4 space-y-0">
+                <div className="min-w-0">
                   <CardTitle className="text-sm font-bold text-zinc-900 dark:text-white">
                     Tren Rasio Utang dibanding Modal (DER)
                   </CardTitle>

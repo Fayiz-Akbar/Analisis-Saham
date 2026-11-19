@@ -421,7 +421,7 @@ export default function App() {
   return (
     <AuthProvider>
       <div
-        className={`min-h-screen ${
+        className={`min-h-screen overflow-x-clip ${
           darkMode ? "dark bg-[#080808] text-[#F5F5F5]" : "bg-white text-slate-900"
         } transition-colors duration-200 flex flex-col`}
       >
@@ -454,7 +454,7 @@ export default function App() {
             <Idx80TickerTapeBar className="w-full" />
 
             {/* Konten Halaman */}
-            <main className="flex-1 max-w-[98%] mx-auto w-full px-3 sm:px-4 lg:px-6 py-6">
+            <main className="flex-1 max-w-full sm:max-w-[98%] mx-auto w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
               <RouteErrorBoundary
                 key={`${activeTab}:${selectedSymbol}`}
                 onBackToDashboard={() => setActiveTab("dashboard")}

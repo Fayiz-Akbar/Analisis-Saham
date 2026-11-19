@@ -115,7 +115,7 @@ export default function FinancialDataTable({
         filterFn: LABEL_FILTER_FN,
         enableHiding: false,
         cell: ({ row }) => (
-          <span className="font-medium text-zinc-900 dark:text-zinc-100 block whitespace-nowrap">
+          <span className="font-medium text-zinc-900 dark:text-zinc-100 block text-[11px] sm:text-xs leading-snug sm:whitespace-nowrap">
             {row.original.label}
           </span>
         ),
@@ -241,10 +241,10 @@ export default function FinancialDataTable({
   return (
     <div className="space-y-3">
       {/* Toolbar Filter ala OriginUI / shadcn DataTable */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           {/* Input Cari Pos Laporan */}
-          <div className="relative">
+          <div className="relative w-full sm:w-64 md:w-72">
             <Input
               id={`${id}-search`}
               ref={inputRef}
@@ -256,7 +256,7 @@ export default function FinancialDataTable({
               type="text"
               aria-label="Cari pos laporan keuangan"
               className={cn(
-                "peer w-60 sm:w-72 ps-8 bg-white dark:bg-[#0f1014] border-zinc-200 dark:border-white/[0.1]",
+                "peer w-full ps-8 bg-white dark:bg-[#0f1014] border-zinc-200 dark:border-white/[0.1]",
                 searchValue && "pe-8",
               )}
             />
@@ -391,9 +391,9 @@ export default function FinancialDataTable({
                     <TableHead
                       key={header.id}
                       className={cn(
-                        "h-11 whitespace-nowrap text-[11px] font-semibold text-zinc-500 dark:text-zinc-400",
+                        "h-11 px-2.5 sm:px-4 whitespace-nowrap text-[11px] font-semibold text-zinc-500 dark:text-zinc-400",
                         isStickyFirst &&
-                          "sticky left-0 z-20 bg-zinc-50 dark:bg-[#131419] border-r border-zinc-200/70 dark:border-white/[0.06] min-w-[220px]",
+                          "sticky left-0 z-20 bg-zinc-50 dark:bg-[#131419] border-r border-zinc-200/70 dark:border-white/[0.06] w-[148px] min-w-[148px] max-w-[155px] sm:w-auto sm:min-w-[220px] sm:max-w-none",
                         isRightAligned && "text-right font-mono",
                         isTTM &&
                           "bg-zinc-100/80 dark:bg-white/[0.04] text-zinc-900 dark:text-white font-bold border-l border-zinc-200 dark:border-white/[0.08]",
@@ -447,9 +447,9 @@ export default function FinancialDataTable({
                       <TableCell
                         key={cell.id}
                         className={cn(
-                          "py-2.5 px-4",
+                          "py-2.5 px-2.5 sm:px-4",
                           isStickyFirst &&
-                            "sticky left-0 z-10 bg-white dark:bg-[#0f1014] border-r border-zinc-100 dark:border-white/[0.04]",
+                            "sticky left-0 z-10 bg-white dark:bg-[#0f1014] border-r border-zinc-100 dark:border-white/[0.04] w-[148px] min-w-[148px] max-w-[155px] sm:w-auto sm:min-w-0 sm:max-w-none",
                           isTTM &&
                             "bg-zinc-50/60 dark:bg-white/[0.02] border-l border-zinc-200/70 dark:border-white/[0.06]",
                         )}

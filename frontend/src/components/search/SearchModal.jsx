@@ -103,11 +103,11 @@ export default function SearchModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-start justify-center pt-10 sm:pt-16 px-3 sm:px-4">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-start justify-center pt-6 sm:pt-16 px-2.5 sm:px-4">
       {/* Modal Container Bergaya TradingView */}
       <div
         ref={modalRef}
-        className={`w-full max-w-2xl rounded-2xl sm:rounded-3xl shadow-2xl border flex flex-col max-h-[85vh] overflow-hidden transition-colors ${
+        className={`w-full max-w-2xl rounded-2xl sm:rounded-3xl shadow-2xl border flex flex-col max-h-[88dvh] overflow-hidden transition-colors ${
           darkMode
             ? "bg-[#1e222d] border-[#2a2e39] text-[#d1d4dc]"
             : "bg-white border-slate-200 text-slate-800"
@@ -117,7 +117,7 @@ export default function SearchModal({
             1. BAGIAN ATAS: Input Kolom Pencarian + Tombol Hapus & Close
             ======================================================== */}
         <div
-          className={`flex items-center gap-3 px-5 py-3.5 border-b ${
+          className={`flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-5 py-3 sm:py-3.5 border-b ${
             darkMode ? "border-[#2a2e39] bg-[#1e222d]" : "border-slate-200 bg-white"
           }`}
         >
@@ -193,7 +193,7 @@ export default function SearchModal({
             ======================================================== */}
         <div
           ref={listRef}
-          className="flex-1 overflow-y-auto divide-y divide-transparent min-h-[280px] max-h-[460px] custom-scrollbar"
+          className="flex-1 overflow-y-auto divide-y divide-transparent min-h-[240px] max-h-[54dvh] sm:max-h-[460px] custom-scrollbar"
         >
           {isLoading ? (
             <div className="p-8 text-center text-xs space-y-2 opacity-60">

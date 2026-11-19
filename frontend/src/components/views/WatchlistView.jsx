@@ -128,7 +128,7 @@ const ProfessionalCard = ({ isActive, children, className = "" }) => {
             : "border-zinc-200/80 dark:border-white/[0.08] shadow-xs hover:shadow-md"
         } transition-all duration-200`}
       >
-        <div className="relative z-10 p-5">{children}</div>
+        <div className="relative z-10 p-4 sm:p-5">{children}</div>
       </div>
     </div>
   );
@@ -484,7 +484,7 @@ const WatchlistStockCard = ({ stock, onToggleWatchlist, onSelectStock, delay = 0
                 e.stopPropagation();
                 onToggleWatchlist(stock.symbol);
               }}
-              className="p-1.5 rounded-xl border border-amber-500/25 bg-amber-500/10 hover:bg-rose-500/15 hover:border-rose-500/35 text-amber-500 hover:text-rose-500 transition-colors cursor-pointer group/star"
+              className="w-9 h-9 flex items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/10 hover:bg-rose-500/15 hover:border-rose-500/35 text-amber-500 hover:text-rose-500 transition-colors cursor-pointer group/star"
               title="Hapus dari Watchlist"
             >
               <Star className="w-4 h-4 fill-amber-400 text-amber-400 group-hover/star:text-rose-500 group-hover/star:fill-rose-500 transition-colors" />
@@ -617,7 +617,7 @@ export default function WatchlistView({ onSelectStock, onBrowseCatalog }) {
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-3xl border border-dashed border-zinc-300 dark:border-zinc-800 p-12 text-center bg-white/40 dark:bg-zinc-950/40 backdrop-blur-sm max-w-xl mx-auto my-12"
+          className="rounded-3xl border border-dashed border-zinc-300 dark:border-zinc-800 p-6 sm:p-12 text-center bg-white/40 dark:bg-zinc-950/40 backdrop-blur-sm max-w-xl mx-auto my-6 sm:my-12"
         >
           <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto mb-4">
             <Star className="w-7 h-7 fill-amber-400/40 text-amber-500" />

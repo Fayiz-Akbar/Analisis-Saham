@@ -457,7 +457,7 @@ export default function LatestNewsSection({ className = "" }) {
                     className="group rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0e14] overflow-hidden flex items-stretch hover:border-slate-400 dark:hover:border-white/25 transition-colors cursor-pointer"
                   >
                     {/* Thumbnail Foto di Kiri: FULL GAMBAR TANPA CONTAINER */}
-                    <div className="relative w-32 sm:w-36 md:w-44 shrink-0 overflow-hidden bg-slate-900">
+                    <div className="relative w-24 sm:w-36 md:w-44 shrink-0 overflow-hidden bg-slate-900">
                       <img
                         src={item.imageUrl || DEFAULT_FALLBACK_IMAGE}
                         alt={item.title}
@@ -515,18 +515,18 @@ export default function LatestNewsSection({ className = "" }) {
           MODAL "LIHAT SEMUA" BERITA KEUANGAN TERKINI
           ======================================================== */}
       {showAllModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-150">
           <div
             onClick={(e) => e.stopPropagation()}
             style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
-            className="w-full max-w-5xl max-h-[88vh] bg-white dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 rounded-3xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
+            className="w-full max-w-5xl max-h-[90dvh] bg-white dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 rounded-2xl sm:rounded-3xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
           >
             {/* Header Modal */}
-            <div className="p-5 sm:p-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
-              <div>
-                <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Newspaper className="w-6 h-6 text-slate-300" />
-                  <span>Seluruh Arus Berita Finansial</span>
+            <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-white/10 flex items-start sm:items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Newspaper className="w-5 h-5 sm:w-6 sm:h-6 text-slate-300 shrink-0" />
+                  <span className="truncate">Seluruh Arus Berita Finansial</span>
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
                   Katalog lengkap berita pasar modal BEI dan emiten bursa dengan foto artikel dan label sentimen.
@@ -535,7 +535,7 @@ export default function LatestNewsSection({ className = "" }) {
 
               <button
                 onClick={() => setShowAllModal(false)}
-                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                className="w-9 h-9 shrink-0 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
                 title="Tutup Modal"
               >
                 <X className="w-5 h-5" />
@@ -543,9 +543,9 @@ export default function LatestNewsSection({ className = "" }) {
             </div>
 
             {/* Filter & Search Bar */}
-            <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-white/10 bg-slate-50/50 dark:bg-black/40 flex flex-col sm:flex-row items-center gap-3">
+            <div className="p-3.5 sm:p-5 border-b border-slate-100 dark:border-white/10 bg-slate-50/50 dark:bg-black/40 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
               {/* Filter Tabs Sentimen */}
-              <div className="flex items-center gap-1.5 bg-slate-200/70 dark:bg-slate-900 p-1 rounded-xl self-stretch sm:self-auto border border-slate-300/50 dark:border-white/10">
+              <div className="flex items-center gap-1 bg-slate-200/70 dark:bg-slate-900 p-1 rounded-xl border border-slate-300/50 dark:border-white/10 overflow-x-auto no-scrollbar">
                 {[
                   { id: "all", label: "Semua" },
                   { id: "positive", label: "Positif" },
@@ -555,7 +555,7 @@ export default function LatestNewsSection({ className = "" }) {
                   <button
                     key={tab.id}
                     onClick={() => setSelectedSentiment(tab.id)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex-1 sm:flex-none whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       selectedSentiment === tab.id
                         ? "bg-white text-slate-900 dark:bg-[#1a1f2c] dark:text-white"
                         : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -597,7 +597,7 @@ export default function LatestNewsSection({ className = "" }) {
                       className="group rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 hover:bg-white dark:bg-[#0c0e14] dark:hover:bg-[#121620] overflow-hidden flex items-stretch hover:border-slate-400 dark:hover:border-white/25 transition-colors cursor-pointer"
                     >
                       {/* Thumbnail Foto Full Bleed di Kiri */}
-                      <div className="relative w-28 sm:w-32 shrink-0 overflow-hidden bg-slate-900">
+                      <div className="relative w-24 sm:w-32 shrink-0 overflow-hidden bg-slate-900">
                         <img
                           src={item.imageUrl || DEFAULT_FALLBACK_IMAGE}
                           alt={item.title}

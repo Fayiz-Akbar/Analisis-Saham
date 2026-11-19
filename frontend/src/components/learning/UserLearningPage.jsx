@@ -926,7 +926,7 @@ export default function UserLearningPage({ defaultOpenAi = false }) {
           ) : (
             <article className="rounded-xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#242424] overflow-hidden">
               {/* Article Top Header */}
-              <div className="p-6 sm:p-8 border-b border-slate-200 dark:border-[#222222] space-y-4">
+              <div className="p-4 sm:p-8 border-b border-slate-200 dark:border-[#222222] space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                     <LevelBadge level={lessonDetail.difficultyLevel || lessonDetail.level} />
@@ -977,7 +977,7 @@ export default function UserLearningPage({ defaultOpenAi = false }) {
               </div>
 
               {/* Structured Block Content Body */}
-              <div className="p-6 sm:p-8 max-w-3xl mx-auto">
+              <div className="p-4 sm:p-8 max-w-3xl mx-auto">
                 <StructuredLessonRenderer blocks={lessonDetail.contentBlocks || []} />
 
                 {/* Official References Section */}
@@ -1008,7 +1008,7 @@ export default function UserLearningPage({ defaultOpenAi = false }) {
               {/* ==============================================================
                   BOTTOM LESSON PROGRESS & PREVIOUS / NEXT NAVIGATION
                   ============================================================== */}
-              <div className="px-6 sm:px-8 py-5 bg-slate-50/80 dark:bg-[#0c0c0c] border-t border-slate-200 dark:border-[#222222] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="px-4 sm:px-8 py-4 sm:py-5 bg-slate-50/80 dark:bg-[#0c0c0c] border-t border-slate-200 dark:border-[#222222] flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                 {/* Previous Lesson Button */}
                 <div>
                   {prevLesson ? (
@@ -1073,18 +1073,18 @@ export default function UserLearningPage({ defaultOpenAi = false }) {
       {/* ====================================================================
           8.4 LEARNING WITH AI (BOTTOM BAR & EXPANDABLE AI INVESTMENT TUTOR)
           ==================================================================== */}
-      <div className="fixed bottom-0 inset-x-0 z-40 pointer-events-none px-4 pb-3">
+      <div className="fixed bottom-0 inset-x-0 z-40 pointer-events-none px-2.5 sm:px-4 pb-2.5 sm:pb-3">
         <div className="max-w-5xl mx-auto pointer-events-auto">
           <div className="rounded-2xl bg-white/95 dark:bg-[#101010]/95 backdrop-blur-md border border-slate-200 dark:border-[#2a2a2a] shadow-2xl overflow-hidden">
             {/* Expanded Conversation Area */}
             {aiExpanded && (
               <div className="border-b border-slate-200 dark:border-[#242424]">
                 {/* Header Drawer AI */}
-                <div className="px-4 py-2.5 bg-slate-950 text-white flex items-center justify-between gap-2">
+                <div className="px-3.5 sm:px-4 py-2.5 bg-slate-950 text-white flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-xs font-semibold">
-                      Learning with AI — InvestPedia Tutor
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span className="text-xs font-semibold truncate">
+                      Learning with AI · InvestPedia Tutor
                     </span>
                     {lessonDetail?.title && (
                       <span className="hidden sm:inline-block text-[11px] font-mono text-slate-300 truncate max-w-xs px-2 py-0.5 rounded bg-white/10">
@@ -1102,7 +1102,7 @@ export default function UserLearningPage({ defaultOpenAi = false }) {
                 </div>
 
                 {/* Messages History */}
-                <div className="max-h-72 overflow-y-auto p-4 space-y-3 bg-slate-50/60 dark:bg-[#0a0a0a] custom-scrollbar">
+                <div className="max-h-[48dvh] sm:max-h-72 overflow-y-auto p-3.5 sm:p-4 space-y-3 bg-slate-50/60 dark:bg-[#0a0a0a] custom-scrollbar">
                   {aiMessages.map((msg) => (
                     <div
                       key={msg.id}
@@ -1168,7 +1168,7 @@ export default function UserLearningPage({ defaultOpenAi = false }) {
                 e.preventDefault();
                 handleAskAiTutor();
               }}
-              className="px-4 py-2.5 flex items-center gap-2.5"
+              className="px-3 sm:px-4 py-2.5 flex items-center gap-2 sm:gap-2.5"
             >
               <button
                 type="button"
@@ -1217,28 +1217,28 @@ export default function UserLearningPage({ defaultOpenAi = false }) {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/65 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/65 flex items-center justify-center p-2.5 sm:p-4"
         >
-          <div className="w-full max-w-2xl max-h-[88vh] rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#242424] flex flex-col overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 dark:border-[#242424] flex items-center justify-between">
-              <div>
+          <div className="w-full max-w-2xl max-h-[90dvh] rounded-2xl bg-white dark:bg-[#101010] border border-slate-200 dark:border-[#242424] flex flex-col overflow-hidden">
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 dark:border-[#242424] flex items-center justify-between gap-2">
+              <div className="min-w-0">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-[#e3252f] font-semibold">
                   Evaluasi Pemahaman Kurikulum
                 </span>
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate">
                   {quizData?.module?.title || "Kuis Modul Pembelajaran"}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setQuizModalOpen(false)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 custom-scrollbar">
               {isLoadingQuiz ? (
                 <div className="py-12 text-center text-xs text-slate-500">
                   Memuat soal evaluasi modul...

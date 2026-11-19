@@ -136,9 +136,12 @@ export default function TradingViewChart({
     const upColor = "#10b981"; // Emerald green
     const downColor = "#ef4444"; // Rose red
 
+    const initialHeight =
+      container.clientHeight || (typeof window !== "undefined" && window.innerWidth < 640 ? 270 : 420);
+
     const chart = createChart(container, {
       width: container.clientWidth,
-      height: 440,
+      height: initialHeight,
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
         textColor: textColor,
@@ -297,7 +300,10 @@ export default function TradingViewChart({
     // Resize observer
     const handleResize = () => {
       if (container && chart) {
-        chart.applyOptions({ width: container.clientWidth });
+        chart.applyOptions({
+          width: container.clientWidth,
+          height: container.clientHeight || initialHeight,
+        });
         if (activeCandles.length > 1) {
           const optimalBarSpacing = Math.max(container.clientWidth / (activeCandles.length - 1), 6);
           chart.timeScale().applyOptions({ barSpacing: optimalBarSpacing });
@@ -307,6 +313,11 @@ export default function TradingViewChart({
     };
 
     window.addEventListener("resize", handleResize);
+    let ro = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(handleResize);
+      ro.observe(container);
+    }
 
     // Listener Fullscreen API untuk resize chart otomatis ke tinggi layar penuh
     const handleFsChange = () => {
@@ -315,7 +326,9 @@ export default function TradingViewChart({
       if (chart && container) {
         setTimeout(() => {
           const newWidth = container.clientWidth;
-          const newHeight = isFs ? Math.max(window.innerHeight - 150, 520) : 460;
+          const newHeight = isFs
+            ? Math.max(window.innerHeight - 150, 480)
+            : container.clientHeight || (window.innerWidth < 640 ? 270 : 420);
           chart.applyOptions({ width: newWidth, height: newHeight });
           chart.timeScale().fitContent();
         }, 80);
@@ -326,6 +339,7 @@ export default function TradingViewChart({
     document.addEventListener("webkitfullscreenchange", handleFsChange);
 
     return () => {
+      if (ro) ro.disconnect();
       window.removeEventListener("resize", handleResize);
       document.removeEventListener("fullscreenchange", handleFsChange);
       document.removeEventListener("webkitfullscreenchange", handleFsChange);
@@ -377,21 +391,21 @@ export default function TradingViewChart({
           : "w-full space-y-2 bg-transparent p-0 border-0"
       }
     >
-      {/* 1. TOP CONTROLS BAR: Candle/Garis Toggle & Timeframe Selector Sebelahan (Persis Seperti Dashboard) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 dark:border-white/[0.08] pb-3">
+      {/* 1. TOP CONTROLS BAR: Candle/Garis Toggle & Timeframe Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 border-b border-slate-200/80 dark:border-white/[0.08] pb-3">
         {/* Sisi Kiri: Simbol Saham */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between sm:justify-start gap-2">
           <span className="text-sm font-bold text-slate-900 dark:text-white">{symbol}</span>
         </div>
 
-        {/* Sisi Kanan: Toggle Candle/Garis + Timeframe Sebelahan (Tanpa Container Box di Belakang) */}
-        <div className="flex items-center gap-3 shrink-0 ml-auto">
+        {/* Sisi Kanan: Toggle Candle/Garis + Timeframe */}
+        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-3 w-full sm:w-auto min-w-0">
           {/* TOGGLE: Candlestick vs Garis / Area */}
           <div className="inline-flex items-center bg-transparent p-0 gap-1 shrink-0">
             <button
               onClick={() => setChartType("candle")}
               title="Tampilan Grafik Candlestick Lilin (OHLC)"
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                 chartType === "candle"
                   ? "bg-emerald-600 text-white shadow-sm"
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -405,7 +419,7 @@ export default function TradingViewChart({
             <button
               onClick={() => setChartType("area")}
               title="Tampilan Grafik Garis / Area"
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                 chartType === "area"
                   ? (isUp ? "bg-emerald-600 text-white shadow-sm" : "bg-rose-600 text-white shadow-sm")
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -418,14 +432,14 @@ export default function TradingViewChart({
             </button>
           </div>
 
-          {/* Timeframe Selector Sebelahan (Tanpa Container Box di Belakang) */}
-          <div className="inline-flex items-center bg-transparent p-0 gap-1 shrink-0">
+          {/* Timeframe Selector (Scroll horizontal aman pada layar sempit) */}
+          <div className="inline-flex items-center bg-transparent p-0 gap-1 max-w-full overflow-x-auto no-scrollbar">
             {ranges.map((r) => (
               <button
                 key={r.value}
                 onClick={() => onRangeChange && onRangeChange(r.value)}
                 title={r.title}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                className={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                   range === r.value
                     ? "bg-slate-200 text-slate-900 dark:bg-[#2a2e39] dark:text-white font-bold"
                     : "text-slate-600 hover:text-slate-900 dark:text-[#787b86] dark:hover:text-white"
@@ -511,7 +525,14 @@ export default function TradingViewChart({
 
       {/* 3. CHART CANVAS CONTAINER (TANPA CONTAINER LATAR DI BELAKANG) */}
       <div className="relative overflow-hidden bg-transparent border-0 shadow-none my-1">
-        <div ref={chartContainerRef} className="w-full" style={{ minHeight: isFullscreen ? "calc(100vh - 200px)" : "440px" }} />
+        <div
+          ref={chartContainerRef}
+          className={
+            isFullscreen
+              ? "w-full h-[calc(100vh-200px)] min-h-[420px]"
+              : "w-full h-[270px] sm:h-[380px] lg:h-[440px]"
+          }
+        />
       </div>
 
       {/* 4. TOOLBAR BAWAH: IKON KONTROL TRADINGVIEW PERSIS SEPERTI DASHBOARD */}

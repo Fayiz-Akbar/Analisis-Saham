@@ -269,9 +269,9 @@ export default function FundamentalGlossary({ fundamentals, symbol }) {
       </div>
 
       {/* Filter Bar ala OriginUI */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <div className="relative w-full sm:w-64">
             <Input
               id={`${id}-search`}
               ref={inputRef}
@@ -281,7 +281,7 @@ export default function FundamentalGlossary({ fundamentals, symbol }) {
               type="text"
               aria-label="Cari istilah fundamental"
               className={cn(
-                "peer w-56 sm:w-64 ps-8 bg-white dark:bg-[#0f1014] border-zinc-200 dark:border-white/[0.1]",
+                "peer w-full ps-8 bg-white dark:bg-[#0f1014] border-zinc-200 dark:border-white/[0.1]",
                 searchValue && "pe-8",
               )}
             />
@@ -364,8 +364,46 @@ export default function FundamentalGlossary({ fundamentals, symbol }) {
         )}
       </div>
 
-      {/* Tabel Panduan Istilah */}
-      <div className="rounded-2xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1014] overflow-hidden">
+      {/* Daftar Istilah Khusus Mobile (< sm): Two-line card tanpa scroll horizontal */}
+      <div className="sm:hidden rounded-2xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1014] divide-y divide-zinc-100 dark:divide-white/[0.05] overflow-hidden">
+        {table.getRowModel().rows.length > 0 ? (
+          table.getRowModel().rows.map((row) => (
+            <div key={row.id} className="p-3.5 space-y-1.5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold text-sm text-zinc-900 dark:text-white">
+                      {row.original.code}
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className="rounded-md px-1.5 py-0 text-[10px] font-semibold border-zinc-200 dark:border-white/[0.1] bg-zinc-100/70 dark:bg-white/[0.04] text-zinc-600 dark:text-zinc-300"
+                    >
+                      {row.original.group}
+                    </Badge>
+                  </div>
+                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    {row.original.name}
+                  </div>
+                </div>
+                <div className="text-right font-mono font-bold tabular-nums text-sm text-zinc-900 dark:text-white shrink-0">
+                  {row.original.currentValue}
+                </div>
+              </div>
+              <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                {row.original.guide}
+              </p>
+            </div>
+          ))
+        ) : (
+          <div className="py-10 px-4 text-center text-xs text-muted-foreground">
+            Istilah tidak ditemukan. Coba kata kunci lain.
+          </div>
+        )}
+      </div>
+
+      {/* Tabel Panduan Istilah Desktop (sm+) */}
+      <div className="hidden sm:block rounded-2xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1014] overflow-hidden">
         <Table>
           <TableHeader className="bg-zinc-50/90 dark:bg-white/[0.02]">
             {table.getHeaderGroups().map((headerGroup) => (

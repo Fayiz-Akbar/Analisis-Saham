@@ -258,9 +258,9 @@ export default function DashboardView({ onSelectStock, onOpenCategoryTable }) {
           </div>
 
           {/* Filter Sektor & Tombol Panah Geser */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto min-w-0">
             {/* Filter Kategori */}
-            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 p-1 rounded-2xl">
+            <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-100 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 p-1 rounded-2xl max-w-full overflow-x-auto no-scrollbar">
               {[
                 { id: "ALL", label: "Semua" },
                 { id: "BANK", label: "Perbankan" },
@@ -271,7 +271,7 @@ export default function DashboardView({ onSelectStock, onOpenCategoryTable }) {
                 <button
                   key={btn.id}
                   onClick={() => setActiveFilter(btn.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  className={`min-h-[34px] px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                     activeFilter === btn.id
                       ? "bg-white text-slate-950 shadow-xs dark:bg-white dark:text-slate-950"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -283,7 +283,7 @@ export default function DashboardView({ onSelectStock, onOpenCategoryTable }) {
             </div>
 
             {/* Tombol Geser Kiri / Kanan */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0">
               <button
                 onClick={() => handleScroll("left")}
                 className="w-9 h-9 rounded-xl bg-white dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-xs"
@@ -322,7 +322,7 @@ export default function DashboardView({ onSelectStock, onOpenCategoryTable }) {
               Array.from({ length: 5 }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="min-w-[290px] sm:min-w-[320px] h-[370px] rounded-[30px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#12151e]/80 p-6 flex flex-col justify-between animate-pulse"
+                  className="min-w-[268px] w-[78vw] max-w-[320px] sm:w-[320px] sm:min-w-[320px] h-[335px] sm:h-[370px] rounded-2xl sm:rounded-[30px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#12151e]/80 p-5 sm:p-6 flex flex-col justify-between animate-pulse shrink-0"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-13 h-13 rounded-2xl bg-slate-200 dark:bg-slate-800" />
@@ -350,7 +350,7 @@ export default function DashboardView({ onSelectStock, onOpenCategoryTable }) {
                   <div
                     key={stock.symbol}
                     onClick={() => onSelectStock && onSelectStock(stock.symbol)}
-                    className="group relative min-w-[285px] sm:min-w-[315px] h-[370px] rounded-[30px] bg-white dark:bg-gradient-to-b dark:from-[#181c28] dark:via-[#10131d] dark:to-[#0a0c12] border border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 shadow-md dark:shadow-2xl p-6 sm:p-7 flex flex-col justify-between flex-shrink-0 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-cyan-950/20 overflow-hidden"
+                    className="group relative min-w-[268px] w-[78vw] max-w-[315px] sm:w-[315px] sm:min-w-[315px] h-[335px] sm:h-[370px] rounded-2xl sm:rounded-[30px] bg-white dark:bg-gradient-to-b dark:from-[#181c28] dark:via-[#10131d] dark:to-[#0a0c12] border border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 shadow-md dark:shadow-2xl p-5 sm:p-7 flex flex-col justify-between flex-shrink-0 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-cyan-950/20 overflow-hidden"
                   >
                     {/* Subtle Ambient Glow Aura pada latar belakang kartu */}
                     <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 rounded-full bg-blue-500/5 blur-3xl pointer-events-none" />

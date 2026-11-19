@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { LogOut, ShieldCheck, UserCheck, UserPlus } from "lucide-react";
+import { LogOut, Menu, ShieldCheck, UserCheck, UserPlus, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 export default function AppHeader({
@@ -11,6 +11,7 @@ export default function AppHeader({
 }) {
   const { user, isAuthenticated, isAdmin, logout, openAuthModal } = useAuth();
   const [showAuthMenu, setShowAuthMenu] = useState(false);
+  const [showMobileNav, setShowMobileNav] = useState(false);
   const authRef = useRef(null);
 
   // Close auth dropdown saat klik di luar
@@ -23,6 +24,16 @@ export default function AppHeader({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Tutup mobile drawer saat Escape ditekan
+  useEffect(() => {
+    if (!showMobileNav) return;
+    function handleEsc(e) {
+      if (e.key === "Escape") setShowMobileNav(false);
+    }
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [showMobileNav]);
 
   // 9 Menu Utama Header Sesuai Ketetapan PRD Tabel A:
   const navTabs = [
@@ -43,36 +54,41 @@ export default function AppHeader({
       ? "Investor (Expert)"
       : "Investor (Pemula)";
 
+  const handleSelectNav = (tabId) => {
+    setActiveTab(tabId);
+    setShowMobileNav(false);
+  };
+
   return (
     <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-[#080808]/95 border-b border-slate-200 dark:border-[#272727] backdrop-blur-md transition-colors shadow-xs dark:shadow-none">
-      <div className="max-w-[98%] mx-auto px-3 sm:px-4 lg:px-6 h-16 flex items-center justify-between gap-3">
+      <div className="max-w-full lg:max-w-[98%] mx-auto px-3 sm:px-4 lg:px-6 h-14 lg:h-16 flex items-center justify-between gap-2 sm:gap-3">
         {/* ========================================================
             KIRI: Logo Investpedia Resmi (Dukungan Light & Dark Mode)
             ======================================================== */}
         <div
-          onClick={() => setActiveTab("dashboard")}
+          onClick={() => handleSelectNav("dashboard")}
           className="flex items-center cursor-pointer select-none flex-shrink-0"
         >
           <img
             src={darkMode ? "/investpedia-full-dark.png" : "/investpedia-full.png"}
             alt="Investpedia"
-            className="h-8 sm:h-9 w-auto object-contain transition-opacity"
+            className="h-7 sm:h-8 lg:h-9 w-auto max-w-[132px] sm:max-w-none object-contain transition-opacity"
           />
         </div>
 
         {/* ========================================================
-            TENGAH: Floating Pill Bar Navigasi (9 Menu Header PRD)
+            TENGAH: Floating Pill Bar Navigasi (Desktop lg+)
             ======================================================== */}
-        <nav className="flex-1 flex justify-center max-w-5xl min-w-0 mx-2 sm:mx-4">
-          <div className="bg-slate-100 border border-slate-200/90 dark:bg-[#12151e] dark:border-slate-800/90 rounded-full p-1 shadow-xs dark:shadow-md flex items-center gap-0.5 sm:gap-1 max-w-full overflow-x-auto scrollbar-none">
+        <nav className="hidden lg:flex flex-1 justify-center max-w-5xl min-w-0 mx-4">
+          <div className="bg-slate-100 border border-slate-200/90 dark:bg-[#12151e] dark:border-slate-800/90 rounded-full p-1 shadow-xs dark:shadow-md flex items-center gap-1 max-w-full overflow-x-auto scrollbar-none">
             {navTabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                  onClick={() => handleSelectNav(tab.id)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                     isActive
                       ? "bg-slate-900 text-white shadow-xs dark:bg-white dark:text-slate-950"
                       : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -86,31 +102,31 @@ export default function AppHeader({
         </nav>
 
         {/* ========================================================
-            KANAN: Portal Admin Pill + Global Search + User Auth + Theme
+            KANAN: Portal Admin Pill + Search + Auth + Theme + Menu Mobile
             ======================================================== */}
-        <div className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
           {/* Pintasan Switch Admin <-> Sistem Utama (HANYA TAMPIL KETIKA SUDAH LOGIN SEBAGAI ADMIN) */}
           {isAdmin && (
             <button
               type="button"
-              onClick={() => setActiveTab(activeTab === "admin" ? "dashboard" : "admin")}
-              className={`h-9 px-3 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              onClick={() => handleSelectNav(activeTab === "admin" ? "dashboard" : "admin")}
+              className={`h-9 px-2.5 sm:px-3 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                 activeTab === "admin"
                   ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-slate-900 dark:border-white"
                   : "bg-slate-100 dark:bg-[#161922] text-slate-700 dark:text-slate-200 border-slate-200 dark:border-[#272727] hover:border-slate-400 dark:hover:border-slate-500"
               }`}
               title={activeTab === "admin" ? "Beralih ke Sistem Utama (Publik)" : "Beralih ke Portal Administrator"}
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
               <span className="hidden sm:inline">
                 {activeTab === "admin" ? "Ke Sistem Utama" : "Portal Admin"}
               </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             </button>
           )}
 
           {/* 1. Global Stock Search Bar Button */}
           <button
+            type="button"
             onClick={onOpenSearch}
             className="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border border-slate-200 dark:border-[#272727] hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center text-slate-700 dark:text-white transition-all cursor-pointer"
             title="Cari Saham IDX (Global Search)"
@@ -125,9 +141,10 @@ export default function AppHeader({
             </svg>
           </button>
 
-          {/* 2. User Profile / Auth Button (Login, Register, Logout, Role Badge) */}
+          {/* 2. User Profile / Auth Button */}
           <div ref={authRef} className="relative">
             <button
+              type="button"
               onClick={() => setShowAuthMenu(!showAuthMenu)}
               className={`h-9 px-2.5 rounded-lg border flex items-center gap-2 transition-all cursor-pointer ${
                 isAuthenticated
@@ -165,7 +182,7 @@ export default function AppHeader({
 
             {/* Auth Dropdown Popover */}
             {showAuthMenu && (
-              <div className="absolute right-0 mt-2 w-72 rounded-xl border border-slate-200 dark:border-[#272727] bg-white dark:bg-[#101010] p-4 z-50 text-xs space-y-3">
+              <div className="absolute right-0 mt-2 w-[min(18rem,calc(100vw-24px))] rounded-xl border border-slate-200 dark:border-[#272727] bg-white dark:bg-[#101010] p-4 z-50 text-xs space-y-3">
                 {isAuthenticated ? (
                   <>
                     <div className="border-b border-slate-200 dark:border-[#272727] pb-3 space-y-1">
@@ -269,8 +286,9 @@ export default function AppHeader({
 
           {/* 3. Dark / Light Mode Toggle Button */}
           <button
+            type="button"
             onClick={toggleDarkMode}
-            className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center text-slate-700 dark:text-white transition-all cursor-pointer shadow-xs dark:shadow-2xs"
+            className="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border border-slate-200 dark:border-[#272727] hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center text-slate-700 dark:text-white transition-all cursor-pointer"
             title={darkMode ? "Ganti ke Mode Terang" : "Ganti ke Mode Gelap"}
             aria-label="Ganti Tema"
           >
@@ -302,8 +320,55 @@ export default function AppHeader({
               </svg>
             )}
           </button>
+
+          {/* 4. Mobile / Tablet Navigation Menu Button (< lg) */}
+          <button
+            type="button"
+            onClick={() => setShowMobileNav((prev) => !prev)}
+            aria-expanded={showMobileNav}
+            aria-label="Buka menu navigasi"
+            className="lg:hidden h-9 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border border-slate-200 dark:border-[#272727] flex items-center gap-1.5 text-xs font-semibold text-slate-800 dark:text-slate-100 cursor-pointer"
+          >
+            {showMobileNav ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            <span>Menu</span>
+          </button>
         </div>
       </div>
+
+      {/* Mobile / Tablet Navigation Drawer Sheet */}
+      {showMobileNav && (
+        <>
+          <div
+            onClick={() => setShowMobileNav(false)}
+            className="fixed inset-0 top-14 z-30 bg-black/50 lg:hidden"
+            aria-hidden="true"
+          />
+          <nav
+            aria-label="Navigasi Utama"
+            className="relative z-40 lg:hidden border-t border-slate-200 dark:border-[#272727] bg-white dark:bg-[#0d0f14] px-3 py-3 shadow-lg"
+          >
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {navTabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => handleSelectNav(tab.id)}
+                    className={`min-h-[44px] px-3 py-2 rounded-xl text-xs font-semibold text-left transition-colors cursor-pointer border ${
+                      isActive
+                        ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-950 dark:border-white"
+                        : "bg-slate-50 dark:bg-[#141720] text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.06]"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        </>
+      )}
     </header>
   );
 }

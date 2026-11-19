@@ -95,10 +95,10 @@ export default function CompanyNewsSection({ symbol, companyName }) {
         </div>
 
         {/* Filter Tombol Sentimen */}
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar max-w-full pb-1 sm:pb-0 sm:flex-wrap">
           <button
             onClick={() => setActiveSentimentFilter("ALL")}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ${
+            className={`min-h-[34px] whitespace-nowrap shrink-0 px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ${
               activeSentimentFilter === "ALL"
                 ? "bg-white text-slate-950 dark:bg-slate-100 dark:text-slate-950 border-transparent"
                 : "bg-slate-100 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800"
@@ -108,7 +108,7 @@ export default function CompanyNewsSection({ symbol, companyName }) {
           </button>
           <button
             onClick={() => setActiveSentimentFilter("POSITIVE")}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ${
+            className={`min-h-[34px] whitespace-nowrap shrink-0 px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ${
               activeSentimentFilter === "POSITIVE"
                 ? "bg-[#062c19] text-[#2fe695] border-[#0e4429]"
                 : "bg-slate-100 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-[#062c19]/30"
@@ -118,7 +118,7 @@ export default function CompanyNewsSection({ symbol, companyName }) {
           </button>
           <button
             onClick={() => setActiveSentimentFilter("NEUTRAL")}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ${
+            className={`min-h-[34px] whitespace-nowrap shrink-0 px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ${
               activeSentimentFilter === "NEUTRAL"
                 ? "bg-slate-800 text-slate-200 border-slate-600"
                 : "bg-slate-100 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-800/60"
@@ -128,7 +128,7 @@ export default function CompanyNewsSection({ symbol, companyName }) {
           </button>
           <button
             onClick={() => setActiveSentimentFilter("NEGATIVE")}
-            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ${
+            className={`min-h-[34px] whitespace-nowrap shrink-0 px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ${
               activeSentimentFilter === "NEGATIVE"
                 ? "bg-[#2a0e12] text-[#f87171] border-[#4c151c]"
                 : "bg-slate-100 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-[#2a0e12]/30"

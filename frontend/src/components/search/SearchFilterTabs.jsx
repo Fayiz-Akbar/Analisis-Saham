@@ -30,10 +30,10 @@ export default function SearchFilterTabs({
   ];
 
   return (
-    <div className="space-y-3 px-5 pt-3 pb-2 select-none">
+    <div className="space-y-3 px-3.5 sm:px-5 pt-2.5 sm:pt-3 pb-2 select-none">
       {/* 1. Primary Tabs (Simbol-Simbol, Ide-Ide, Skrip, Berita) */}
       <div
-        className={`flex items-center gap-6 border-b text-xs font-semibold ${
+        className={`flex items-center gap-4 sm:gap-6 border-b text-xs font-semibold overflow-x-auto no-scrollbar whitespace-nowrap ${
           darkMode ? "border-[#2a2e39] text-[#787b86]" : "border-slate-200 text-slate-500"
         }`}
       >

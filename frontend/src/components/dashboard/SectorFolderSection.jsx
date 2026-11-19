@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import GlassFolder from "@/components/ui/glass-folder-cards";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -8,10 +8,21 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
  */
 export default function SectorFolderSection({ onSelectStock, onOpenCategoryTable }) {
   const scrollRef = useRef(null);
+  const [folderWidth, setFolderWidth] = useState(() =>
+    typeof window !== "undefined" && window.innerWidth < 430 ? 270 : 330
+  );
+
+  useEffect(() => {
+    const updateWidth = () => {
+      setFolderWidth(window.innerWidth < 430 ? 270 : 330);
+    };
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
 
   const scroll = (direction) => {
     if (scrollRef.current) {
-      const amount = 380;
+      const amount = window.innerWidth < 640 ? 300 : 380;
       scrollRef.current.scrollBy({
         left: direction === "left" ? -amount : amount,
         behavior: "smooth",
@@ -356,18 +367,17 @@ export default function SectorFolderSection({ onSelectStock, onOpenCategoryTable
         {sectorFolders.map((item, index) => (
           <div
             key={item.id}
-            className="shrink-0 snap-start flex flex-col items-center p-4 rounded-3xl border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-[#0c0e14]/90 backdrop-blur-md hover:border-slate-400 dark:hover:border-white/25 transition-colors group"
-            style={{ width: 370 }}
+            className="w-[calc(100vw-2.25rem)] max-w-[360px] sm:w-[370px] sm:max-w-none shrink-0 snap-start flex flex-col items-center p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-[#0c0e14]/90 backdrop-blur-md hover:border-slate-400 dark:hover:border-white/25 transition-colors group"
           >
             {/* Objek Glass Folder Interaktif */}
-            <div className="flex justify-center w-full py-2">
+            <div className="flex justify-center w-full py-1.5 sm:py-2 overflow-hidden">
               <GlassFolder
                 label={item.label}
                 meta={item.meta}
                 tone={item.tone}
                 art={item.art}
                 files={item.files}
-                width={330}
+                width={folderWidth}
                 action="more"
                 labelPlacement="bottom-left"
                 appearDelay={index * 90}

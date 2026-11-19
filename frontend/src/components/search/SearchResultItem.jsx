@@ -13,7 +13,7 @@ export default function SearchResultItem({
   return (
     <div
       onClick={() => onSelect(stock.symbol)}
-      className={`px-5 py-2.5 flex items-center justify-between gap-4 cursor-pointer transition-colors border-b last:border-b-0 ${
+      className={`px-3.5 sm:px-5 py-2.5 flex items-center justify-between gap-2.5 sm:gap-4 cursor-pointer transition-colors border-b last:border-b-0 ${
         darkMode
           ? isSelected
             ? "bg-[#2a2e39] border-[#2a2e39]"
@@ -24,7 +24,7 @@ export default function SearchResultItem({
       }`}
     >
       {/* Kolom Kiri: Logo Bundar + Ticker + Nama Perusahaan */}
-      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+      <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
         {/* Logo Lingkaran Sesuai Referensi TradingView */}
         <div className="w-7 h-7 rounded-full bg-white p-0.5 border border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-2xs">
           <img
@@ -39,9 +39,9 @@ export default function SearchResultItem({
         </div>
 
         {/* Ticker Simbol (Biru di Light Mode / Putih di Dark Mode) */}
-        <div className="flex items-center gap-4 min-w-0 flex-1">
+        <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 flex-1">
           <span
-            className={`font-mono font-bold text-sm tracking-tight w-16 sm:w-20 shrink-0 ${
+            className={`font-mono font-bold text-sm tracking-tight w-14 sm:w-20 shrink-0 ${
               darkMode ? "text-white" : "text-[#2962ff]"
             }`}
           >
@@ -59,11 +59,11 @@ export default function SearchResultItem({
         </div>
       </div>
 
-      {/* Kolom Kanan: Tag 'stock' + Badge 'IDX' Berlogo Bulat Marun Resmi BEI */}
+      {/* Kolom Kanan: Tag 'stock' + Badge 'IDX' */}
       <div className="flex items-center gap-2.5 shrink-0 text-xs select-none">
         {/* Tag Tipe Instrumen (stock) */}
         <span
-          className={`text-[11px] font-medium lowercase ${
+          className={`hidden sm:inline text-[11px] font-medium lowercase ${
             darkMode ? "text-[#787b86]" : "text-slate-400"
           }`}
         >

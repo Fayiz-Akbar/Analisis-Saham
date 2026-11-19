@@ -43,6 +43,82 @@ function formatRatio(num, suffix = "x") {
   return `${Number(num).toFixed(2).replace(".", ",")}${suffix}`;
 }
 
+function getScreenerTabMetrics(stock, activeTab) {
+  const p = stock.dailyPrice || {};
+  const f = stock.fundamentals || {};
+  const price = p.closePrice ? Number(p.closePrice) : null;
+
+  switch (activeTab) {
+    case "kinerja":
+      return [
+        { label: "Volume", value: p.volume ? `${(Number(p.volume) / 1e6).toFixed(1)} Jt` : "-" },
+        { label: "Nilai Tx", value: p.volume && price ? formatMarketCap(Number(p.volume) * price) : "-" },
+        { label: "High Hari Ini", value: formatRupiah(p.highPrice) },
+        { label: "Low Hari Ini", value: formatRupiah(p.lowPrice) },
+      ];
+    case "teknikal":
+      return [
+        { label: "Open", value: formatRupiah(p.openPrice) },
+        { label: "High", value: formatRupiah(p.highPrice) },
+        { label: "Low", value: formatRupiah(p.lowPrice) },
+        { label: "Kap. Pasar", value: formatMarketCap(f.marketCap) },
+      ];
+    case "penilaian":
+      return [
+        { label: "P/E (PER)", value: formatRatio(f.peRatio) },
+        { label: "PBV", value: formatRatio(f.pbvRatio) },
+        { label: "EPS", value: formatRupiah(f.eps) },
+        { label: "Nilai Buku/Lbr", value: f.pbvRatio && price ? formatRupiah(Math.round(price / Number(f.pbvRatio))) : "-" },
+      ];
+    case "dividen":
+      return [
+        { label: "Yield Dividen", value: formatPercent(f.dividendYield), tone: "emerald" },
+        { label: "EPS", value: formatRupiah(f.eps) },
+        { label: "P/E", value: formatRatio(f.peRatio) },
+        {
+          label: "Payout Ratio",
+          value: f.dividendYield && f.peRatio ? `${Math.min(90, Math.round(Number(f.dividendYield) * Number(f.peRatio)))}%` : "35%",
+        },
+      ];
+    case "profitabilitas":
+      return [
+        { label: "ROE", value: formatPercent(f.roe), tone: "emerald" },
+        { label: "ROA", value: formatPercent(f.roa) },
+        { label: "Net Margin", value: formatPercent(f.netProfitMargin) },
+        { label: "Laba Bersih", value: formatMarketCap(f.netIncome) },
+      ];
+    case "laporan_pemasukan":
+      return [
+        { label: "Pendapatan", value: formatMarketCap(f.revenue) },
+        { label: "Laba Bersih", value: formatMarketCap(f.netIncome) },
+        { label: "Net Margin", value: formatPercent(f.netProfitMargin) },
+        { label: "EPS", value: formatRupiah(f.eps) },
+      ];
+    case "neraca":
+      return [
+        { label: "Total Aset", value: formatMarketCap(f.totalAssets) },
+        { label: "Liabilitas", value: formatMarketCap(f.totalLiabilities) },
+        { label: "Ekuitas", value: formatMarketCap(f.totalEquity) },
+        { label: "DER", value: formatRatio(f.der) },
+      ];
+    case "arus_kas":
+      return [
+        { label: "Kas & Setara Kas", value: formatMarketCap(f.cashEquivalents), tone: "emerald" },
+        { label: "Laba Bersih", value: formatMarketCap(f.netIncome) },
+        { label: "Ekuitas", value: formatMarketCap(f.totalEquity) },
+        { label: "Kap. Pasar", value: formatMarketCap(f.marketCap) },
+      ];
+    case "ikhtisar":
+    default:
+      return [
+        { label: "Kap. Pasar", value: formatMarketCap(f.marketCap) },
+        { label: "P/E", value: formatRatio(f.peRatio) },
+        { label: "ROE", value: formatPercent(f.roe) },
+        { label: "Yield Dividen", value: formatPercent(f.dividendYield) },
+      ];
+  }
+}
+
 export default function StockTableView({
   initialSector = "ALL",
   onSelectStock,
@@ -209,16 +285,16 @@ export default function StockTableView({
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
       className="space-y-5 pb-12"
     >
-      {/* 9 Tab Navigasi Atas (Sesuai Persis dengan Foto Pengguna) */}
+      {/* 9 Tab Navigasi Atas */}
       <div className="border-b border-slate-200 dark:border-white/10 overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-1 min-w-max pb-1">
+        <div className="flex items-center gap-1 min-w-max pb-1.5">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                className={`min-h-[36px] px-3.5 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   isActive
                     ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold shadow-2xs"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60"
@@ -232,7 +308,7 @@ export default function StockTableView({
       </div>
 
       {/* Baris Filter Sektor & Kolom Pencarian */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-white dark:bg-[#0c0e14] p-3 rounded-2xl border border-slate-200 dark:border-white/10">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 sm:gap-3 bg-white dark:bg-[#0c0e14] p-3 rounded-2xl border border-slate-200 dark:border-white/10">
         {/* Input Pencarian Simbol / Nama */}
         <div className="relative w-full lg:w-72 shrink-0">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -241,21 +317,21 @@ export default function StockTableView({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari simbol atau emiten (e.g. BBCA)..."
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-white/30"
+            className="w-full h-9 pl-9 pr-3 text-xs rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/40 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-slate-400 dark:focus:border-white/30"
           />
         </div>
 
         {/* Filter Pills Sektor */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 lg:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 lg:pb-0">
           <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500 shrink-0 ml-1 mr-0.5" />
           {sectorList.map((sec) => (
             <button
               key={sec.id}
               onClick={() => setSelectedSector(sec.id)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+              className={`min-h-[34px] px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
                 selectedSector === sec.id
-                  ? "bg-slate-800 text-white border border-white/20"
-                  : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-white"
+                  ? "bg-slate-900 text-white dark:bg-slate-800 dark:border-white/20 border border-slate-900"
+                  : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               {sec.label}
@@ -264,8 +340,153 @@ export default function StockTableView({
         </div>
       </div>
 
-      {/* Tabel Data Saham Komprehensif (Sesuai Foto Pengguna) */}
-      <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0e14] overflow-hidden">
+      {/* Kontrol Urutkan Khusus Mobile / Tablet (< md) */}
+      <div className="md:hidden flex items-center justify-between gap-2 px-1">
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+          {filteredStocks.length} emiten
+        </span>
+        <div className="flex items-center gap-1.5">
+          <label htmlFor="mobile-screener-sort" className="text-[11px] text-slate-500 dark:text-slate-400">
+            Urutkan:
+          </label>
+          <select
+            id="mobile-screener-sort"
+            value={sortField}
+            onChange={(e) => setSortField(e.target.value)}
+            className="h-8 px-2.5 rounded-lg text-xs font-semibold bg-white dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white"
+          >
+            <option value="marketCap">Kap. Pasar</option>
+            <option value="price">Harga</option>
+            <option value="changePercent">Perubahan %</option>
+            <option value="peRatio">P/E Ratio</option>
+            <option value="pbvRatio">PBV</option>
+            <option value="roe">ROE</option>
+            <option value="netIncome">Laba Bersih</option>
+            <option value="revenue">Pendapatan</option>
+            <option value="symbol">Simbol</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
+            aria-label={sortOrder === "asc" ? "Urutan naik" : "Urutan turun"}
+            className="h-8 w-8 rounded-lg flex items-center justify-center bg-white dark:bg-[#0c0e14] border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 cursor-pointer"
+          >
+            {sortOrder === "asc" ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Daftar Kartu Saham Khusus Mobile / Tablet (< md) */}
+      <div className="md:hidden space-y-2.5">
+        {isLoading ? (
+          <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0e14] py-14 text-center text-xs text-slate-400">
+            <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-slate-500" />
+            <span>Memuat data fundamental emiten bursa...</span>
+          </div>
+        ) : filteredStocks.length === 0 ? (
+          <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0e14] py-12 px-4 text-center text-xs text-slate-400">
+            Tidak ada saham yang sesuai dengan filter atau kata kunci.
+          </div>
+        ) : (
+          filteredStocks.map((stock) => {
+            const p = stock.dailyPrice || {};
+            const price = p.closePrice ? Number(p.closePrice) : null;
+            const changePct = p.changePercent ? Number(p.changePercent) : 0;
+            const isUp = changePct >= 0;
+            const isStarred = watchlistSymbols.includes(String(stock.symbol || "").toUpperCase());
+            const metrics = getScreenerTabMetrics(stock, activeTab);
+
+            return (
+              <div
+                key={`mob-${stock.symbol}`}
+                onClick={() => onSelectStock?.(stock.symbol)}
+                className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0e14] p-3.5 space-y-3 active:bg-slate-50 dark:active:bg-white/[0.04] transition-colors cursor-pointer"
+              >
+                <div className="flex items-start justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <button
+                      type="button"
+                      onClick={(e) => toggleWatchlist(e, stock.symbol)}
+                      aria-label={isStarred ? `Hapus ${stock.symbol} dari watchlist` : `Simpan ${stock.symbol} ke watchlist`}
+                      className="w-9 h-9 -ml-1 rounded-xl flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/10 shrink-0 cursor-pointer"
+                    >
+                      <Star
+                        className={`w-4 h-4 ${
+                          isStarred ? "text-amber-400 fill-amber-400" : "text-slate-400"
+                        }`}
+                      />
+                    </button>
+
+                    <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 p-0.5 border border-slate-200 dark:border-white/10 flex items-center justify-center shrink-0 overflow-hidden">
+                      <img
+                        src={stock.logoUrl || `https://assets.stockbit.com/logos/companies/${stock.symbol}.png`}
+                        alt={stock.symbol}
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight">
+                          {stock.symbol}
+                        </span>
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 truncate max-w-[110px]">
+                          {stock.sector || "IDX"}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        {stock.companyName}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <div className="font-mono font-bold text-sm text-slate-900 dark:text-white tabular-nums">
+                      {formatRupiah(price)}
+                    </div>
+                    <div
+                      className={`font-mono text-xs font-bold tabular-nums ${
+                        !price
+                          ? "text-slate-400"
+                          : isUp
+                            ? "text-emerald-600 dark:text-[#2fe695]"
+                            : "text-rose-600 dark:text-[#f87171]"
+                      }`}
+                    >
+                      {price ? formatPercent(changePct) : "-"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2.5 border-t border-slate-100 dark:border-white/[0.06] text-xs">
+                  {metrics.map((m) => (
+                    <div key={m.label} className="flex items-center justify-between gap-1.5 min-w-0">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        {m.label}
+                      </span>
+                      <span
+                        className={`font-mono font-semibold tabular-nums shrink-0 ${
+                          m.tone === "emerald"
+                            ? "text-emerald-600 dark:text-[#2fe695]"
+                            : "text-slate-900 dark:text-slate-200"
+                        }`}
+                      >
+                        {m.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Tabel Data Saham Komprehensif Desktop (md+) */}
+      <div className="hidden md:block rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0c0e14] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead className="bg-slate-50 dark:bg-black/60 border-b border-slate-200 dark:border-white/10 text-slate-400 uppercase tracking-wider text-[11px] font-bold">
@@ -739,7 +960,7 @@ export default function StockTableView({
                             e.stopPropagation();
                             onSelectStock?.(stock.symbol);
                           }}
-                          className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white text-slate-950 dark:bg-white dark:text-slate-950 hover:bg-slate-200 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 transition-colors inline-flex items-center gap-1 cursor-pointer"
                         >
                           <span>Detail</span>
                           <ExternalLink className="w-2.5 h-2.5" />

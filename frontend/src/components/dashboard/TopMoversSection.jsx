@@ -267,6 +267,13 @@ export default function TopMoversSection({
   const hoverTimeoutRef = React.useRef(null);
 
   const handleRowMouseEnter = (key) => {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      !window.matchMedia("(hover: hover)").matches
+    ) {
+      return;
+    }
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
       hoverTimeoutRef.current = null;
@@ -440,8 +447,8 @@ export default function TopMoversSection({
         }`}
       >
         {/* Sisi Kiri: Logo Lingkaran + Nama Emiten + Ticker Badge */}
-        <div className="flex items-center gap-3.5 min-w-0 pr-3">
-          <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 p-1 flex items-center justify-center flex-shrink-0 shadow-2xs">
+        <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 pr-2 sm:pr-3">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 p-1 flex items-center justify-center flex-shrink-0 shadow-2xs">
             <img
               src={
                 stock.logoUrl ||
@@ -459,11 +466,11 @@ export default function TopMoversSection({
           </div>
 
           <div className="min-w-0 flex flex-col justify-center">
-            <span className="text-sm sm:text-[15px] font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate leading-tight">
+            <span className="text-xs sm:text-[15px] font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate leading-tight">
               {displayName}
             </span>
             <div className="mt-1">
-              <span className="text-[11px] font-bold text-white bg-blue-600 dark:bg-blue-600 px-1.5 py-0.5 rounded tracking-wide uppercase inline-block leading-none shadow-2xs">
+              <span className="text-[10px] sm:text-[11px] font-bold text-white bg-blue-600 dark:bg-blue-600 px-1.5 py-0.5 rounded tracking-wide uppercase inline-block leading-none shadow-2xs">
                 {stock.symbol}
               </span>
             </div>
@@ -471,18 +478,18 @@ export default function TopMoversSection({
         </div>
 
         {/* Sisi Kanan: Harga + IDR + Solid Rounded Badge Persentase */}
-        <div className="flex items-center gap-3.5 sm:gap-5 flex-shrink-0">
+        <div className="flex items-center gap-2 sm:gap-5 flex-shrink-0">
           <div className="text-right whitespace-nowrap">
-            <span className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tabular-nums">
+            <span className="text-xs sm:text-base font-extrabold text-slate-900 dark:text-white tabular-nums">
               {formattedPrice}
             </span>
-            <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 ml-1 uppercase">
+            <span className="text-[10px] sm:text-xs font-semibold text-slate-400 dark:text-slate-500 ml-0.5 sm:ml-1 uppercase">
               IDR
             </span>
           </div>
 
           <div
-            className={`min-w-[74px] sm:min-w-[80px] text-center px-2.5 py-1.5 rounded-[7px] text-xs sm:text-[13px] font-bold tabular-nums text-white shadow-2xs ${
+            className={`min-w-[66px] sm:min-w-[80px] text-center px-2 sm:px-2.5 py-1.5 rounded-[7px] text-[11px] sm:text-[13px] font-bold tabular-nums text-white shadow-2xs ${
               isGainer
                 ? "bg-[#059669] hover:bg-[#047857]"
                 : "bg-[#dc2626] hover:bg-[#b91c1c]"

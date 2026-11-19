@@ -155,8 +155,8 @@ export const Idx80TickerTapeBar = ({ className = "" }) => {
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
     >
       {/* Badge Tetap di Kiri: IDX80 TAPE (Bersih & Elegan, Tanpa Lingkaran) */}
-      <div className="z-20 flex-shrink-0 flex items-center px-4 h-full bg-slate-200 dark:bg-[#0e121c] border-r border-slate-300 dark:border-white/[0.08] shadow-xs dark:shadow-md">
-        <span className="text-[11px] font-black tracking-widest text-slate-800 dark:text-slate-100 uppercase">
+      <div className="z-20 flex-shrink-0 flex items-center px-2.5 sm:px-4 h-full bg-slate-200 dark:bg-[#0e121c] border-r border-slate-300 dark:border-white/[0.08] shadow-xs dark:shadow-md">
+        <span className="text-[10px] sm:text-[11px] font-black tracking-widest text-slate-800 dark:text-slate-100 uppercase">
           IDX80 TAPE
         </span>
       </div>
@@ -655,9 +655,12 @@ export const HeroMarketChart = ({ className = "" }) => {
     const container = chartContainerRef.current;
     const isDarkTheme = isDark;
 
+    const initialHeight =
+      container.clientHeight || (typeof window !== "undefined" && window.innerWidth < 640 ? 270 : 400);
+
     const chart = createChart(container, {
       width: container.clientWidth,
-      height: 400,
+      height: initialHeight,
       layout: {
         background: { type: ColorType.Solid, color: isDarkTheme ? "#080808" : "#ffffff" },
         textColor: isDarkTheme ? "rgb(106, 109, 120)" : "rgb(100, 116, 139)",
@@ -823,12 +826,21 @@ export const HeroMarketChart = ({ className = "" }) => {
 
     const handleResize = () => {
       if (container && chart) {
-        chart.applyOptions({ width: container.clientWidth });
+        chart.applyOptions({
+          width: container.clientWidth,
+          height: container.clientHeight || initialHeight,
+        });
       }
     };
     window.addEventListener("resize", handleResize);
+    let ro = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(handleResize);
+      ro.observe(container);
+    }
 
     return () => {
+      if (ro) ro.disconnect();
       window.removeEventListener("resize", handleResize);
       try {
         chart.remove();
@@ -939,13 +951,13 @@ export const HeroMarketChart = ({ className = "" }) => {
           ======================================================== */}
       <div className="flex flex-col gap-2.5 pb-3 border-b border-slate-200/80 dark:border-white/[0.08]">
         {/* Baris 1: Sisi Kiri (Indeks + Judul) & Sisi Kanan (Toggle Candle/Garis + Timeframe di Kanan) */}
-        <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 sm:gap-3 w-full">
           {/* Sisi Kiri: Switcher Chips Indeks Bursa + Judul Indeks */}
-          <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
             <div className="inline-flex items-center bg-transparent p-0 gap-1 shrink-0">
               <button
                 onClick={() => setSelectedIndex("IHSG")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                className={`min-h-[34px] px-2.5 sm:px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
                   selectedIndex === "IHSG"
                     ? "bg-slate-200 text-slate-900 dark:bg-[#2a2e39] dark:text-white"
                     : "text-slate-600 hover:text-slate-900 dark:text-[#787b86] dark:hover:text-white"
@@ -955,7 +967,7 @@ export const HeroMarketChart = ({ className = "" }) => {
               </button>
               <button
                 onClick={() => setSelectedIndex("IDX80")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                className={`min-h-[34px] px-2.5 sm:px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
                   selectedIndex === "IDX80"
                     ? "bg-slate-200 text-slate-900 dark:bg-[#2a2e39] dark:text-white"
                     : "text-slate-600 hover:text-slate-900 dark:text-[#787b86] dark:hover:text-white"
@@ -966,19 +978,19 @@ export const HeroMarketChart = ({ className = "" }) => {
             </div>
 
             {/* Judul Indeks */}
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight shrink-0">
+            <h1 className="text-base sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight truncate">
               {selectedIndex === "IHSG" ? "IHSG (Indeks Gabungan)" : "IDX80 (80 Terlikuid)"}
             </h1>
           </div>
 
-          {/* Sisi Kanan: TOGGLE Candle/Garis + Timeframe Selector (Tanpa Container Box di Belakang) */}
-          <div className="flex items-center gap-3 shrink-0 ml-auto">
+          {/* Sisi Kanan: TOGGLE Candle/Garis + Timeframe Selector */}
+          <div className="flex flex-wrap items-center justify-between md:justify-end gap-2 sm:gap-3 w-full md:w-auto min-w-0">
             {/* TOGGLE: Candlestick (Lilin) vs Garis / Area */}
             <div className="inline-flex items-center bg-transparent p-0 gap-1 shrink-0">
               <button
                 onClick={() => setChartType("candle")}
                 title="Tampilan Grafik Candlestick Lilin (OHLC)"
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                   chartType === "candle"
                     ? "bg-emerald-600 text-white shadow-sm"
                     : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -992,7 +1004,7 @@ export const HeroMarketChart = ({ className = "" }) => {
               <button
                 onClick={() => setChartType("area")}
                 title="Tampilan Grafik Garis / Area (Watchlist Style)"
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                   chartType === "area"
                     ? (isUp ? "bg-emerald-600 text-white shadow-sm" : "bg-rose-600 text-white shadow-sm")
                     : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -1005,13 +1017,13 @@ export const HeroMarketChart = ({ className = "" }) => {
               </button>
             </div>
 
-            {/* Timeframe Selector Sebelahan (Tanpa Container Box di Belakang) */}
-            <div className="inline-flex items-center bg-transparent p-0 gap-1 shrink-0">
+            {/* Timeframe Selector (Scrollable jika sempit di HP) */}
+            <div className="inline-flex items-center bg-transparent p-0 gap-1 max-w-full overflow-x-auto no-scrollbar">
               {TIMEFRAMES.map((tf) => (
                 <button
                   key={tf.id}
                   onClick={() => setSelectedPeriod(tf.id)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  className={`min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                     selectedPeriod === tf.id
                       ? "bg-slate-200 text-slate-900 dark:bg-[#2a2e39] dark:text-white font-bold"
                       : "text-slate-600 hover:text-slate-900 dark:text-[#787b86] dark:hover:text-white"
@@ -1089,7 +1101,7 @@ export const HeroMarketChart = ({ className = "" }) => {
       {/* ========================================================
           AREA GRAFIK: TRADINGVIEW LIGHTWEIGHT CHARTS (TANPA CONTAINER/BORDER BERLEBIH)
           ======================================================== */}
-      <div className={`relative w-full my-2 bg-transparent overflow-hidden ${isFullscreen ? "h-[calc(100vh-320px)] min-h-[480px]" : "h-[400px] sm:h-[440px]"}`}>
+      <div className={`relative w-full my-2 bg-transparent overflow-hidden ${isFullscreen ? "h-[calc(100vh-320px)] min-h-[480px]" : "h-[270px] sm:h-[380px] lg:h-[440px]"}`}>
         <div ref={chartContainerRef} className="w-full h-full" />
       </div>
 
@@ -1150,8 +1162,8 @@ export const HeroMarketChart = ({ className = "" }) => {
       {/* ========================================================
           BARIS STATISTIK PERGERAKAN SAHAM (TANPA CONTAINER DI BELAKANG)
           ======================================================== */}
-      <div className="flex flex-wrap items-center justify-between gap-3 py-2 my-1 text-xs bg-transparent border-0">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 py-2 my-1 text-xs bg-transparent border-0">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
           <div className="flex items-center gap-1.5">
             <span className="text-slate-600 dark:text-slate-400 font-medium">Emiten Menguat:</span>
             <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400">+{advancingCount}</span>
@@ -1176,7 +1188,7 @@ export const HeroMarketChart = ({ className = "" }) => {
       {/* ========================================================
           7 INDIKATOR METRIC PERGERAKAN PASAR (TANPA CONTAINER DI BELAKANG)
           ======================================================== */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 pt-2 border-t border-slate-100 dark:border-white/[0.06]">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 sm:gap-3 pt-2 border-t border-slate-100 dark:border-white/[0.06] [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
         {/* Indikator 1: Market Cap */}
         <div className="bg-transparent border-0 shadow-none p-1 flex flex-col justify-between">
           <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate block">Kapitalisasi Pasar</span>
