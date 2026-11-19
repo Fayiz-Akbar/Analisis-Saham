@@ -1,48 +1,40 @@
 import React from "react";
 
 /**
- * 4 Pilar Analisis Fundamental Finansial Sesuai Bab Skripsi [7] & PRD
- * - Pilar 1 • Valuasi Pasar (PER, PBV, Market Cap, Dividend Yield)
- * - Pilar 2 • Profitabilitas & Efisiensi Operasional (ROE, ROA, Net Profit Margin, Laba Bersih)
- * - Pilar 3 • Solvabilitas & Modal (DER, Liabilitas, Ekuitas, Kas)
- * - Pilar 4 • Pertumbuhan / Growth (Pertumbuhan Omset YoY, Pertumbuhan Laba YoY, EPS, Pendapatan)
- *
- * Mengadopsi desain 4 Kartu Horisontal Sleek Key-Value pairs (Label Kiri, Nilai Kanan)
- * persis seperti referensi visual pengguna (Yahoo Finance / TradingView style).
- * Sesuai aturan: Tanpa buletan status dekoratif, flat border minimalis.
+ * 4 Pilar Fundamental Saham
+ * Desain bersih, to-the-point, dan ramah pengguna:
+ * - Header kartu langsung menampilkan nama pilar & status evaluasi
+ * - 4 baris metrik utama dengan angka monospace rata kanan (tabular-nums)
+ * - 1 kalimat kesimpulan kontekstual di bagian bawah setiap kartu
  */
-export default function FundamentalPillars({ fundamentals, stock, quote }) {
+export default function FundamentalPillars({ fundamentals, stock }) {
   const f = fundamentals || {};
   const isBank =
     (stock?.sector || "").toLowerCase().includes("financial") ||
     (stock?.industry || "").toLowerCase().includes("bank");
 
-  // Helper pemformat desimal dan mata uang
   const formatNum = (val, suffix = "") => {
     if (val === null || val === undefined || isNaN(val)) return "-";
-    return `${Number(val).toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 2 })}${suffix}`;
-  };
-
-  const formatRupiahAbbr = (val) => {
-    if (!val || isNaN(val)) return "-";
-    const num = Number(val);
-    if (Math.abs(num) >= 1e12) {
-      return `Rp ${(num / 1e12).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Triliun`;
-    }
-    if (Math.abs(num) >= 1e9) {
-      return `Rp ${(num / 1e9).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Miliar`;
-    }
-    return `Rp ${num.toLocaleString("id-ID")}`;
+    return `${Number(val).toLocaleString("id-ID", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 2,
+    })}${suffix}`;
   };
 
   const formatRupiahShort = (val) => {
-    if (!val || isNaN(val)) return "-";
+    if (val === null || val === undefined || isNaN(val)) return "-";
     const num = Number(val);
     if (Math.abs(num) >= 1e12) {
-      return `Rp ${(num / 1e12).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} T`;
+      return `Rp ${(num / 1e12).toLocaleString("id-ID", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })} T`;
     }
     if (Math.abs(num) >= 1e9) {
-      return `Rp ${(num / 1e9).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} M`;
+      return `Rp ${(num / 1e9).toLocaleString("id-ID", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })} M`;
     }
     return `Rp ${num.toLocaleString("id-ID")}`;
   };
@@ -54,30 +46,9 @@ export default function FundamentalPillars({ fundamentals, stock, quote }) {
     if (val === null || val === undefined || isNaN(val)) return "-";
     const num = Number(val);
     if (isForeignCurrency) {
-      const absVal = Math.abs(num);
-      let usdStr = "";
-      if (absVal >= 1e9) {
-        usdStr = `$ ${(num / 1e9).toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 2 })} B`;
-      } else if (absVal >= 1e6) {
-        usdStr = `$ ${(num / 1e6).toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 2 })} M`;
-      } else {
-        usdStr = `$ ${num.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      }
-
       const idrNom = valIdr !== undefined && valIdr !== null ? Number(valIdr) : num * usdRate;
-      const absIdr = Math.abs(idrNom);
-      let idrStr = "";
-      if (absIdr >= 1e12) {
-        idrStr = `Rp ${(idrNom / 1e12).toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 2 })} T`;
-      } else if (absIdr >= 1e9) {
-        idrStr = `Rp ${(idrNom / 1e9).toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 2 })} M`;
-      } else {
-        idrStr = `Rp ${Math.round(idrNom).toLocaleString("id-ID")}`;
-      }
-
-      return `${usdStr} (≈ ${idrStr})`;
+      return formatRupiahShort(idrNom);
     }
-
     return formatRupiahShort(num);
   };
 
@@ -86,296 +57,412 @@ export default function FundamentalPillars({ fundamentals, stock, quote }) {
     const num = Number(val);
     if (isForeignCurrency) {
       const idrNom = valIdr !== undefined && valIdr !== null ? Number(valIdr) : num * usdRate;
-      return `$ ${num.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 4 })} (≈ Rp ${Math.round(idrNom).toLocaleString("id-ID")})`;
+      return `Rp ${Math.round(idrNom).toLocaleString("id-ID")}`;
     }
-    return `Rp ${Math.round(num).toLocaleString("id-ID")}`;
+    return `Rp ${Number(num).toLocaleString("id-ID", {
+      minimumFractionDigits: Math.abs(num) < 10 ? 2 : 0,
+      maximumFractionDigits: 2,
+    })}`;
   };
+
+  const positiveBadge =
+    "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-[#062c19] dark:text-[#2fe695] dark:border-[#0e4429]";
+  const negativeBadge =
+    "bg-rose-50 text-rose-700 border-rose-200 dark:bg-[#2a0e12] dark:text-[#f87171] dark:border-[#4c151c]";
+  const neutralBadge =
+    "bg-slate-100 text-slate-700 border-slate-200 dark:bg-white/[0.06] dark:text-slate-300 dark:border-white/[0.1]";
 
   // 1. Evaluasi Valuasi
   const pe = f.peRatio !== null && f.peRatio !== undefined ? Number(f.peRatio) : null;
+  const pbv = f.pbvRatio !== null && f.pbvRatio !== undefined ? Number(f.pbvRatio) : null;
   let valuationStatus = "Valuasi Wajar";
-  let valuationStyle = "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700";
+  let valuationStyle = neutralBadge;
   if (pe !== null) {
     if (pe < 0) {
-      valuationStatus = "Laba Negatif";
-      valuationStyle = "bg-[#2a0e12] text-[#f87171] border-[#4c151c]";
+      valuationStatus = "Masih Rugi";
+      valuationStyle = negativeBadge;
     } else if (pe < 12) {
-      valuationStatus = "Undervalued (Murah)";
-      valuationStyle = "bg-[#062c19] text-[#2fe695] border-[#0e4429]";
+      valuationStatus = "Relatif Murah";
+      valuationStyle = positiveBadge;
     } else if (pe > 25) {
-      valuationStatus = "Premi Valuasi Tinggi";
-      valuationStyle = "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700";
+      valuationStatus = "Harga Premium";
+      valuationStyle = neutralBadge;
     }
+  }
+
+  let valuationTakeaway = "Data rasio valuasi pasar belum lengkap untuk periode ini.";
+  if (pe !== null && pe < 0) {
+    valuationTakeaway =
+      "PER negatif karena perusahaan masih mencatat rugi bersih. Fokuskan evaluasi pada nilai buku (PBV) dan perbaikan arus kas.";
+  } else if (pe !== null && pbv !== null) {
+    valuationTakeaway = `Saham diperdagangkan pada ${formatNum(pe, "x")} laba tahunan dan ${formatNum(
+      pbv,
+      "x"
+    )} dari nilai modal bersihnya.`;
+  } else if (pbv !== null) {
+    valuationTakeaway = `Harga pasar berada di level ${formatNum(pbv, "x")} terhadap nilai buku ekuitas per saham.`;
   }
 
   // 2. Evaluasi Profitabilitas
   const roe = f.roe !== null && f.roe !== undefined ? Number(f.roe) : null;
-  let profitStatus = "Profitabilitas Stabil";
-  let profitStyle = "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700";
+  const roa = f.roa !== null && f.roa !== undefined ? Number(f.roa) : null;
+  const npmNum =
+    f.netProfitMargin !== null && f.netProfitMargin !== undefined ? Number(f.netProfitMargin) : null;
+  const netIncomeNum = f.netIncome !== null && f.netIncome !== undefined ? Number(f.netIncome) : null;
+
+  let profitStatus = "Laba Stabil";
+  let profitStyle = neutralBadge;
   if (roe !== null) {
     if (roe < 0) {
-      profitStatus = "Imbal Hasil Negatif";
-      profitStyle = "bg-[#2a0e12] text-[#f87171] border-[#4c151c]";
-    } else if (roe >= 20) {
-      profitStatus = "Sangat Prima (ROE ≥ 20%)";
-      profitStyle = "bg-[#062c19] text-[#2fe695] border-[#0e4429]";
-    } else if (roe < 10) {
-      profitStatus = "Di Bawah Rata-Rata Sektor";
-      profitStyle = "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700";
+      profitStatus = "Merugi";
+      profitStyle = negativeBadge;
+    } else if (roe >= 15) {
+      profitStatus = "Sangat Efisien";
+      profitStyle = positiveBadge;
+    } else if (roe < 8) {
+      profitStatus = "Marjin Tipis";
+      profitStyle = neutralBadge;
+    }
+  }
+
+  let profitTakeaway = "Mengukur kemampuan perusahaan menghasilkan laba dari modal dan omset.";
+  if (roe !== null && npmNum !== null) {
+    if (roe < 0 || npmNum < 0) {
+      profitTakeaway = `Imbal hasil modal (${formatNum(
+        roe,
+        "%"
+      )}) masih tertekan beban usaha; pantau pemangkasan rugi di kuartal terbaru.`;
+    } else {
+      profitTakeaway = `Setiap Rp 100 omset menghasilkan Rp ${formatNum(
+        npmNum
+      )} laba bersih, dengan pengembalian modal (ROE) ${formatNum(roe, "%")}.`;
     }
   }
 
   // 3. Evaluasi Solvabilitas
   const der = f.der !== null && f.der !== undefined ? Number(f.der) : null;
-  let solvencyStatus = "Beban Utang Terkendali";
-  let solvencyStyle = "bg-[#062c19] text-[#2fe695] border-[#0e4429]";
+  let solvencyStatus = "Utang Aman";
+  let solvencyStyle = positiveBadge;
   if (isBank) {
-    solvencyStatus = "Leverage Wajar Perbankan";
-    solvencyStyle = "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700";
+    solvencyStatus = "Struktur Bank";
+    solvencyStyle = neutralBadge;
   } else if (der !== null) {
     if (der < 1.0) {
-      solvencyStatus = "Struktur Modal Sehat (Utang Rendah)";
-      solvencyStyle = "bg-[#062c19] text-[#2fe695] border-[#0e4429]";
-    } else if (der > 2.5) {
-      solvencyStatus = "Leverage Tinggi";
-      solvencyStyle = "bg-[#2a0e12] text-[#f87171] border-[#4c151c]";
+      solvencyStatus = "Modal Kuat";
+      solvencyStyle = positiveBadge;
+    } else if (der > 2.0) {
+      solvencyStatus = "Utang Tinggi";
+      solvencyStyle = negativeBadge;
+    } else {
+      solvencyStatus = "Utang Terkendali";
+      solvencyStyle = neutralBadge;
     }
+  }
+
+  let solvencyTakeaway = "Perbandingan beban kewajiban terhadap modal bersih dan cadangan kas.";
+  if (isBank) {
+    solvencyTakeaway =
+      "Pada sektor perbankan, liabilitas didominasi dana pihak ketiga (tabungan & deposito nasabah) untuk disalurkan menjadi kredit.";
+  } else if (der !== null) {
+    solvencyTakeaway =
+      der <= 1.0
+        ? `Modal bersih lebih besar dibanding total kewajiban (DER ${formatNum(
+            der,
+            "x"
+          )}), risiko gagal bayar rendah.`
+        : `Total kewajiban tercatat ${formatNum(
+            der,
+            "x"
+          )} dari modal bersih; perhatikan kecukupan kas terhadap beban bunga.`;
   }
 
   // 4. Evaluasi Pertumbuhan
-  const revGrowth = f.revenueGrowth !== null && f.revenueGrowth !== undefined ? Number(f.revenueGrowth) : null;
-  const netGrowth = f.netIncomeGrowth !== null && f.netIncomeGrowth !== undefined ? Number(f.netIncomeGrowth) : null;
-  let growthStatus = "Pertumbuhan Berkelanjutan";
-  let growthStyle = "bg-[#062c19] text-[#2fe695] border-[#0e4429]";
+  const revGrowth =
+    f.revenueGrowth !== null && f.revenueGrowth !== undefined ? Number(f.revenueGrowth) : null;
+  const netGrowth =
+    f.netIncomeGrowth !== null && f.netIncomeGrowth !== undefined ? Number(f.netIncomeGrowth) : null;
+  let growthStatus = "Stabil";
+  let growthStyle = neutralBadge;
   if (revGrowth !== null && netGrowth !== null) {
     if (revGrowth > 0 && netGrowth > 0) {
-      growthStatus = "Ekspansi Bisnis Positif";
-      growthStyle = "bg-[#062c19] text-[#2fe695] border-[#0e4429]";
+      growthStatus = "Tumbuh Positif";
+      growthStyle = positiveBadge;
     } else if (revGrowth < 0 && netGrowth < 0) {
-      growthStatus = "Kinerja Tertekan";
-      growthStyle = "bg-[#2a0e12] text-[#f87171] border-[#4c151c]";
+      growthStatus = "Melambat";
+      growthStyle = negativeBadge;
     } else {
-      growthStatus = "Pertumbuhan Campuran";
-      growthStyle = "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700";
+      growthStatus = "Bervariasi";
+      growthStyle = neutralBadge;
     }
   }
 
+  let growthTakeaway = "Laju perubahan pendapatan dan laba bersih dibandingkan tahun sebelumnya.";
+  if (revGrowth !== null && netGrowth !== null) {
+    const revDir = revGrowth >= 0 ? `naik +${formatNum(revGrowth, "%")}` : `turun ${formatNum(revGrowth, "%")}`;
+    const netDir = netGrowth >= 0 ? `tumbuh +${formatNum(netGrowth, "%")}` : `terkoreksi ${formatNum(netGrowth, "%")}`;
+    growthTakeaway = `Pendapatan tahunan ${revDir} YoY, sedangkan laba bersih ${netDir} YoY.`;
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3.5">
       {/* Header Bagian 4 Pilar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2.5 border-b border-slate-200 dark:border-white/[0.08]">
         <div>
           <h2 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            4 Pilar Analisis Fundamental Finansial
+            4 Pilar Fundamental
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Kerangka evaluasi komprehensif kesehatan emiten berdasarkan Valuasi, Profitabilitas, Solvabilitas, dan Pertumbuhan [7].
+            Ringkasan valuasi harga, kemampuan cetak laba, struktur utang, dan pertumbuhan tahunan.
           </p>
         </div>
-        <div className="text-[11px] font-mono px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 w-fit">
-          Basis: {f.financialPeriod || "Audit Resmi Terkini"}{isForeignCurrency ? " • Laporan Resmi USD" : ""}
-        </div>
+        {isForeignCurrency && (
+          <span className="text-[11px] font-mono px-2.5 py-1 rounded-md bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] w-fit">
+            Pelaporan USD dikonversi ke IDR (1 USD ≈ Rp {Math.round(usdRate).toLocaleString("id-ID")})
+          </span>
+        )}
       </div>
 
-      {/* Grid 4 Kartu Horisontal Sesuai Foto Referensi (Yahoo Finance / TradingView Key Stats Style) */}
+      {/* Grid 4 Kartu Horisontal */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
-        
-        {/* ========================================================
-            KARTU 1: PILAR 1 • VALUASI PASAR
-            ======================================================== */}
-        <div className="p-4 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between space-y-3.5 hover:border-slate-300 dark:hover:border-white/20 transition-colors">
-          <div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
-                Pilar 1 • Valuasi Pasar
-              </span>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 ${valuationStyle}`}>
+        {/* PILAR 1: VALUASI HARGA */}
+        <div className="rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between overflow-hidden">
+          <div className="p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-white/[0.06]">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                1. Valuasi Harga
+              </h3>
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border shrink-0 ${valuationStyle}`}>
                 {valuationStatus}
               </span>
             </div>
-            <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1">
-              Harga Pasar vs Laba & Nilai Buku
-            </h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-1 line-clamp-2">
-              Mengukur perbandingan harga pasar saham terhadap laba bersih (PER) dan nilai buku aset bersih (PBV).
-            </p>
+
+            <div className="divide-y divide-slate-100 dark:divide-white/[0.04] text-xs">
+              <div className="py-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">PER (Harga / Laba)</span>
+                <span className="font-mono font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                  {formatNum(f.peRatio, "x")}
+                </span>
+              </div>
+              <div className="py-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">PBV (Harga / Modal)</span>
+                <span className="font-mono font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                  {formatNum(f.pbvRatio, "x")}
+                </span>
+              </div>
+              <div className="py-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">Kapitalisasi Pasar</span>
+                <span className="font-mono font-bold tabular-nums text-slate-900 dark:text-slate-100 truncate text-right">
+                  {formatRupiahShort(f.marketCap)}
+                </span>
+              </div>
+              <div className="pt-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">Dividend Yield</span>
+                <span
+                  className={`font-mono font-bold tabular-nums ${
+                    Number(f.dividendYield || 0) > 0
+                      ? "text-emerald-600 dark:text-[#2fe695]"
+                      : "text-slate-500 dark:text-slate-400"
+                  }`}
+                >
+                  {Number(f.dividendYield || 0) > 0 ? formatNum(f.dividendYield, "%") : "-"}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="divide-y divide-slate-100 dark:divide-white/[0.05] text-xs pt-1">
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">PE Ratio (PER)</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
-                {formatNum(f.peRatio, "x")}
-              </span>
-            </div>
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Price to Book (PBV)</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
-                {formatNum(f.pbvRatio, "x")}
-              </span>
-            </div>
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Kapitalisasi Pasar</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100 truncate ml-2 text-right">
-                {formatRupiahShort(f.marketCap)}
-              </span>
-            </div>
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Dividend Yield</span>
-              <span className="font-mono font-bold text-emerald-600 dark:text-[#2fe695]">
-                {formatNum(f.dividendYield, "%")}
-              </span>
-            </div>
+          <div className="px-4 py-2.5 bg-slate-50/80 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.05] text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+            {valuationTakeaway}
           </div>
         </div>
 
-        {/* ========================================================
-            KARTU 2: PILAR 2 • PROFITABILITAS
-            ======================================================== */}
-        <div className="p-4 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between space-y-3.5 hover:border-slate-300 dark:hover:border-white/20 transition-colors">
-          <div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
-                Pilar 2 • Profitabilitas
-              </span>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 ${profitStyle}`}>
+        {/* PILAR 2: PROFITABILITAS */}
+        <div className="rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between overflow-hidden">
+          <div className="p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-white/[0.06]">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                2. Profitabilitas
+              </h3>
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border shrink-0 ${profitStyle}`}>
                 {profitStatus}
               </span>
             </div>
-            <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1">
-              Efisiensi Pencetakan Laba Operasional
-            </h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-1 line-clamp-2">
-              Menilai efektivitas manajemen mencetak laba bersih dari modal ekuitas (ROE), aset (ROA), dan margin omset (NPM).
-            </p>
+
+            <div className="divide-y divide-slate-100 dark:divide-white/[0.04] text-xs">
+              <div className="py-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">ROE (Imbal Modal)</span>
+                <span
+                  className={`font-mono font-bold tabular-nums ${
+                    roe === null
+                      ? "text-slate-400"
+                      : roe >= 0
+                      ? "text-emerald-600 dark:text-[#2fe695]"
+                      : "text-rose-600 dark:text-[#f87171]"
+                  }`}
+                >
+                  {formatNum(roe, "%")}
+                </span>
+              </div>
+              <div className="py-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">ROA (Imbal Aset)</span>
+                <span
+                  className={`font-mono font-bold tabular-nums ${
+                    roa === null
+                      ? "text-slate-400"
+                      : roa >= 0
+                      ? "text-emerald-600 dark:text-[#2fe695]"
+                      : "text-rose-600 dark:text-[#f87171]"
+                  }`}
+                >
+                  {formatNum(roa, "%")}
+                </span>
+              </div>
+              <div className="py-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">Marjin Bersih (NPM)</span>
+                <span
+                  className={`font-mono font-bold tabular-nums ${
+                    npmNum === null
+                      ? "text-slate-400"
+                      : npmNum >= 0
+                      ? "text-slate-900 dark:text-slate-100"
+                      : "text-rose-600 dark:text-[#f87171]"
+                  }`}
+                >
+                  {formatNum(npmNum, "%")}
+                </span>
+              </div>
+              <div className="pt-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">Laba Bersih</span>
+                <span
+                  className={`font-mono font-bold tabular-nums truncate text-right ${
+                    netIncomeNum !== null && netIncomeNum < 0
+                      ? "text-rose-600 dark:text-[#f87171]"
+                      : "text-slate-900 dark:text-slate-100"
+                  }`}
+                >
+                  {formatFinancialMetric(f.netIncome, f.netIncomeIdr)}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="divide-y divide-slate-100 dark:divide-white/[0.05] text-xs pt-1">
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Return on Equity (ROE)</span>
-              <span className="font-mono font-bold text-emerald-600 dark:text-[#2fe695]">
-                {formatNum(f.roe, "%")}
-              </span>
-            </div>
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Return on Assets (ROA)</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
-                {formatNum(f.roa, "%")}
-              </span>
-            </div>
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Net Profit Margin</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
-                {formatNum(f.netProfitMargin, "%")}
-              </span>
-            </div>
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Laba Bersih Tahunan</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100 truncate ml-2 text-right">
-                {formatFinancialMetric(f.netIncome, f.netIncomeIdr)}
-              </span>
-            </div>
+          <div className="px-4 py-2.5 bg-slate-50/80 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.05] text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+            {profitTakeaway}
           </div>
         </div>
 
-        {/* ========================================================
-            KARTU 3: PILAR 3 • SOLVABILITAS & MODAL
-            ======================================================== */}
-        <div className="p-4 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between space-y-3.5 hover:border-slate-300 dark:hover:border-white/20 transition-colors">
-          <div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
-                Pilar 3 • Solvabilitas & Modal
-              </span>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 ${solvencyStyle}`}>
+        {/* PILAR 3: KESEHATAN MODAL & UTANG */}
+        <div className="rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between overflow-hidden">
+          <div className="p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-white/[0.06]">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                3. Modal & Utang
+              </h3>
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border shrink-0 ${solvencyStyle}`}>
                 {solvencyStatus}
               </span>
             </div>
-            <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1">
-              Ketahanan Finansial & Risiko Utang
-            </h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-1 line-clamp-2">
-              Menakar risiko keuangan dan beban utang berbunga melalui rasio DER untuk memastikan struktur modal sehat.
-            </p>
+
+            <div className="divide-y divide-slate-100 dark:divide-white/[0.04] text-xs">
+              <div className="py-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">DER (Utang / Modal)</span>
+                <span className="font-mono font-bold tabular-nums text-slate-900 dark:text-slate-100">
+                  {formatNum(f.der, "x")}
+                </span>
+              </div>
+              <div className="py-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">Total Ekuitas</span>
+                <span className="font-mono font-bold tabular-nums text-slate-900 dark:text-slate-100 truncate text-right">
+                  {formatFinancialMetric(f.totalEquity, f.totalEquityIdr)}
+                </span>
+              </div>
+              <div className="py-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">Total Liabilitas</span>
+                <span className="font-mono font-bold tabular-nums text-slate-900 dark:text-slate-100 truncate text-right">
+                  {formatFinancialMetric(f.totalLiabilities, f.totalLiabilitiesIdr)}
+                </span>
+              </div>
+              <div className="pt-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">Kas & Setara Kas</span>
+                <span className="font-mono font-bold tabular-nums text-slate-900 dark:text-slate-100 truncate text-right">
+                  {formatFinancialMetric(f.cashEquivalents, f.cashEquivalentsIdr)}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="divide-y divide-slate-100 dark:divide-white/[0.05] text-xs pt-1">
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Debt to Equity (DER)</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
-                {formatNum(f.der, "x")}
-              </span>
-            </div>
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Total Liabilitas</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100 truncate ml-2 text-right">
-                {formatFinancialMetric(f.totalLiabilities, f.totalLiabilitiesIdr)}
-              </span>
-            </div>
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Total Ekuitas</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100 truncate ml-2 text-right">
-                {formatFinancialMetric(f.totalEquity, f.totalEquityIdr)}
-              </span>
-            </div>
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Kas & Setara Kas</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100 truncate ml-2 text-right">
-                {formatFinancialMetric(f.cashEquivalents, f.cashEquivalentsIdr)}
-              </span>
-            </div>
+          <div className="px-4 py-2.5 bg-slate-50/80 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.05] text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+            {solvencyTakeaway}
           </div>
         </div>
 
-        {/* ========================================================
-            KARTU 4: PILAR 4 • PERTUMBUHAN (GROWTH)
-            ======================================================== */}
-        <div className="p-4 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between space-y-3.5 hover:border-slate-300 dark:hover:border-white/20 transition-colors">
-          <div>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
-                Pilar 4 • Pertumbuhan (Growth)
-              </span>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 ${growthStyle}`}>
+        {/* PILAR 4: PERTUMBUHAN KINERJA */}
+        <div className="rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] flex flex-col justify-between overflow-hidden">
+          <div className="p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-white/[0.06]">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                4. Pertumbuhan
+              </h3>
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border shrink-0 ${growthStyle}`}>
                 {growthStatus}
               </span>
             </div>
-            <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1">
-              Ekspansi Pendapatan, Laba, & EPS
-            </h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-1 line-clamp-2">
-              Memantau kesinambungan pendapatan (Revenue), laba bersih, serta laba per saham (EPS) untuk stabilitas jangka panjang.
-            </p>
+
+            <div className="divide-y divide-slate-100 dark:divide-white/[0.04] text-xs">
+              <div className="py-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">Pertumbuhan Omset</span>
+                <span
+                  className={`font-mono font-bold tabular-nums ${
+                    revGrowth === null
+                      ? "text-slate-400"
+                      : revGrowth >= 0
+                      ? "text-emerald-600 dark:text-[#2fe695]"
+                      : "text-rose-600 dark:text-[#f87171]"
+                  }`}
+                >
+                  {revGrowth !== null && revGrowth > 0 ? "+" : ""}
+                  {formatNum(revGrowth, "% YoY")}
+                </span>
+              </div>
+              <div className="py-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">Pertumbuhan Laba</span>
+                <span
+                  className={`font-mono font-bold tabular-nums ${
+                    netGrowth === null
+                      ? "text-slate-400"
+                      : netGrowth >= 0
+                      ? "text-emerald-600 dark:text-[#2fe695]"
+                      : "text-rose-600 dark:text-[#f87171]"
+                  }`}
+                >
+                  {netGrowth !== null && netGrowth > 0 ? "+" : ""}
+                  {formatNum(netGrowth, "% YoY")}
+                </span>
+              </div>
+              <div className="py-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">Laba / Saham (EPS)</span>
+                <span
+                  className={`font-mono font-bold tabular-nums truncate text-right ${
+                    f.eps !== null && f.eps !== undefined && Number(f.eps) < 0
+                      ? "text-rose-600 dark:text-[#f87171]"
+                      : "text-slate-900 dark:text-slate-100"
+                  }`}
+                >
+                  {formatEpsMetric(f.eps, f.epsIdr)}
+                </span>
+              </div>
+              <div className="pt-1.5 flex items-center justify-between gap-2">
+                <span className="text-slate-500 dark:text-slate-400">Pendapatan Usaha</span>
+                <span className="font-mono font-bold tabular-nums text-slate-900 dark:text-slate-100 truncate text-right">
+                  {formatFinancialMetric(f.revenue, f.revenueIdr)}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="divide-y divide-slate-100 dark:divide-white/[0.05] text-xs pt-1">
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Pertumbuhan Omset</span>
-              <span className={`font-mono font-bold ${Number(f.revenueGrowth || 0) >= 0 ? "text-emerald-600 dark:text-[#2fe695]" : "text-rose-600 dark:text-[#f87171]"}`}>
-                {Number(f.revenueGrowth || 0) > 0 ? "+" : ""}{formatNum(f.revenueGrowth, "% YoY")}
-              </span>
-            </div>
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Pertumbuhan Laba</span>
-              <span className={`font-mono font-bold ${Number(f.netIncomeGrowth || 0) >= 0 ? "text-emerald-600 dark:text-[#2fe695]" : "text-rose-600 dark:text-[#f87171]"}`}>
-                {Number(f.netIncomeGrowth || 0) > 0 ? "+" : ""}{formatNum(f.netIncomeGrowth, "% YoY")}
-              </span>
-            </div>
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Laba per Saham (EPS)</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100 truncate ml-2 text-right">
-                {formatEpsMetric(f.eps, f.epsIdr)}
-              </span>
-            </div>
-            <div className="py-1.5 flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Pendapatan Tahunan</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100 truncate ml-2 text-right">
-                {formatFinancialMetric(f.revenue, f.revenueIdr)}
-              </span>
-            </div>
+          <div className="px-4 py-2.5 bg-slate-50/80 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/[0.05] text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+            {growthTakeaway}
           </div>
         </div>
-
       </div>
     </div>
   );

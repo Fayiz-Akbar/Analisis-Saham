@@ -586,9 +586,9 @@ export const HeroMarketChart = ({ className = "" }) => {
   const stats = marketData?.statistics || {};
 
   // Harga & Perubahan Indeks Riil
-  const basePrice = marketData?.price ?? (isIHSG ? 5050.429 : 143.25);
-  const changeAmount = marketData?.changeAmount ?? (isIHSG ? 20.17 : 1.15);
-  const changePercent = marketData?.changePercent ?? (isIHSG ? 0.40 : 0.81);
+  const basePrice = marketData?.price ?? (isIHSG ? 5210.38 : 77.54);
+  const changeAmount = marketData?.changeAmount ?? (isIHSG ? -35.15 : -0.60);
+  const changePercent = marketData?.changePercent ?? (isIHSG ? -0.67 : -0.77);
 
   // Data Candlestick Tersanitasi Khusus TradingView Lightweight Charts
   const chartCandles = useMemo(() => {
@@ -906,9 +906,9 @@ export const HeroMarketChart = ({ className = "" }) => {
   const activeVol24h = hoveredPoint?.vol24hFormatted || (stats.turnover ? formatTurnoverID(stats.turnover) : (isIHSG ? "Rp 11,85 Triliun" : "Rp 13,73 Triliun"));
   const volumeTxVal = `${activeVol24h} (${formatVolumeID(stats.volume)})`;
 
-  const prevCloseOpenVal = `${formatIndexPrice(stats.previousClose ?? (isIHSG ? 5030.26 : 142.1))} / ${formatIndexPrice(stats.openPrice ?? (isIHSG ? 4954.24 : 142.65))}`;
-  const dayRangeVal = `${formatIndexPrice(stats.dayLow ?? (isIHSG ? 4925.10 : 141.8))} - ${formatIndexPrice(stats.dayHigh ?? (isIHSG ? 5050.43 : 143.9))}`;
-  const fiftyTwoWeekRangeVal = `${formatIndexPrice(stats.fiftyTwoWeekLow ?? (isIHSG ? 4824.36 : 124.5))} - ${formatIndexPrice(stats.fiftyTwoWeekHigh ?? (isIHSG ? 9174.47 : 156.2))}`;
+  const prevCloseOpenVal = `${formatIndexPrice(stats.previousClose ?? (isIHSG ? 5245.53 : 78.144))} / ${formatIndexPrice(stats.openPrice ?? (isIHSG ? 5232.39 : 77.871))}`;
+  const dayRangeVal = `${formatIndexPrice(stats.dayLow ?? (isIHSG ? 5167.98 : 76.782))} - ${formatIndexPrice(stats.dayHigh ?? (isIHSG ? 5276.03 : 78.638))}`;
+  const fiftyTwoWeekRangeVal = `${formatIndexPrice(stats.fiftyTwoWeekLow ?? (isIHSG ? 4824.36 : 70.881))} - ${formatIndexPrice(stats.fiftyTwoWeekHigh ?? (isIHSG ? 9174.47 : 140.967))}`;
   const pePbvVal = `${formatIDR(stats.peRatio ?? (isIHSG ? 13.45 : 14.1), 2)}x / ${formatIDR(stats.pbvRatio ?? (isIHSG ? 2.14 : 2.35), 2)}x`;
 
   const advancingCount = stats.advancing ?? (isIHSG ? 248 : 30);
@@ -1166,7 +1166,10 @@ export const HeroMarketChart = ({ className = "" }) => {
           </div>
         </div>
         <div className="text-[11px] text-slate-500 font-medium">
-          Total Konstituen Pasar: <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{isIHSG ? "945 Saham" : "80 Saham"}</span>
+          Total Konstituen Pasar:{" "}
+          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+            {stats.trackedCount ? `${stats.trackedCount} Saham` : isIHSG ? "880 Saham" : "80 Saham"}
+          </span>
         </div>
       </div>
 

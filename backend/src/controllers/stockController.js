@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma.js";
 import { MarketDataService } from "../services/marketDataService.js";
+import { syncIdx80Constituents, getLastIdx80SyncStatus } from "../services/idx80SyncService.js";
 import { sendSuccess, sendError } from "../utils/response.js";
 import { execFile } from "child_process";
 import { promisify } from "util";
@@ -17,10 +18,12 @@ const SCRIPT_PATH = path.resolve(__dirname, "../scripts/fetchFinancialHistory.py
  */
 export const searchStocks = async (req, res) => {
   try {
+    await syncIdx80Constituents();
     const query = req.query.q?.trim() || "";
+    const includeAll = req.query.includeAll === "true";
 
     if (!query) {
-      // Jika query kosong, kembalikan 10 saham teratas IDX80
+      // Jika query kosong, kembalikan 10 saham teratas IDX80 aktif
       const defaultStocks = await prisma.stock.findMany({
         where: { isIdx80: true },
         take: 10,
@@ -29,15 +32,20 @@ export const searchStocks = async (req, res) => {
       return sendSuccess(res, 200, "Daftar saham default", defaultStocks);
     }
 
+    const where = {
+      OR: [
+        { symbol: { contains: query, mode: "insensitive" } },
+        { companyName: { contains: query, mode: "insensitive" } },
+      ],
+    };
+    if (!includeAll) {
+      where.isIdx80 = true;
+    }
+
     const stocks = await prisma.stock.findMany({
-      where: {
-        OR: [
-          { symbol: { contains: query, mode: "insensitive" } },
-          { companyName: { contains: query, mode: "insensitive" } },
-        ],
-      },
+      where,
       take: 20,
-      orderBy: { symbol: "asc" },
+      orderBy: [{ isIdx80: "desc" }, { symbol: "asc" }],
     });
 
     return sendSuccess(res, 200, `Ditemukan ${stocks.length} saham`, stocks);
@@ -48,16 +56,19 @@ export const searchStocks = async (req, res) => {
 };
 
 /**
- * Mengambil Daftar Saham (Katalog IDX80)
+ * Mengambil Daftar Saham (Katalog IDX80 Aktif Tersinkronisasi)
  * GET /api/stocks
  */
 export const getAllStocks = async (req, res) => {
   try {
-    const { sector, limit = 80, isIdx80 } = req.query;
+    await syncIdx80Constituents();
+    const { sector, limit = 80, isIdx80, includeAll } = req.query;
 
     const where = {};
     if (sector) where.sector = sector;
-    if (isIdx80 !== undefined) where.isIdx80 = isIdx80 === "true";
+    if (includeAll !== "true") {
+      where.isIdx80 = isIdx80 !== undefined ? isIdx80 === "true" : true;
+    }
 
     const stocks = await prisma.stock.findMany({
       where,
@@ -350,6 +361,23 @@ export const getMarketOverview = async (req, res) => {
 };
 
 /**
+ * Sinkronisasi & Status Konstituen IDX80 Terbaru
+ * GET / POST /api/stocks/sync-idx80
+ */
+export const syncIdx80Endpoint = async (req, res) => {
+  try {
+    const force = req.method === "POST" || req.query.force === "true";
+    const status = force
+      ? await syncIdx80Constituents({ force: true })
+      : (await getLastIdx80SyncStatus()) || (await syncIdx80Constituents());
+    return sendSuccess(res, 200, "Status sinkronisasi konstituen IDX80", status);
+  } catch (error) {
+    console.error("Sync IDX80 Error:", error);
+    return sendError(res, 500, "Gagal melakukan sinkronisasi konstituen IDX80.");
+  }
+};
+
+/**
  * Helper untuk mengambil data finansial & laporan audit 100% riil dari Yahoo Finance
  */
 export async function fetchFinancialDataFromSource(symbol) {
@@ -444,6 +472,7 @@ export async function fetchFinancialDataFromSource(symbol) {
           cashEquivalents: audit.cashEquivalents ? audit.cashEquivalents.toString() : undefined,
           netProfitMargin: audit.netProfitMargin?.toString(),
           roe: audit.roe?.toString(),
+          roa: audit.roa?.toString(),
           der: audit.der?.toString(),
           eps: (audit.eps !== null && audit.eps !== undefined ? audit.eps : stats.eps)?.toString(),
           revenueGrowth: revGrowth !== null ? revGrowth.toString() : undefined,
@@ -465,6 +494,7 @@ export async function fetchFinancialDataFromSource(symbol) {
           cashEquivalents: audit.cashEquivalents ? audit.cashEquivalents.toString() : "0",
           netProfitMargin: audit.netProfitMargin?.toString() || "0",
           roe: audit.roe?.toString() || "0",
+          roa: audit.roa?.toString() || "0",
           der: audit.der?.toString() || "0",
           eps: (audit.eps !== null && audit.eps !== undefined ? audit.eps : stats.eps)?.toString() || "0",
           revenueGrowth: revGrowth !== null ? revGrowth.toString() : "0",
@@ -508,24 +538,26 @@ export function buildRealFundamentalObject(realData, sym) {
     peRatio: stats.peRatio !== null && stats.peRatio !== undefined ? stats.peRatio : null,
     pbvRatio: stats.pbvRatio !== null && stats.pbvRatio !== undefined ? stats.pbvRatio : null,
     dividendYield: stats.dividendYield || 0,
-    eps: audit?.eps !== null && audit?.eps !== undefined ? audit.eps : (stats.eps || null),
+    eps: audit?.eps !== null && audit?.eps !== undefined ? audit.eps : (stats.eps ?? null),
+    epsTtm: stats.eps ?? realData?.ttm?.eps ?? null,
     epsIdr: audit?.epsIdr !== null && audit?.epsIdr !== undefined ? audit.epsIdr : null,
     beta: stats.beta || null,
-    revenue: audit?.revenue || null,
-    netIncome: audit?.netIncome || null,
-    totalAssets: audit?.totalAssets || null,
-    totalEquity: audit?.totalEquity || null,
-    totalLiabilities: audit?.totalLiabilities || null,
-    cashEquivalents: audit?.cashEquivalents || null,
-    revenueIdr: audit?.revenueIdr || null,
-    netIncomeIdr: audit?.netIncomeIdr || null,
-    totalAssetsIdr: audit?.totalAssetsIdr || null,
-    totalEquityIdr: audit?.totalEquityIdr || null,
-    totalLiabilitiesIdr: audit?.totalLiabilitiesIdr || null,
-    cashEquivalentsIdr: audit?.cashEquivalentsIdr || null,
-    netProfitMargin: audit?.netProfitMargin || null,
-    roe: audit?.roe || null,
-    der: audit?.der || null,
+    revenue: audit?.revenue ?? null,
+    netIncome: audit?.netIncome ?? null,
+    totalAssets: audit?.totalAssets ?? null,
+    totalEquity: audit?.totalEquity ?? null,
+    totalLiabilities: audit?.totalLiabilities ?? null,
+    cashEquivalents: audit?.cashEquivalents ?? null,
+    revenueIdr: audit?.revenueIdr ?? null,
+    netIncomeIdr: audit?.netIncomeIdr ?? null,
+    totalAssetsIdr: audit?.totalAssetsIdr ?? null,
+    totalEquityIdr: audit?.totalEquityIdr ?? null,
+    totalLiabilitiesIdr: audit?.totalLiabilitiesIdr ?? null,
+    cashEquivalentsIdr: audit?.cashEquivalentsIdr ?? null,
+    netProfitMargin: audit?.netProfitMargin ?? null,
+    roe: audit?.roe ?? null,
+    roa: audit?.roa ?? null,
+    der: audit?.der ?? null,
     revenueGrowth: revGrowth,
     netIncomeGrowth: netGrowth,
     financialPeriod: audit ? `${audit.period} Audit (Konsolidasian)` : "FY2024 Audit",

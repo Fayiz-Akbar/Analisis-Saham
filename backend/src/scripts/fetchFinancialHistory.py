@@ -108,7 +108,8 @@ def main():
                 # Derived Ratios
                 npm = round((net_inc / rev * 100), 2) if (rev and net_inc and rev > 0) else None
                 roe = round((net_inc / equity * 100), 2) if (equity and net_inc and equity > 0) else None
-                der = round((liab / equity), 2) if (equity and liab and equity > 0) else None
+                roa = round((net_inc / assets * 100), 2) if (assets and net_inc is not None and assets > 0) else None
+                der = round((liab / equity), 2) if (equity and liab is not None and equity > 0) else None
 
                 # Konversi ekuivalen IDR
                 rev_idr = rev * usd_to_idr if (rev is not None and financial_currency == 'USD') else rev
@@ -149,6 +150,7 @@ def main():
                     "cashEquivalentsIdr": cash_idr,
                     "netProfitMargin": npm,
                     "roe": roe,
+                    "roa": roa,
                     "der": der,
                     "eps": formatted_eps,
                     "epsIdr": eps_idr,
@@ -193,6 +195,15 @@ def main():
 
                 cash = safe_float(q_bs.loc['Cash And Cash Equivalents', col]) if q_bs is not None and 'Cash And Cash Equivalents' in q_bs.index else None
                 eps = safe_float(q_fin.loc['Diluted EPS', col]) if 'Diluted EPS' in q_fin.index else None
+                if eps is None and 'Basic EPS' in q_fin.index:
+                    eps = safe_float(q_fin.loc['Basic EPS', col])
+                if eps is None and net_inc is not None:
+                    for sh_key in ['Diluted Average Shares', 'Basic Average Shares']:
+                        if sh_key in q_fin.index:
+                            sh_val = safe_float(q_fin.loc[sh_key, col])
+                            if sh_val and sh_val > 0:
+                                eps = net_inc / sh_val
+                                break
 
                 formatted_eps = None
                 eps_idr = None
@@ -204,9 +215,10 @@ def main():
                         formatted_eps = round(eps, 2)
                         eps_idr = formatted_eps
 
-                npm = round((net_inc / rev * 100), 2) if (rev and net_inc and rev > 0) else None
-                roe = round((net_inc * 4 / equity * 100), 2) if (equity and net_inc and equity > 0) else None
-                der = round((liab / equity), 2) if (equity and liab and equity > 0) else None
+                npm = round((net_inc / rev * 100), 2) if (rev and net_inc is not None and rev > 0) else None
+                roe = round((net_inc * 4 / equity * 100), 2) if (equity and net_inc is not None and equity > 0) else None
+                roa = round((net_inc * 4 / assets * 100), 2) if (assets and net_inc is not None and assets > 0) else None
+                der = round((liab / equity), 2) if (equity and liab is not None and equity > 0) else None
 
                 rev_idr = rev * usd_to_idr if (rev is not None and financial_currency == 'USD') else rev
                 net_inc_idr = net_inc * usd_to_idr if (net_inc is not None and financial_currency == 'USD') else net_inc
@@ -244,6 +256,7 @@ def main():
                     "cashEquivalentsIdr": cash_idr,
                     "netProfitMargin": npm,
                     "roe": roe,
+                    "roa": roa,
                     "der": der,
                     "eps": formatted_eps,
                     "epsIdr": eps_idr,
@@ -292,9 +305,11 @@ def main():
                     ttm_eps = round(ttm_eps_raw, 2)
                     ttm_eps_idr = ttm_eps
 
-            ttm_npm = round((ttm_net_inc / ttm_rev * 100), 2) if (ttm_rev and ttm_net_inc and ttm_rev > 0) else None
-            ttm_roe = round((ttm_net_inc / ttm_equity * 100), 2) if (ttm_equity and ttm_net_inc and ttm_equity > 0) else None
-            ttm_der = round((ttm_liab / ttm_equity), 2) if (ttm_equity and ttm_liab and ttm_equity > 0) else None
+            ttm_npm = round((ttm_net_inc / ttm_rev * 100), 2) if (ttm_rev and ttm_net_inc is not None and ttm_rev > 0) else None
+            ttm_roe = round((ttm_net_inc / ttm_equity * 100), 2) if (ttm_equity and ttm_net_inc is not None and ttm_equity > 0) else None
+            info_roa = safe_float(info.get('returnOnAssets'))
+            ttm_roa = round((ttm_net_inc / ttm_assets * 100), 2) if (ttm_assets and ttm_net_inc is not None and ttm_assets > 0) else (round(info_roa * 100, 2) if info_roa is not None else None)
+            ttm_der = round((ttm_liab / ttm_equity), 2) if (ttm_equity and ttm_liab is not None and ttm_equity > 0) else None
 
             ttm_rev_idr = ttm_rev * usd_to_idr if (ttm_rev is not None and financial_currency == 'USD') else ttm_rev
             ttm_net_inc_idr = ttm_net_inc * usd_to_idr if (ttm_net_inc is not None and financial_currency == 'USD') else ttm_net_inc
@@ -333,6 +348,7 @@ def main():
                     "cashEquivalentsIdr": ttm_cash_idr,
                     "netProfitMargin": ttm_npm,
                     "roe": ttm_roe,
+                    "roa": ttm_roa,
                     "der": ttm_der,
                     "eps": ttm_eps,
                     "epsIdr": ttm_eps_idr,
@@ -394,6 +410,8 @@ def main():
             forward_pe = safe_float(info.get('forwardPE'))
             pbv_ratio = safe_float(info.get('priceToBook'))
             eps = safe_float(info.get('trailingEps'))
+            info_roa_stat = safe_float(info.get('returnOnAssets'))
+            roa_stat = round(info_roa_stat * 100, 2) if info_roa_stat is not None else None
 
             div_rate = safe_float(info.get('dividendRate'))
             div_yield = safe_float(info.get('dividendYield'))
@@ -407,6 +425,7 @@ def main():
                 "dividendYield": div_yield,
                 "dividendRate": div_rate,
                 "eps": eps,
+                "roa": roa_stat,
                 "beta": beta,
                 "sector": info.get('sector'),
                 "industry": info.get('industry'),

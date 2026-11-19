@@ -6,7 +6,7 @@ import TopMoversSection from "./TopMoversSection";
 import LatestNewsSection from "./LatestNewsSection";
 import SectorFolderSection from "./SectorFolderSection";
 
-// Generate smooth cubic bezier spline SVG path persis tampilan Watchlist (Garis Glow Hijau/Merah + Area Gradien + Grid Sumbu Y)
+// Generate sharp linear SVG sparkline path persis tampilan Watchlist (Garis Tegas Hijau/Merah + Area Gradien + Grid Sumbu Y)
 function generateWatchlistStyleChart(values, width = 280, height = 110) {
   const padLeft = 38;
   const padRight = 8;
@@ -16,29 +16,19 @@ function generateWatchlistStyleChart(values, width = 280, height = 110) {
   const innerW = width - padLeft - padRight;
   const innerH = height - padTop - padBottom;
 
-  let activeValues = Array.isArray(values) && values.length >= 2 ? [...values] : [4900, 4920, 4890, 4910, 4930, 4900];
+  let activeValues = Array.isArray(values) && values.length >= 2 ? [...values] : [4900, 4900];
 
   const minVal = Math.min(...activeValues);
   const maxVal = Math.max(...activeValues);
 
-  // Jika harga stagnan tanpa fluktuasi, berikan gelombang halus
-  if (minVal === maxVal) {
-    activeValues = [
-      minVal * 0.995,
-      minVal * 1.002,
-      minVal * 0.998,
-      minVal * 1.003,
-      minVal * 1.001,
-      minVal,
-    ];
-  }
-
-  const min = Math.min(...activeValues);
-  const max = Math.max(...activeValues);
+  // Jika harga stagnan tanpa fluktuasi, buat domain rata di tengah agar tidak memunculkan gelombang buatan
+  const isFlat = minVal === maxVal;
+  const min = isFlat ? minVal * 0.995 : minVal;
+  const max = isFlat ? maxVal * 1.005 : maxVal;
   const range = max - min || 1;
 
-  // Margin vertikal 8% agar kurva tidak menempel di batas atas / bawah
-  const padV = range * 0.08;
+  // Margin vertikal 6% agar garis tidak menempel di batas atas / bawah
+  const padV = range * 0.06;
   const domainMin = min - padV;
   const domainMax = max + padV;
   const domainRange = domainMax - domainMin || 1;
@@ -49,20 +39,9 @@ function generateWatchlistStyleChart(values, width = 280, height = 110) {
     return { x: Number(x.toFixed(1)), y: Number(y.toFixed(1)) };
   });
 
-  let linePath = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 0; i < points.length - 1; i++) {
-    const p0 = points[i === 0 ? 0 : i - 1];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[i + 2] || p2;
-
-    const cp1x = p1.x + (p2.x - p0.x) / 5;
-    const cp1y = p1.y + (p2.y - p0.y) / 5;
-    const cp2x = p2.x - (p3.x - p1.x) / 5;
-    const cp2y = p2.y - (p3.y - p1.y) / 5;
-
-    linePath += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
-  }
+  const linePath = points
+    .map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`))
+    .join(" ");
 
   const baselineY = padTop + innerH;
   const areaPath = `${linePath} L ${points[points.length - 1].x} ${baselineY} L ${points[0].x} ${baselineY} Z`;
@@ -453,14 +432,12 @@ export default function DashboardView({ onSelectStock, onOpenCategoryTable }) {
                           stroke="none"
                         />
 
-                        {/* Garis Kurva Saham Halus Glowing Hijau/Merah */}
+                        {/* Garis Saham Tegas Hijau/Merah */}
                         <path
                           d={linePath}
                           fill="none"
                           stroke={isPositive ? "#10b981" : "#ef4444"}
                           strokeWidth="2.4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
                           filter={`url(#stockCardGlow-${stock.symbol})`}
                         />
                       </svg>
