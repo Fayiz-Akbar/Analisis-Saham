@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   BarChart,
   Bar,
@@ -28,6 +28,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import FinancialDataTable from "./FinancialDataTable";
 
 /**
  * Laporan Keuangan Konsolidasian & 5 Grafik Insight Multi-Periode
@@ -171,19 +172,22 @@ export default function FinancialStatementsTable({
     })}%`;
   };
 
-  const toChartUnit = (rawVal, idrVal) => {
-    if (rawVal === null || rawVal === undefined || isNaN(rawVal)) return 0;
-    if (isUsdDisplay) {
-      return Number((Number(rawVal) / 1e6).toFixed(2));
-    }
-    const nominalIdr =
-      idrVal !== null && idrVal !== undefined
-        ? Number(idrVal)
-        : isForeignCurrency
-        ? Number(rawVal) * usdRate
-        : Number(rawVal);
-    return Number((nominalIdr / 1e12).toFixed(2));
-  };
+  const toChartUnit = useCallback(
+    (rawVal, idrVal) => {
+      if (rawVal === null || rawVal === undefined || isNaN(rawVal)) return 0;
+      if (isUsdDisplay) {
+        return Number((Number(rawVal) / 1e6).toFixed(2));
+      }
+      const nominalIdr =
+        idrVal !== null && idrVal !== undefined
+          ? Number(idrVal)
+          : isForeignCurrency
+          ? Number(rawVal) * usdRate
+          : Number(rawVal);
+      return Number((nominalIdr / 1e12).toFixed(2));
+    },
+    [isUsdDisplay, isForeignCurrency, usdRate]
+  );
 
   const activePeriods = useMemo(() => {
     let list = [];
@@ -247,7 +251,15 @@ export default function FinancialStatementsTable({
         chartDer: p.der !== null && p.der !== undefined && !isNaN(p.der) ? Number(p.der) : null,
       };
     });
-  }, [activePeriods, regularPeriods, isUsdDisplay, isForeignCurrency, usdRate, periodMode]);
+  }, [
+    activePeriods,
+    regularPeriods,
+    isUsdDisplay,
+    isForeignCurrency,
+    usdRate,
+    periodMode,
+    toChartUnit,
+  ]);
 
   const profitDataset = useMemo(() => {
     return chartDataset.filter(
@@ -407,89 +419,6 @@ export default function FinancialStatementsTable({
     });
     return isPointDiff ? `${sign}${formatted} pt` : `${sign}${formatted}%`;
   };
-
-  const stickyLabelCellClass =
-    "py-2.5 px-4 sticky left-0 z-10 bg-white dark:bg-[#0f1014] border-r border-zinc-100 dark:border-white/[0.04] font-medium text-zinc-800 dark:text-zinc-200";
-
-  const TABLE_SECTIONS = [
-    {
-      title: "Laporan Laba Rugi (Penjualan & Keuntungan)",
-      rows: [
-        {
-          key: "revenue",
-          label: "Total Penjualan (Revenue)",
-          type: "currency",
-          isBold: true,
-        },
-        {
-          key: "netIncome",
-          label: "Laba Bersih (Net Income)",
-          type: "currency",
-          isBold: true,
-          colorBySign: true,
-        },
-        {
-          key: "netProfitMargin",
-          label: "Sisa Laba dari Penjualan (NPM)",
-          type: "percent",
-          isPointDiff: true,
-          colorBySign: true,
-        },
-        {
-          key: "eps",
-          label: "Laba per 1 Lembar Saham (EPS)",
-          type: "eps",
-          colorBySign: true,
-        },
-      ],
-    },
-    {
-      title: "Neraca Keuangan (Harta, Modal, & Utang)",
-      rows: [
-        {
-          key: "totalAssets",
-          label: "Total Harta (Aset)",
-          type: "currency",
-          isBold: true,
-        },
-        {
-          key: "totalEquity",
-          label: "Modal Bersih (Ekuitas)",
-          type: "currency",
-          isBold: true,
-        },
-        {
-          key: "totalLiabilities",
-          label: "Total Utang (Liabilitas)",
-          type: "currency",
-        },
-        {
-          key: "cashEquivalents",
-          label: "Uang Kas Tersedia",
-          type: "currency",
-        },
-      ],
-    },
-    {
-      title: "Rasio Efisiensi Usaha",
-      rows: [
-        {
-          key: "roe",
-          label: "Laba dari Modal Sendiri (ROE)",
-          type: "percent",
-          isPointDiff: true,
-          colorBySign: true,
-        },
-        {
-          key: "roa",
-          label: "Laba dari Total Harta (ROA)",
-          type: "percent",
-          isPointDiff: true,
-          colorBySign: true,
-        },
-      ],
-    },
-  ];
 
   const INCOME_HEADER_TABS = [
     {
@@ -1560,102 +1489,19 @@ export default function FinancialStatementsTable({
       )}
 
       {/* ========================================================
-          3. TABEL KOMPARATIF MULTI-PERIODE
+          3. TABEL KOMPARATIF MULTI-PERIODE (@tanstack/react-table)
           ======================================================== */}
       {apiHistory && (activeView === "both" || activeView === "table") && (
-        <div className="rounded-2xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0f1014] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left border-collapse">
-              <thead>
-                <tr className="border-b border-zinc-200 dark:border-white/[0.08] bg-zinc-50 dark:bg-white/[0.02] text-zinc-500 dark:text-zinc-400 font-semibold">
-                  <th className="py-3 px-4 min-w-[215px] sticky left-0 z-20 bg-zinc-50 dark:bg-[#131419] border-r border-zinc-200/70 dark:border-white/[0.06]">
-                    Pos Laporan Keuangan
-                  </th>
-                  {activePeriods.map((p) => (
-                    <th
-                      key={p.period}
-                      className={`py-3 px-4 font-mono text-right min-w-[125px] ${
-                        p.isTTM
-                          ? "bg-zinc-100/70 dark:bg-white/[0.04] text-zinc-900 dark:text-white font-bold border-l border-zinc-200 dark:border-white/[0.08]"
-                          : ""
-                      }`}
-                    >
-                      {p.label}
-                    </th>
-                  ))}
-                  <th className="py-3 px-4 text-right min-w-[115px] font-mono">
-                    {deltaHeaderLabel}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-white/[0.04]">
-                {TABLE_SECTIONS.map((section) => (
-                  <React.Fragment key={section.title}>
-                    <tr className="bg-zinc-50/70 dark:bg-white/[0.015]">
-                      <td
-                        colSpan={activePeriods.length + 2}
-                        className="py-2 px-4 font-bold text-zinc-600 dark:text-zinc-300 text-[11px] uppercase tracking-wider"
-                      >
-                        {section.title}
-                      </td>
-                    </tr>
-
-                    {section.rows.map((row) => {
-                      const rowDelta = computeMetricDelta(row.key, Boolean(row.isPointDiff));
-                      return (
-                        <tr
-                          key={row.key}
-                          className="hover:bg-zinc-50/60 dark:hover:bg-white/[0.02] transition-colors"
-                        >
-                          <td className={stickyLabelCellClass}>{row.label}</td>
-
-                          {activePeriods.map((p) => {
-                            const rawVal = p[row.key];
-                            let formattedCell = "-";
-                            if (row.type === "currency") {
-                              formattedCell = formatFinancialValue(rawVal);
-                            } else if (row.type === "eps") {
-                              formattedCell = formatEpsValue(rawVal);
-                            } else if (row.type === "percent") {
-                              formattedCell = formatPct(rawVal);
-                            }
-
-                            const cellColor = row.colorBySign
-                              ? getValueColorClass(rawVal)
-                              : "text-zinc-900 dark:text-zinc-100";
-
-                            return (
-                              <td
-                                key={p.period}
-                                className={`py-2.5 px-4 font-mono tabular-nums text-right ${
-                                  row.isBold ? "font-bold" : "font-semibold"
-                                } ${cellColor} ${
-                                  p.isTTM
-                                    ? "bg-zinc-50/60 dark:bg-white/[0.02] border-l border-zinc-200/70 dark:border-white/[0.06]"
-                                    : ""
-                                }`}
-                              >
-                                {formattedCell}
-                              </td>
-                            );
-                          })}
-
-                          <td
-                            className={`py-2.5 px-4 font-mono font-semibold tabular-nums text-right ${getValueColorClass(
-                              rowDelta
-                            )}`}
-                          >
-                            {formatDeltaCell(rowDelta, Boolean(row.isPointDiff))}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <FinancialDataTable
+          activePeriods={activePeriods}
+          regularPeriods={regularPeriods}
+          deltaHeaderLabel={deltaHeaderLabel}
+          formatFinancialValue={formatFinancialValue}
+          formatEpsValue={formatEpsValue}
+          formatPct={formatPct}
+          formatDeltaCell={formatDeltaCell}
+          getValueColorClass={getValueColorClass}
+        />
       )}
     </div>
   );

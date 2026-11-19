@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, Suspense, lazy } from "react";
+import React, { Component, useState, useEffect, useCallback, useRef, Suspense, lazy } from "react";
 // Context Autentikasi & RBAC
 import { AuthProvider } from "./context/AuthContext";
 import AuthModal from "./components/auth/AuthModal";
@@ -121,6 +121,55 @@ const buildUrlFromRoute = (route) => {
 
   return TAB_TO_PATH[route.tab] || "/";
 };
+
+class RouteErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, errorMessage: "" };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, errorMessage: error?.message || "Terjadi kesalahan saat menampilkan halaman." };
+  }
+
+  componentDidCatch(error, info) {
+    console.error("RouteErrorBoundary menangkap error halaman:", error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="max-w-lg mx-auto my-12 p-6 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-white dark:bg-[#0f1014] text-center space-y-3">
+          <h2 className="text-base font-bold text-zinc-900 dark:text-white">
+            Gagal Memuat Halaman
+          </h2>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            {this.state.errorMessage}
+          </p>
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => this.setState({ hasError: false, errorMessage: "" })}
+              className="px-4 py-2 rounded-lg text-xs font-semibold bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 cursor-pointer"
+            >
+              Coba Lagi
+            </button>
+            {this.props.onBackToDashboard && (
+              <button
+                type="button"
+                onClick={this.props.onBackToDashboard}
+                className="px-4 py-2 rounded-lg text-xs font-semibold border border-zinc-200 dark:border-white/10 text-zinc-700 dark:text-zinc-300 cursor-pointer"
+              >
+                Ke Dashboard
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(getInitialDarkMode);
@@ -406,11 +455,15 @@ export default function App() {
 
             {/* Konten Halaman */}
             <main className="flex-1 max-w-[98%] mx-auto w-full px-3 sm:px-4 lg:px-6 py-6">
-              <Suspense
-                fallback={
-                  <div className="p-6 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] animate-pulse h-80" />
-                }
+              <RouteErrorBoundary
+                key={`${activeTab}:${selectedSymbol}`}
+                onBackToDashboard={() => setActiveTab("dashboard")}
               >
+                <Suspense
+                  fallback={
+                    <div className="p-6 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#0c0e14] animate-pulse h-80" />
+                  }
+                >
                 {/* ========================================================
                     1. DASHBOARD: Kartu Geser Saham (Carousel / Slider)
                     ======================================================== */}
@@ -504,7 +557,8 @@ export default function App() {
                 {activeTab === "learning" && <UserLearningPage defaultOpenAi={false} />}
 
                 {activeTab === "ai" && <UserLearningPage defaultOpenAi={true} />}
-              </Suspense>
+                </Suspense>
+              </RouteErrorBoundary>
             </main>
           </>
         )}

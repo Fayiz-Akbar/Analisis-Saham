@@ -5,12 +5,11 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  ArrowLeft,
   RefreshCw,
   ExternalLink,
   SlidersHorizontal,
-  TableProperties,
 } from "lucide-react";
+import { useWatchlist } from "@/lib/watchlist";
 
 /**
  * Format Angka Rupiah & Kapitalisasi Pasar
@@ -61,52 +60,12 @@ export default function StockTableView({
     setSelectedSector(initialSector || "ALL");
   }, [initialSector]);
 
-  // Watchlist State (Tersinkronisasi dengan localStorage)
-  const [watchlistSymbols, setWatchlistSymbols] = useState(() => {
-    try {
-      const saved = localStorage.getItem("investai_watchlist_symbols");
-      return saved ? JSON.parse(saved) : ["BBCA", "BBRI", "TLKM", "ASII"];
-    } catch {
-      return ["BBCA", "BBRI", "TLKM", "ASII"];
-    }
-  });
+  const { watchlistSymbols, toggleWatchlist: toggleWatchlistBySymbol } = useWatchlist();
 
   const toggleWatchlist = (e, symbol) => {
     e.stopPropagation();
-    setWatchlistSymbols((prev) => {
-      let updated;
-      if (prev.includes(symbol)) {
-        updated = prev.filter((s) => s !== symbol);
-      } else {
-        updated = [...prev, symbol];
-      }
-      try {
-        localStorage.setItem("investai_watchlist_symbols", JSON.stringify(updated));
-        window.dispatchEvent(new Event("watchlist-updated"));
-      } catch (err) {
-        console.warn("Gagal menyimpan watchlist:", err);
-      }
-      return updated;
-    });
+    toggleWatchlistBySymbol(symbol);
   };
-
-  // Dengarkan event sinkronisasi watchlist saat ada perubahan di WatchlistView
-  useEffect(() => {
-    const handleSync = () => {
-      try {
-        const saved = localStorage.getItem("investai_watchlist_symbols");
-        if (saved) setWatchlistSymbols(JSON.parse(saved));
-      } catch (e) {
-        console.warn(e);
-      }
-    };
-    window.addEventListener("watchlist-updated", handleSync);
-    window.addEventListener("storage", handleSync);
-    return () => {
-      window.removeEventListener("watchlist-updated", handleSync);
-      window.removeEventListener("storage", handleSync);
-    };
-  }, []);
 
   const fetchStocks = async () => {
     setIsLoading(true);
@@ -126,13 +85,6 @@ export default function StockTableView({
   useEffect(() => {
     fetchStocks();
   }, []);
-
-  // Update selected sector jika prop initialSector berubah
-  useEffect(() => {
-    if (initialSector) {
-      setSelectedSector(initialSector);
-    }
-  }, [initialSector]);
 
   // Daftar Tab Sesuai Referensi Gambar Pengguna
   const tabs = [
@@ -524,7 +476,9 @@ export default function StockTableView({
                   const price = p.closePrice ? Number(p.closePrice) : null;
                   const changePct = p.changePercent ? Number(p.changePercent) : 0;
                   const isUp = changePct >= 0;
-                  const isStarred = watchlistSymbols.includes(stock.symbol);
+                  const isStarred = watchlistSymbols.includes(
+                    String(stock.symbol || "").toUpperCase()
+                  );
 
                   return (
                     <tr
@@ -535,6 +489,7 @@ export default function StockTableView({
                       {/* Tombol Star Watchlist */}
                       <td className="px-3 py-3 text-center">
                         <button
+                          type="button"
                           onClick={(e) => toggleWatchlist(e, stock.symbol)}
                           className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
                           title={isStarred ? "Hapus dari Watchlist" : "Tambahkan ke Watchlist"}

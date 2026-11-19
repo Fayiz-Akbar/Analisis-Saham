@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Star } from "lucide-react";
+import { useWatchlist } from "@/lib/watchlist";
 import TradingViewChart from "./TradingViewChart";
 import FundamentalPillars from "./FundamentalPillars";
 import FinancialStatementsTable from "./FinancialStatementsTable";
 import FundamentalGlossary from "./FundamentalGlossary";
 import CompanyNewsSection from "./CompanyNewsSection";
-
-const WATCHLIST_STORAGE_KEY = "investai_watchlist_symbols";
 
 export default function StockDetailCard({
   stockData,
@@ -31,32 +30,7 @@ export default function StockDetailCard({
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState(null);
 
-  const [watchlistSymbols, setWatchlistSymbols] = useState(() => {
-    try {
-      const saved = localStorage.getItem(WATCHLIST_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : ["BBCA", "BBRI", "TLKM", "ASII"];
-    } catch {
-      return ["BBCA", "BBRI", "TLKM", "ASII"];
-    }
-  });
-
-  // Sinkronisasi Watchlist antar komponen/tab
-  useEffect(() => {
-    const syncWatchlist = () => {
-      try {
-        const saved = localStorage.getItem(WATCHLIST_STORAGE_KEY);
-        if (saved) setWatchlistSymbols(JSON.parse(saved));
-      } catch {
-        // Abaikan kegagalan parsing localStorage
-      }
-    };
-    window.addEventListener("watchlist-updated", syncWatchlist);
-    window.addEventListener("storage", syncWatchlist);
-    return () => {
-      window.removeEventListener("watchlist-updated", syncWatchlist);
-      window.removeEventListener("storage", syncWatchlist);
-    };
-  }, []);
+  const { watchlistSymbols, toggleWatchlist } = useWatchlist();
 
   const fetchFinancialHistory = useCallback((sym, signalObj = { active: true }) => {
     if (!sym) return;
@@ -109,7 +83,8 @@ export default function StockDetailCard({
           roa: audit.roa ?? stats.roa ?? prev?.roa ?? null,
           der: audit.der,
           eps: audit.eps !== null && audit.eps !== undefined ? audit.eps : stats.eps,
-          epsTtm: stats.eps ?? json.data.ttm?.eps ?? prev?.epsTtm ?? null,
+          epsTtm: json.data.ttm?.eps ?? stats.eps ?? prev?.epsTtm ?? null,
+          epsTtmIdr: json.data.ttm?.epsIdr ?? stats.epsIdr ?? prev?.epsTtmIdr ?? null,
           revenueGrowth: revGrowth !== null ? revGrowth : prev?.revenueGrowth,
           netIncomeGrowth: netGrowth !== null ? netGrowth : prev?.netIncomeGrowth,
           financialPeriod: `${audit.period} Audit (Konsolidasian)`,
@@ -195,21 +170,11 @@ export default function StockDetailCard({
   }
 
   const { stock, quote } = stockData;
-  const isWatched = watchlistSymbols.includes(quote.symbol);
+  const normalizedSymbol = String(quote.symbol || "").trim().toUpperCase();
+  const isWatched = watchlistSymbols.includes(normalizedSymbol);
 
   const handleToggleWatchlist = () => {
-    setWatchlistSymbols((prev) => {
-      const updated = prev.includes(quote.symbol)
-        ? prev.filter((s) => s !== quote.symbol)
-        : [...prev, quote.symbol];
-      try {
-        localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(updated));
-        window.dispatchEvent(new Event("watchlist-updated"));
-      } catch (err) {
-        console.warn("Gagal menyimpan watchlist:", err);
-      }
-      return updated;
-    });
+    toggleWatchlist(normalizedSymbol);
   };
 
   const changeVal = Number(quote.changeAmount || 0);
@@ -545,6 +510,7 @@ export default function StockDetailCard({
               <span className="font-mono font-semibold text-slate-900 dark:text-slate-100 tabular-nums text-right">
                 {(() => {
                   const isForeign = effectiveFundamentals?.financialCurrency === "USD";
+                  const epsValIdr = effectiveFundamentals?.epsTtmIdr;
                   const epsVal =
                     effectiveFundamentals?.epsTtm !== null && effectiveFundamentals?.epsTtm !== undefined
                       ? effectiveFundamentals.epsTtm
@@ -552,6 +518,16 @@ export default function StockDetailCard({
                       ? effectiveFundamentals.eps
                       : quote.eps;
                   if (epsVal === null || epsVal === undefined) return "-";
+                  if (isForeign && epsValIdr !== null && epsValIdr !== undefined) {
+                    return (
+                      <span title={`Asli: $ ${Number(epsVal).toFixed(4)}`}>
+                        Rp {Number(epsValIdr).toLocaleString("id-ID", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    );
+                  }
                   if (isForeign) {
                     return `$ ${Number(epsVal).toFixed(4)}`;
                   }

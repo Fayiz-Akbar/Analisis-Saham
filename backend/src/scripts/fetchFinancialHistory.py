@@ -12,6 +12,71 @@ def safe_float(val):
     except:
         return None
 
+
+def normalize_info_trailing_eps(
+    info_eps,
+    financial_currency,
+    trading_currency,
+    usd_to_idr,
+    ttm_net_inc,
+    annual_items,
+    quarterly_items,
+    info,
+):
+    ref_usd_eps = None
+    shares = safe_float(info.get("sharesOutstanding"))
+    if ttm_net_inc is not None and shares and shares > 0:
+        ref_usd_eps = ttm_net_inc / shares
+    elif quarterly_items:
+        q_eps_list = [q["eps"] for q in quarterly_items if q.get("eps") is not None]
+        if len(q_eps_list) >= 2:
+            ref_usd_eps = sum(q_eps_list)
+    if ref_usd_eps is None and annual_items:
+        for a in reversed(annual_items):
+            if a.get("eps") is not None:
+                ref_usd_eps = a["eps"]
+                break
+
+    if info_eps is None:
+        if ref_usd_eps is not None:
+            if financial_currency == "USD":
+                eps_usd = round(ref_usd_eps, 4) if abs(ref_usd_eps) < 1 else round(ref_usd_eps, 2)
+                return eps_usd, round(ref_usd_eps * usd_to_idr, 2)
+            return round(ref_usd_eps, 2), round(ref_usd_eps, 2)
+        return None, None
+
+    if financial_currency != "USD":
+        val = round(info_eps, 2)
+        return val, val
+
+    # Yahoo Finance frequently returns trailingEps in trading currency (IDR) while financials are in USD.
+    is_already_idr = False
+    if trading_currency == "IDR":
+        price = safe_float(
+            info.get("currentPrice")
+            or info.get("regularMarketPrice")
+            or info.get("previousClose")
+        )
+        trailing_pe = safe_float(info.get("trailingPE"))
+        if price and trailing_pe and abs(trailing_pe) > 0:
+            implied_idr_eps = price / trailing_pe
+            if abs(info_eps - implied_idr_eps) <= abs(info_eps * usd_to_idr - implied_idr_eps):
+                is_already_idr = True
+        elif ref_usd_eps is not None and abs(ref_usd_eps) > 0:
+            err_as_usd = abs(info_eps - ref_usd_eps) / abs(ref_usd_eps)
+            err_as_idr = abs((info_eps / usd_to_idr) - ref_usd_eps) / abs(ref_usd_eps)
+            if err_as_idr < err_as_usd:
+                is_already_idr = True
+
+    if is_already_idr:
+        eps_idr = round(info_eps, 2)
+        raw_usd = info_eps / usd_to_idr
+        eps_usd = round(raw_usd, 4) if abs(raw_usd) < 1 else round(raw_usd, 2)
+        return eps_usd, eps_idr
+
+    eps_usd = round(info_eps, 4) if abs(info_eps) < 1 else round(info_eps, 2)
+    return eps_usd, round(info_eps * usd_to_idr, 2)
+
 def main():
     if len(sys.argv) < 2:
         print(json.dumps({"success": False, "message": "Symbol argument required"}))
@@ -288,22 +353,18 @@ def main():
             ttm_liab = latest_q.get('totalLiabilities')
             ttm_cash = latest_q.get('cashEquivalents')
 
-            # Trailing EPS
-            ttm_eps_raw = safe_float(info.get('trailingEps'))
-            if ttm_eps_raw is None and quarterly_items:
-                q_eps_list = [q['eps'] for q in quarterly_items if q.get('eps') is not None]
-                if q_eps_list:
-                    ttm_eps_raw = sum(q_eps_list)
-
-            ttm_eps = None
-            ttm_eps_idr = None
-            if ttm_eps_raw is not None:
-                if financial_currency == 'USD':
-                    ttm_eps = round(ttm_eps_raw, 4) if abs(ttm_eps_raw) < 1 else round(ttm_eps_raw, 2)
-                    ttm_eps_idr = round(ttm_eps_raw * usd_to_idr, 2)
-                else:
-                    ttm_eps = round(ttm_eps_raw, 2)
-                    ttm_eps_idr = ttm_eps
+            # Trailing EPS (deteksi akurat satuan IDR vs USD pada ticker.info)
+            trading_currency = info.get('currency') or 'IDR'
+            ttm_eps, ttm_eps_idr = normalize_info_trailing_eps(
+                safe_float(info.get('trailingEps')),
+                financial_currency,
+                trading_currency,
+                usd_to_idr,
+                ttm_net_inc,
+                annual_items,
+                quarterly_items,
+                info,
+            )
 
             ttm_npm = round((ttm_net_inc / ttm_rev * 100), 2) if (ttm_rev and ttm_net_inc is not None and ttm_rev > 0) else None
             ttm_roe = round((ttm_net_inc / ttm_equity * 100), 2) if (ttm_equity and ttm_net_inc is not None and ttm_equity > 0) else None
@@ -409,7 +470,35 @@ def main():
             pe_ratio = safe_float(info.get('trailingPE'))
             forward_pe = safe_float(info.get('forwardPE'))
             pbv_ratio = safe_float(info.get('priceToBook'))
-            eps = safe_float(info.get('trailingEps'))
+            trading_currency = info.get('currency') or 'IDR'
+            latest_equity_idr = (
+                (ttm_item.get('totalEquityIdr') if ttm_item else None)
+                or (annual_items[-1].get('totalEquityIdr') if annual_items else None)
+            )
+            if (
+                financial_currency == 'USD'
+                and trading_currency == 'IDR'
+                and market_cap
+                and market_cap > 0
+                and latest_equity_idr
+                and latest_equity_idr > 0
+            ):
+                computed_pbv = round(market_cap / latest_equity_idr, 2)
+                if pbv_ratio is None or pbv_ratio > computed_pbv * 50:
+                    pbv_ratio = computed_pbv
+
+            eps_stat, eps_stat_idr = normalize_info_trailing_eps(
+                safe_float(info.get('trailingEps')),
+                financial_currency,
+                trading_currency,
+                usd_to_idr,
+                ttm_item.get('netIncome') if ttm_item else None,
+                annual_items,
+                quarterly_items,
+                info,
+            )
+            eps = eps_stat if eps_stat is not None else (ttm_item.get('eps') if ttm_item else None)
+            eps_idr = eps_stat_idr if eps_stat_idr is not None else (ttm_item.get('epsIdr') if ttm_item else None)
             info_roa_stat = safe_float(info.get('returnOnAssets'))
             roa_stat = round(info_roa_stat * 100, 2) if info_roa_stat is not None else None
 
@@ -425,6 +514,7 @@ def main():
                 "dividendYield": div_yield,
                 "dividendRate": div_rate,
                 "eps": eps,
+                "epsIdr": eps_idr,
                 "roa": roa_stat,
                 "beta": beta,
                 "sector": info.get('sector'),

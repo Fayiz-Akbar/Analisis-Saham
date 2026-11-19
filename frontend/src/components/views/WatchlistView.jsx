@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, RefreshCw, Layers } from "lucide-react";
+import { Star, Layers } from "lucide-react";
+import { useWatchlist } from "@/lib/watchlist";
 
 /**
  * Format Angka Finansial Standar Indonesia (Rupiah, Volume Lembar, & Kap Pasar)
@@ -158,7 +159,10 @@ const InteractiveChart = ({ data = [], positive = true, className = "" }) => {
   }, [data]);
 
   // Fallback jika belum ada data riil yang termuat
-  const validPrices = rawPrices.length >= 2 ? rawPrices : [4900, 4920, 4890, 4910, 4930, 4900];
+  const validPrices = useMemo(
+    () => (rawPrices.length >= 2 ? rawPrices : [4900, 4920, 4890, 4910, 4930, 4900]),
+    [rawPrices]
+  );
 
   const minV = Math.min(...validPrices);
   const maxV = Math.max(...validPrices);
@@ -170,12 +174,18 @@ const InteractiveChart = ({ data = [], positive = true, className = "" }) => {
   const domainMax = maxV + padV;
   const domainRange = domainMax - domainMin || 1;
 
-  const xFor = (i) => (validPrices.length <= 1 ? 0 : (i / (validPrices.length - 1)) * innerW);
-  const yFor = (v) => innerH - ((v - domainMin) / domainRange) * innerH;
+  const xFor = useCallback(
+    (i) => (validPrices.length <= 1 ? 0 : (i / (validPrices.length - 1)) * innerW),
+    [validPrices.length, innerW]
+  );
+  const yFor = useCallback(
+    (v) => innerH - ((v - domainMin) / domainRange) * innerH,
+    [innerH, domainMin, domainRange]
+  );
 
   const points = useMemo(() => {
     return validPrices.map((v, i) => [xFor(i), yFor(v)]);
-  }, [validPrices, innerW, innerH, domainMin, domainRange]);
+  }, [validPrices, xFor, yFor]);
 
   const dPath = useMemo(() => {
     if (!points.length) return "";
@@ -469,6 +479,7 @@ const WatchlistStockCard = ({ stock, onToggleWatchlist, onSelectStock, delay = 0
 
             {/* Tombol Matikan Bintang (Unstar dari Watchlist) */}
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleWatchlist(stock.symbol);
@@ -541,21 +552,13 @@ export default function WatchlistView({ onSelectStock, onBrowseCatalog }) {
   const [allStocks, setAllStocks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Watchlist Symbols tersinkronisasi dengan localStorage
-  const [watchlistSymbols, setWatchlistSymbols] = useState(() => {
-    try {
-      const saved = localStorage.getItem("investai_watchlist_symbols");
-      return saved ? JSON.parse(saved) : ["BBCA", "BBRI", "TLKM", "ASII"];
-    } catch {
-      return ["BBCA", "BBRI", "TLKM", "ASII"];
-    }
-  });
+  const { watchlistSymbols, toggleWatchlist: handleToggleWatchlist } = useWatchlist();
 
   // Fetch seluruh katalog saham dari backend
   const fetchAllStocks = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/stocks?limit=80");
+      const res = await fetch("http://localhost:5000/api/stocks?limit=200");
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         setAllStocks(json.data);
@@ -571,46 +574,12 @@ export default function WatchlistView({ onSelectStock, onBrowseCatalog }) {
     fetchAllStocks();
   }, [fetchAllStocks]);
 
-  // Sinkronisasi otomatis saat ada saham dibintangi di StockTableView
-  useEffect(() => {
-    const handleSync = () => {
-      try {
-        const saved = localStorage.getItem("investai_watchlist_symbols");
-        if (saved) setWatchlistSymbols(JSON.parse(saved));
-      } catch (e) {
-        console.warn("Gagal membaca update watchlist:", e);
-      }
-    };
-
-    window.addEventListener("watchlist-updated", handleSync);
-    window.addEventListener("storage", handleSync);
-    return () => {
-      window.removeEventListener("watchlist-updated", handleSync);
-      window.removeEventListener("storage", handleSync);
-    };
-  }, []);
-
-  // Toggle watchlist symbol (Tambah / Hapus)
-  const handleToggleWatchlist = (symbol) => {
-    setWatchlistSymbols((prev) => {
-      const updated = prev.includes(symbol)
-        ? prev.filter((s) => s !== symbol)
-        : [...prev, symbol];
-
-      try {
-        localStorage.setItem("investai_watchlist_symbols", JSON.stringify(updated));
-        window.dispatchEvent(new Event("watchlist-updated"));
-      } catch (err) {
-        console.warn("Gagal menyimpan watchlist:", err);
-      }
-      return updated;
-    });
-  };
-
   // Filter emiten yang ada di dalam watchlist pengguna
   const watchedStocks = useMemo(() => {
     if (!allStocks.length) return [];
-    return allStocks.filter((stock) => watchlistSymbols.includes(stock.symbol));
+    return allStocks.filter((stock) =>
+      watchlistSymbols.includes(String(stock.symbol || "").toUpperCase())
+    );
   }, [allStocks, watchlistSymbols]);
 
   if (loading && allStocks.length === 0) {
