@@ -13,7 +13,11 @@ const VERTEX_SHADER_SOURCE = `
 `;
 
 const FRAGMENT_SHADER_SOURCE = `
-  precision highp float;
+  #ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+  #else
+    precision mediump float;
+  #endif
   uniform vec2 u_resolution;
   uniform float u_time;
   uniform float u_dpr;
@@ -75,117 +79,262 @@ const FRAGMENT_SHADER_SOURCE = `
   }
 `;
 
-function HalftoneWaveCanvas() {
-  const canvasRef = useRef(null);
+function startWebGLHalftone(canvas) {
+  const gl =
+    canvas.getContext("webgl", {
+      antialias: true,
+      alpha: false,
+      failIfMajorPerformanceCaveat: false,
+    }) || canvas.getContext("experimental-webgl");
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return undefined;
+  if (!gl) return null;
 
-    const gl =
-      canvas.getContext("webgl", { antialias: true, alpha: false }) ||
-      canvas.getContext("experimental-webgl");
-
-    if (!gl) return undefined;
-
-    const compileShader = (type, source) => {
-      const shader = gl.createShader(type);
-      if (!shader) return null;
-      gl.shaderSource(shader, source);
-      gl.compileShader(shader);
-      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        gl.deleteShader(shader);
-        return null;
-      }
-      return shader;
-    };
-
-    const vertexShader = compileShader(gl.VERTEX_SHADER, VERTEX_SHADER_SOURCE);
-    const fragmentShader = compileShader(gl.FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE);
-    if (!vertexShader || !fragmentShader) return undefined;
-
-    const program = gl.createProgram();
-    if (!program) return undefined;
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      gl.deleteProgram(program);
-      return undefined;
+  const compileShader = (type, source) => {
+    const shader = gl.createShader(type);
+    if (!shader) return null;
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      gl.deleteShader(shader);
+      return null;
     }
+    return shader;
+  };
 
-    gl.useProgram(program);
+  const vertexShader = compileShader(gl.VERTEX_SHADER, VERTEX_SHADER_SOURCE);
+  const fragmentShader = compileShader(gl.FRAGMENT_SHADER, FRAGMENT_SHADER_SOURCE);
+  if (!vertexShader || !fragmentShader) {
+    if (vertexShader) gl.deleteShader(vertexShader);
+    if (fragmentShader) gl.deleteShader(fragmentShader);
+    return null;
+  }
 
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
-      gl.STATIC_DRAW
-    );
+  const program = gl.createProgram();
+  if (!program) return null;
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
 
-    const positionLocation = gl.getAttribLocation(program, "a_position");
-    gl.enableVertexAttribArray(positionLocation);
-    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    gl.deleteProgram(program);
+    gl.deleteShader(vertexShader);
+    gl.deleteShader(fragmentShader);
+    return null;
+  }
 
-    const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
-    const timeLocation = gl.getUniformLocation(program, "u_time");
-    const dprLocation = gl.getUniformLocation(program, "u_dpr");
+  gl.useProgram(program);
 
-    let animationFrameId = null;
-    const startTime = performance.now();
+  const positionBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+    gl.STATIC_DRAW
+  );
 
-    const resizeCanvas = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const width = Math.max(1, Math.floor(canvas.clientWidth * dpr));
-      const height = Math.max(1, Math.floor(canvas.clientHeight * dpr));
-      if (canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-        gl.viewport(0, 0, width, height);
-      }
-      gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
-      gl.uniform1f(dprLocation, dpr);
-    };
+  const positionLocation = gl.getAttribLocation(program, "a_position");
+  gl.enableVertexAttribArray(positionLocation);
+  gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-    resizeCanvas();
-    const resizeObserver =
-      typeof ResizeObserver !== "undefined" ? new ResizeObserver(resizeCanvas) : null;
+  const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+  const timeLocation = gl.getUniformLocation(program, "u_time");
+  const dprLocation = gl.getUniformLocation(program, "u_dpr");
+
+  let animationFrameId = null;
+  const startTime = performance.now();
+
+  const resizeCanvas = () => {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const width = Math.max(1, Math.floor(canvas.clientWidth * dpr));
+    const height = Math.max(1, Math.floor(canvas.clientHeight * dpr));
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+      gl.viewport(0, 0, width, height);
+    }
+    gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+    gl.uniform1f(dprLocation, dpr);
+  };
+
+  resizeCanvas();
+  const resizeObserver =
+    typeof ResizeObserver !== "undefined" ? new ResizeObserver(resizeCanvas) : null;
+  if (resizeObserver) {
+    resizeObserver.observe(canvas);
+  } else {
+    window.addEventListener("resize", resizeCanvas);
+  }
+
+  const render = (now) => {
+    const elapsedSeconds = (now - startTime) * 0.001;
+    gl.uniform1f(timeLocation, elapsedSeconds);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    animationFrameId = window.requestAnimationFrame(render);
+  };
+
+  animationFrameId = window.requestAnimationFrame(render);
+
+  return () => {
+    if (animationFrameId) window.cancelAnimationFrame(animationFrameId);
     if (resizeObserver) {
-      resizeObserver.observe(canvas);
+      resizeObserver.disconnect();
     } else {
-      window.addEventListener("resize", resizeCanvas);
+      window.removeEventListener("resize", resizeCanvas);
     }
+    gl.deleteBuffer(positionBuffer);
+    gl.deleteProgram(program);
+    gl.deleteShader(vertexShader);
+    gl.deleteShader(fragmentShader);
+  };
+}
 
-    const render = (now) => {
-      const elapsedSeconds = (now - startTime) * 0.001;
-      gl.uniform1f(timeLocation, elapsedSeconds);
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
-      animationFrameId = window.requestAnimationFrame(render);
-    };
+function start2DHalftoneWave(canvas) {
+  const ctx = canvas.getContext("2d", { alpha: false });
+  if (!ctx) return null;
+
+  let width = 1;
+  let height = 1;
+  let dpr = 1;
+  let animationFrameId = null;
+  const startTime = performance.now();
+
+  const resizeCanvas = () => {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = Math.max(1, canvas.clientWidth);
+    height = Math.max(1, canvas.clientHeight);
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+
+  resizeCanvas();
+  const resizeObserver =
+    typeof ResizeObserver !== "undefined" ? new ResizeObserver(resizeCanvas) : null;
+  if (resizeObserver) {
+    resizeObserver.observe(canvas);
+  } else {
+    window.addEventListener("resize", resizeCanvas);
+  }
+
+  const smoothstep = (edge0, edge1, x) => {
+    const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+    return t * t * (3 - 2 * t);
+  };
+
+  const angle = 0.35;
+  const cosA = Math.cos(angle);
+  const sinA = Math.sin(angle);
+  const cell = 7;
+
+  const render = (now) => {
+    const t = ((now - startTime) * 0.001) * 0.28;
+    ctx.fillStyle = "#fbf9f9";
+    ctx.fillRect(0, 0, width, height);
+
+    const aspect = width / Math.max(height, 1);
+    const diag = Math.hypot(width, height);
+    const steps = Math.ceil(diag / cell) + 2;
+    const cx = width * 0.5;
+    const cy = height * 0.5;
+
+    for (let gx = -steps; gx <= steps; gx++) {
+      for (let gy = -steps; gy <= steps; gy++) {
+        const lx = gx * cell;
+        const ly = gy * cell;
+        const sx = cx + lx * cosA - ly * sinA;
+        const sy = cy + lx * sinA + ly * cosA;
+        if (sx < -cell || sx > width + cell || sy < -cell || sy > height + cell) continue;
+
+        const uvx = sx / width;
+        const uvy = 1 - sy / height;
+        let px = (uvx - 0.15) * aspect * 2.15;
+        let py = (uvy - 0.1) * 2.15;
+
+        for (let i = 1; i < 5; i++) {
+          const nextPx = px + (0.58 / i) * Math.sin(i * 1.85 * py + t + 0.45 * i);
+          const nextPy = py + (0.58 / i) * Math.cos(i * 1.85 * px - t * 0.85 + 0.65 * i);
+          px = nextPx;
+          py = nextPy;
+        }
+
+        const waveA = 0.5 + 0.5 * Math.sin(px * 2.1 - py * 1.7 + t * 0.4);
+        const waveB = 0.5 + 0.5 * Math.cos(py * 2.6 + px * 1.4 - t * 0.3);
+        const ridge = Math.pow(1 - Math.abs(Math.sin(px * 1.45 + py * 1.25)), 2.2);
+
+        let intensity = Math.max(0, Math.min(1, waveA * 0.52 + waveB * 0.28 + ridge * 0.48));
+        const bottomLeftFade = smoothstep(0.05, 0.68, Math.hypot(uvx * 0.95, uvy * 1.15));
+        intensity *= 0.22 + (1 - 0.22) * bottomLeftFade;
+
+        const alpha = smoothstep(0.08, 0.92, intensity);
+        if (alpha <= 0.02) continue;
+
+        const radius = Math.max(0.3, Math.min(cell * 0.44, Math.pow(intensity, 1.25) * (cell * 0.46)));
+        const deepMix = smoothstep(0.55, 0.95, intensity);
+        const r = Math.round(227 + (181 - 227) * deepMix);
+        const g = Math.round(37 + (19 - 37) * deepMix);
+        const b = Math.round(47 + (29 - 47) * deepMix);
+
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(2)})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
 
     animationFrameId = window.requestAnimationFrame(render);
+  };
+
+  animationFrameId = window.requestAnimationFrame(render);
+
+  return () => {
+    if (animationFrameId) window.cancelAnimationFrame(animationFrameId);
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+    } else {
+      window.removeEventListener("resize", resizeCanvas);
+    }
+  };
+}
+
+function HalftoneWaveCanvas() {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
+
+    const createSizedCanvas = () => {
+      const c = document.createElement("canvas");
+      c.setAttribute("aria-hidden", "true");
+      c.className = "absolute inset-0 w-full h-full block pointer-events-none";
+      container.replaceChildren(c);
+      return c;
+    };
+
+    const webglCanvas = createSizedCanvas();
+    let cleanup = null;
+    try {
+      cleanup = startWebGLHalftone(webglCanvas);
+    } catch {
+      cleanup = null;
+    }
+
+    if (!cleanup) {
+      const fallbackCanvas = createSizedCanvas();
+      cleanup = start2DHalftoneWave(fallbackCanvas);
+    }
 
     return () => {
-      if (animationFrameId) window.cancelAnimationFrame(animationFrameId);
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      } else {
-        window.removeEventListener("resize", resizeCanvas);
-      }
-      gl.deleteBuffer(positionBuffer);
-      gl.deleteProgram(program);
-      gl.deleteShader(vertexShader);
-      gl.deleteShader(fragmentShader);
+      if (cleanup) cleanup();
+      container.replaceChildren();
     };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
+    <div
+      ref={containerRef}
       aria-hidden="true"
-      className="absolute inset-0 w-full h-full block pointer-events-none"
+      className="absolute inset-0 w-full h-full pointer-events-none"
     />
   );
 }

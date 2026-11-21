@@ -1,5 +1,8 @@
 import sys
+import re
 import json
+import urllib.parse
+import urllib.request
 import yfinance as yf
 import pandas as pd
 
@@ -11,6 +14,114 @@ def safe_float(val):
         return None if pd.isna(f) else f
     except:
         return None
+
+
+def translate_to_indonesian(text):
+    """Menerjemahkan ringkasan profil perusahaan ke Bahasa Indonesia secara aman."""
+    if not text or not isinstance(text, str):
+        return None
+    cleaned = " ".join(text.split())
+    if not cleaned:
+        return None
+
+    sentences = re.split(r"(?<=[.!?])\s+", cleaned)
+    chunks = []
+    current = ""
+    for sentence in sentences:
+        if len(current) + len(sentence) + 1 <= 1300:
+            current = f"{current} {sentence}".strip()
+        else:
+            if current:
+                chunks.append(current)
+            current = sentence[:1300]
+    if current:
+        chunks.append(current)
+
+    translated_parts = []
+    for chunk in chunks:
+        try:
+            url = (
+                "https://translate.googleapis.com/translate_a/single"
+                f"?client=gtx&sl=en&tl=id&dt=t&q={urllib.parse.quote(chunk)}"
+            )
+            req = urllib.request.Request(
+                url,
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
+            )
+            with urllib.request.urlopen(req, timeout=4) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            if isinstance(data, list) and data and isinstance(data[0], list):
+                part = "".join(seg[0] for seg in data[0] if isinstance(seg, list) and seg and seg[0])
+                if part.strip():
+                    translated_parts.append(part.strip())
+                    continue
+            return None
+        except Exception:
+            return None
+
+    result = " ".join(translated_parts).strip()
+    return result or None
+
+
+def build_company_profile(info):
+    """Menyusun profil bisnis & jajaran manajemen emiten dari Yahoo Finance API."""
+    if not isinstance(info, dict):
+        return None
+
+    raw_summary = info.get("longBusinessSummary")
+    summary_en = " ".join(str(raw_summary).split()) if isinstance(raw_summary, str) and raw_summary.strip() else None
+    summary_id = translate_to_indonesian(summary_en) if summary_en else None
+
+    raw_officers = info.get("companyOfficers") or []
+    officers = []
+    for off in raw_officers[:6]:
+        if isinstance(off, dict) and off.get("name"):
+            clean_name = " ".join(str(off.get("name")).split())
+            clean_title = " ".join(str(off.get("title") or "").split())
+            officers.append({
+                "name": clean_name,
+                "title": clean_title or "Direksi & Manajemen",
+                "age": off.get("age") if isinstance(off.get("age"), int) else None,
+            })
+
+    address_parts = [
+        " ".join(str(p).split())
+        for p in [info.get("address1"), info.get("address2")]
+        if isinstance(p, str) and p.strip()
+    ]
+
+    emp_raw = info.get("fullTimeEmployees")
+    employees = None
+    try:
+        if emp_raw is not None and not pd.isna(emp_raw):
+            employees = int(emp_raw)
+    except Exception:
+        employees = None
+
+    website = info.get("website")
+    if isinstance(website, str) and website.strip() and not website.startswith(("http://", "https://")):
+        website = f"https://{website.strip()}"
+
+    ir_website = info.get("irWebsite")
+    if isinstance(ir_website, str) and ir_website.strip() and not ir_website.startswith(("http://", "https://")):
+        ir_website = f"https://{ir_website.strip()}"
+
+    return {
+        "longName": info.get("longName") or info.get("shortName"),
+        "sector": info.get("sectorDisp") or info.get("sector"),
+        "industry": info.get("industryDisp") or info.get("industry"),
+        "summaryId": summary_id,
+        "summaryEn": summary_en,
+        "summary": summary_id or summary_en,
+        "website": website.strip() if isinstance(website, str) and website.strip() else None,
+        "irWebsite": ir_website.strip() if isinstance(ir_website, str) and ir_website.strip() else None,
+        "address": ", ".join(address_parts) if address_parts else None,
+        "city": info.get("city"),
+        "country": info.get("country"),
+        "phone": info.get("phone"),
+        "fullTimeEmployees": employees,
+        "officers": officers,
+    }
 
 
 def normalize_info_trailing_eps(
@@ -542,6 +653,8 @@ def main():
         except Exception:
             pass
 
+        company_profile = build_company_profile(info)
+
         output = {
             "success": True,
             "symbol": raw_symbol,
@@ -549,6 +662,7 @@ def main():
             "financialCurrency": financial_currency,
             "usdToIdrRate": round(usd_to_idr, 2),
             "keyStatistics": key_stats,
+            "companyProfile": company_profile,
             "annual": annual_items,
             "quarterly": quarterly_items,
             "ttm": ttm_item,

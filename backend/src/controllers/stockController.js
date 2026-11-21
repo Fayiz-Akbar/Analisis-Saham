@@ -339,14 +339,16 @@ export const getStockQuote = async (req, res) => {
       ? {
           ...stock,
           fundamentals: realFundamental,
+          companyProfile: realData?.companyProfile || null,
         }
       : {
           symbol: cleanSymbol,
-          companyName: cleanSymbol,
-          sector: "Financials",
-          industry: "General",
+          companyName: realData?.companyProfile?.longName || cleanSymbol,
+          sector: realData?.companyProfile?.sector || "Financials",
+          industry: realData?.companyProfile?.industry || "General",
           exchange: "IDX",
           fundamentals: realFundamental,
+          companyProfile: realData?.companyProfile || null,
         };
 
     const responsePayload = {
@@ -491,6 +493,7 @@ export const getStockDetail = async (req, res) => {
       stock: {
         ...stock,
         fundamentals: realFundamental,
+        companyProfile: realData?.companyProfile || null,
       },
       currentPrice: marketData.regularMarketPrice,
       changePercent: marketData.changePercent,
@@ -569,7 +572,13 @@ export async function fetchFinancialDataFromSource(symbol) {
     const cached = await prisma.apiCache.findUnique({
       where: { endpointKey },
     });
-    if (cached && new Date(cached.expiresAt) > new Date() && cached.responseData?.financialCurrency !== undefined && cached.responseData?.ttm !== undefined) {
+    if (
+      cached &&
+      new Date(cached.expiresAt) > new Date() &&
+      cached.responseData?.financialCurrency !== undefined &&
+      cached.responseData?.ttm !== undefined &&
+      cached.responseData?.companyProfile !== undefined
+    ) {
       return { ...cached.responseData, fromCache: true };
     }
   } catch (cacheErr) {
@@ -778,6 +787,41 @@ export const getStockFinancialHistory = async (req, res) => {
   } catch (error) {
     console.error("Get Stock Financial History Error:", error);
     return sendError(res, 500, `Terjadi kesalahan saat memuat laporan keuangan ${req.params.symbol}: ${error.message}`);
+  }
+};
+
+/**
+ * Mengambil Profil Resmi & Penjelasan Bisnis Perusahaan dari Yahoo Finance API
+ * GET /api/stocks/:symbol/profile
+ */
+export const getStockProfile = async (req, res) => {
+  try {
+    const rawSymbol = req.params.symbol?.trim();
+    if (!rawSymbol) {
+      return sendError(res, 400, "Simbol emiten harus disertakan.");
+    }
+
+    const cleanSymbol = rawSymbol.toUpperCase().replace(".JK", "");
+    const [stock, realData] = await Promise.all([
+      prisma.stock.findUnique({ where: { symbol: cleanSymbol } }),
+      fetchFinancialDataFromSource(cleanSymbol),
+    ]);
+
+    const profile = realData?.companyProfile || null;
+    return sendSuccess(res, 200, `Profil bisnis perusahaan ${cleanSymbol} berhasil dimuat`, {
+      symbol: cleanSymbol,
+      companyName: stock?.companyName || profile?.longName || cleanSymbol,
+      sector: stock?.sector || profile?.sector || null,
+      industry: stock?.industry || profile?.industry || null,
+      logoUrl: stock?.logoUrl || `https://assets.stockbit.com/logos/companies/${cleanSymbol}.png`,
+      exchange: stock?.exchange || "IDX",
+      source: realData?.source || "Yahoo Finance (Company Profile)",
+      fromCache: Boolean(realData?.fromCache),
+      companyProfile: profile,
+    });
+  } catch (error) {
+    console.error("Get Stock Profile Error:", error);
+    return sendError(res, 500, `Gagal memuat profil perusahaan ${req.params.symbol}: ${error.message}`);
   }
 };
 

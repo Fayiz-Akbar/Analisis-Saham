@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Star } from "lucide-react";
 import { useWatchlist } from "@/lib/watchlist";
 import TradingViewChart from "./TradingViewChart";
+import CompanyProfileSection from "./CompanyProfileSection";
 import FundamentalPillars from "./FundamentalPillars";
 import FinancialStatementsTable from "./FinancialStatementsTable";
 import FundamentalGlossary from "./FundamentalGlossary";
@@ -228,6 +229,7 @@ export default function StockDetailCard({
   };
 
   const effectiveFundamentals = fundamentalData || stock?.fundamentals;
+  const effectiveProfile = financialHistory?.companyProfile || stock?.companyProfile || null;
 
   const SUB_TABS = [
     { id: "all", label: "Semua Analisis" },
@@ -592,6 +594,18 @@ export default function StockDetailCard({
           </div>
         </div>
       </div>
+
+      {/* ========================================================
+          3B. PROFIL PERUSAHAAN & PENJELASAN BISNIS (YAHOO FINANCE API)
+          ======================================================== */}
+      <CompanyProfileSection
+        key={normalizedSymbol}
+        symbol={normalizedSymbol}
+        profile={effectiveProfile}
+        isLoading={isLoadingHistory && !effectiveProfile}
+        error={historyError}
+        onRetry={() => fetchFinancialHistory(quote.symbol)}
+      />
 
       {/* ========================================================
           4. SUB-TAB NAVIGASI MODUL ANALISIS MENDALAM

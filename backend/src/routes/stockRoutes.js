@@ -10,6 +10,7 @@ import {
   getTickerTape,
   getMarketOverview,
   getStockFinancialHistory,
+  getStockProfile,
   syncIdx80Endpoint,
 } from "../controllers/stockController.js";
 import { getLatestNews } from "../controllers/newsController.js";
@@ -46,6 +47,9 @@ router.get("/:symbol/fundamentals", getStockFundamentals);
 
 // Endpoint laporan keuangan historis multi-tahun & kuartalan riil
 router.get("/:symbol/financial-history", getStockFinancialHistory);
+
+// Endpoint profil & penjelasan bisnis perusahaan dari Yahoo Finance API
+router.get("/:symbol/profile", getStockProfile);
 
 // Endpoint berita spesifik emiten dengan label sentimen
 router.get("/:symbol/news", (req, res, next) => {
