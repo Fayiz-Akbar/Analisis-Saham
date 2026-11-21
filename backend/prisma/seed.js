@@ -399,7 +399,7 @@ async function main() {
   console.log("🌱 Memulai Seeding Basis Data...");
 
   // 1. Akun Pengguna Demo (Admin + Investor Pemula & Berpengalaman)
-  const adminPasswordHash = await bcrypt.hash("admin123", 10);
+  const adminPasswordHash = await bcrypt.hash("password", 10);
   const passwordHash = await bcrypt.hash("Password123!", 10);
 
   const demoAdmin = await prisma.user.upsert({

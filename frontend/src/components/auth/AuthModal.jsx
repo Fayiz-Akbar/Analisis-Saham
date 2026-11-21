@@ -32,13 +32,6 @@ export default function AuthModal({ onNavigateToAdmin }) {
     setFieldErrors({});
   };
 
-  const handleQuickFill = (demoEmail) => {
-    resetMessages();
-    setMode("login");
-    setEmail(demoEmail);
-    setPassword("Password123!");
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     resetMessages();
@@ -279,38 +272,6 @@ export default function AuthModal({ onNavigateToAdmin }) {
                 ? "Masuk Sekarang"
                 : "Buat Akun Investor"}
           </button>
-
-          {/* Pintasan Akun Demo untuk Pengujian Cepat */}
-          {mode === "login" && (
-            <div className="pt-3 border-t border-slate-200 dark:border-[#272727] space-y-2">
-              <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 block">
-                Akun Demo Pengujian (Investor & Admin):
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill("admin@investai.id")}
-                  className="px-2.5 py-1 rounded-md text-[11px] font-mono font-medium bg-rose-50 dark:bg-rose-950/40 text-[#E5242A] dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-100 transition-colors cursor-pointer"
-                >
-                  Admin
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill("fayiz.pemula@example.com")}
-                  className="px-2.5 py-1 rounded-md text-[11px] font-mono font-medium bg-[#062c19] text-[#34d399] border border-[#0e4429] hover:bg-[#0e4429]/60 transition-colors cursor-pointer"
-                >
-                  Investor Pemula
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill("fayiz.expert@example.com")}
-                  className="px-2.5 py-1 rounded-md text-[11px] font-mono font-medium bg-slate-100 dark:bg-[#1a1d26] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#272727] hover:border-slate-400 dark:hover:border-slate-500 transition-colors cursor-pointer"
-                >
-                  Investor Expert
-                </button>
-              </div>
-            </div>
-          )}
         </form>
       </div>
     </div>
