@@ -79,12 +79,6 @@ export default function AdminDashboardPage({
     }
     return null;
   });
-  const [isFullPageEditor, setIsFullPageEditor] = useState(() => {
-    if (typeof window !== "undefined") {
-      return /^\/admin\/materi\/[^/]+\/edit/i.test(window.location.pathname);
-    }
-    return false;
-  });
   const [hasUnsavedEditorChanges, setHasUnsavedEditorChanges] = useState(false);
 
   // Data
@@ -254,12 +248,11 @@ export default function AdminDashboardPage({
   const isKontenSubActive = ["studio", "curriculum", "quizzes"].includes(
     activeView
   );
-  const isDedicatedFullPageEdit = activeView === "studio" && isFullPageEditor;
 
   return (
     <div className="min-h-screen flex bg-[#F4F6FA] dark:bg-[#080808] text-slate-900 dark:text-slate-100">
       {/* Mobile Sidebar Backdrop */}
-      {!isDedicatedFullPageEdit && sidebarOpen && (
+      {sidebarOpen && (
         <div
           aria-hidden="true"
           onClick={() => setSidebarOpen(false)}
@@ -268,17 +261,16 @@ export default function AdminDashboardPage({
       )}
 
       {/* ================================================================
-          LEFT SIDEBAR (Hidden when in Dedicated Full-Page Edit Materi Mode)
+          LEFT SIDEBAR (Deep Navy #181C2E - Fixed/Sticky Viewport Height on All Pages)
           ================================================================ */}
-      {!isDedicatedFullPageEdit && (
       <aside
         aria-label="Navigasi Administrator"
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#181B2C] text-slate-200 flex flex-col justify-between transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 h-screen bg-[#181B2C] text-slate-200 flex flex-col justify-between shrink-0 transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Top Brand & Navigation Menu */}
-        <div className="p-5 space-y-6 overflow-y-auto">
+        <div className="flex-1 min-h-0 p-5 space-y-6 overflow-y-auto">
           <div className="flex items-center justify-between gap-2 px-1">
             <div className="flex items-center gap-2.5">
               <img
@@ -446,8 +438,8 @@ export default function AdminDashboardPage({
           </nav>
         </div>
 
-        {/* Bottom Admin Profile Card (Matching Reference Sidebar Footer) */}
-        <div className="p-4">
+        {/* Bottom Admin Profile Card (Pinned at Bottom of Viewport on All Pages) */}
+        <div className="p-4 shrink-0 border-t border-white/[0.06] bg-[#181B2C]">
           <div className="p-3 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-between gap-2.5">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-9 h-9 rounded-full bg-slate-200/20 flex items-center justify-center text-white shrink-0">
@@ -474,14 +466,12 @@ export default function AdminDashboardPage({
           </div>
         </div>
       </aside>
-      )}
 
       {/* ================================================================
           MAIN WORKSPACE AREA
           ================================================================ */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Utility Bar (Hidden in Dedicated Full-Page Edit Materi Mode) */}
-        {!isDedicatedFullPageEdit && (
+        {/* Top Utility Bar (Bell, Theme Toggle, & "Lihat Situs ↗") */}
         <header className="sticky top-0 z-30 h-16 px-4 sm:px-6 lg:px-8 bg-[#F4F6FA]/90 dark:bg-[#080808]/90 backdrop-blur-md flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <button
@@ -537,16 +527,9 @@ export default function AdminDashboardPage({
             )}
           </div>
         </header>
-        )}
 
         {/* Page Content Container */}
-        <main
-          className={
-            isDedicatedFullPageEdit
-              ? "flex-1 w-full max-w-[1160px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5"
-              : "flex-1 w-full max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 pb-10 space-y-6"
-          }
-        >
+        <main className="flex-1 w-full max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 pb-10 space-y-6">
           {/* Toast */}
           {toast && (
             <div
@@ -853,7 +836,6 @@ export default function AdminDashboardPage({
               onNotify={showToast}
               onBreadcrumbChange={setBreadcrumbText}
               onUnsavedStateChange={setHasUnsavedEditorChanges}
-              onFullPageEditorChange={setIsFullPageEditor}
             />
           )}
 

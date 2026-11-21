@@ -22,6 +22,7 @@ import {
   MoreHorizontal,
   Plus,
   Quote,
+  Redo2,
   RefreshCw,
   Search,
   Sparkles,
@@ -29,6 +30,7 @@ import {
   Table as TableIcon,
   Trash2,
   Underline,
+  Undo2,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -601,6 +603,40 @@ export default function LearningContentStudio({
   const [saveState, setSaveState] = useState("saved"); // "saved" | "unsaved" | "saving" | "failed"
   const [blockFormatTag, setBlockFormatTag] = useState("p");
 
+  // Undo / Redo Document History Stack
+  const historyStackRef = useRef([]);
+  const historyIndexRef = useRef(-1);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  const syncHistoryFlags = () => {
+    setCanUndo(historyIndexRef.current > 0);
+    setCanRedo(
+      historyIndexRef.current >= 0 &&
+        historyIndexRef.current < historyStackRef.current.length - 1
+    );
+  };
+
+  const recordEditorHistory = useCallback((forcedHtml = null) => {
+    const html =
+      forcedHtml !== null
+        ? forcedHtml
+        : editorSurfaceRef.current?.innerHTML || "";
+    if (!html) return;
+    const stack = historyStackRef.current;
+    const currentIdx = historyIndexRef.current;
+    if (currentIdx >= 0 && stack[currentIdx] === html) return;
+
+    const nextStack = stack.slice(0, currentIdx + 1);
+    nextStack.push(html);
+    if (nextStack.length > 60) {
+      nextStack.shift();
+    }
+    historyStackRef.current = nextStack;
+    historyIndexRef.current = nextStack.length - 1;
+    syncHistoryFlags();
+  }, []);
+
   // Modals
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
@@ -793,6 +829,9 @@ export default function LearningContentStudio({
           if (editorSurfaceRef.current) {
             editorSurfaceRef.current.innerHTML = initialHtml;
           }
+          historyStackRef.current = [initialHtml];
+          historyIndexRef.current = 0;
+          syncHistoryFlags();
           isHydratingRef.current = false;
         }, 60);
 
@@ -946,6 +985,42 @@ export default function LearningContentStudio({
   // ==========================================================================
   // CONTINUOUS WYSIWYG DOCUMENT COMMANDS (Single Surface)
   // ==========================================================================
+  const getActiveTopLevelBlock = () => {
+    const surface = editorSurfaceRef.current;
+    if (!surface || typeof window === "undefined") return null;
+    const sel = window.getSelection();
+    let anchor =
+      sel && sel.rangeCount > 0 && surface.contains(sel.anchorNode)
+        ? sel.anchorNode
+        : savedSelectionRangeRef.current?.startContainer || null;
+
+    while (anchor && anchor !== surface) {
+      if (anchor.parentNode === surface && anchor.nodeType === Node.ELEMENT_NODE) {
+        return anchor;
+      }
+      anchor = anchor.parentNode;
+    }
+    return null;
+  };
+
+  const syncBlockFormatTagFromCursor = () => {
+    const activeBlock = getActiveTopLevelBlock();
+    if (!activeBlock) {
+      setBlockFormatTag("p");
+      return;
+    }
+    const tag = activeBlock.tagName.toLowerCase();
+    if (tag === "h1" || tag === "h2" || tag === "h3") {
+      setBlockFormatTag(tag);
+    } else if (tag === "pre") {
+      setBlockFormatTag("formula");
+    } else if (tag === "blockquote") {
+      setBlockFormatTag("callout");
+    } else {
+      setBlockFormatTag("p");
+    }
+  };
+
   const saveCurrentSelection = () => {
     if (typeof window === "undefined") return;
     const sel = window.getSelection();
@@ -956,6 +1031,7 @@ export default function LearningContentStudio({
       editorSurfaceRef.current.contains(sel.anchorNode)
     ) {
       savedSelectionRangeRef.current = sel.getRangeAt(0).cloneRange();
+      syncBlockFormatTagFromCursor();
     }
   };
 
@@ -971,32 +1047,207 @@ export default function LearningContentStudio({
     }
   };
 
+  const handleUndo = () => {
+    if (!editorSurfaceRef.current) return;
+    if (historyIndexRef.current > 0) {
+      historyIndexRef.current -= 1;
+      const targetHtml = historyStackRef.current[historyIndexRef.current];
+      editorSurfaceRef.current.innerHTML = targetHtml;
+      syncHistoryFlags();
+      markDirty();
+    } else {
+      restoreSavedSelection();
+      document.execCommand("undo", false, null);
+      markDirty();
+    }
+  };
+
+  const handleRedo = () => {
+    if (!editorSurfaceRef.current) return;
+    if (
+      historyIndexRef.current >= 0 &&
+      historyIndexRef.current < historyStackRef.current.length - 1
+    ) {
+      historyIndexRef.current += 1;
+      const targetHtml = historyStackRef.current[historyIndexRef.current];
+      editorSurfaceRef.current.innerHTML = targetHtml;
+      syncHistoryFlags();
+      markDirty();
+    } else {
+      restoreSavedSelection();
+      document.execCommand("redo", false, null);
+      markDirty();
+    }
+  };
+
   const execEditorCommand = (command, value = null) => {
     restoreSavedSelection();
     document.execCommand(command, false, value);
     saveCurrentSelection();
+    recordEditorHistory();
     markDirty();
   };
 
-  const handleFormatBlockChange = (tagValue) => {
-    setBlockFormatTag(tagValue);
-    restoreSavedSelection();
-    if (tagValue === "callout") {
-      document.execCommand(
-        "insertHTML",
-        false,
-        `<blockquote data-block-type="callout" data-variant="concept" data-title="Catatan Penting"><strong>Catatan Penting:</strong> Tuliskan poin sorotan penting di sini...</blockquote><p><br/></p>`
-      );
-    } else if (tagValue === "formula") {
-      document.execCommand(
-        "insertHTML",
-        false,
-        `<pre data-block-type="formula" data-title="Formula Finansial">ROE = (Laba Bersih / Total Ekuitas) × 100%</pre><p><br/></p>`
-      );
-    } else {
-      document.execCommand("formatBlock", false, `<${tagValue}>`);
+  const insertBlockNodeAfterCurrentBlock = (htmlElement) => {
+    const surface = editorSurfaceRef.current;
+    if (!surface) return;
+    surface.focus();
+
+    let targetBlock = null;
+    if (typeof window !== "undefined") {
+      const sel = window.getSelection();
+      let anchor =
+        sel && sel.rangeCount > 0 && surface.contains(sel.anchorNode)
+          ? sel.anchorNode
+          : savedSelectionRangeRef.current?.startContainer || null;
+
+      while (anchor && anchor !== surface) {
+        if (anchor.parentNode === surface) {
+          targetBlock = anchor;
+          break;
+        }
+        anchor = anchor.parentNode;
+      }
     }
+
+    const trailingParagraph = document.createElement("p");
+    trailingParagraph.innerHTML = "<br/>";
+
+    if (targetBlock && targetBlock.parentNode === surface) {
+      targetBlock.after(htmlElement, trailingParagraph);
+    } else {
+      surface.appendChild(htmlElement);
+      surface.appendChild(trailingParagraph);
+    }
+
+    if (typeof window !== "undefined") {
+      const sel = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(htmlElement);
+      range.collapse(false);
+      if (sel) {
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      savedSelectionRangeRef.current = range.cloneRange();
+    }
+    recordEditorHistory();
+    markDirty();
+  };
+
+  const selectAndFocusElement = (el) => {
+    if (!el || typeof window === "undefined") return;
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    if (sel) {
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+    savedSelectionRangeRef.current = range.cloneRange();
+    syncBlockFormatTagFromCursor();
+  };
+
+  const handleFormatBlockChange = (tagValue) => {
+    const surface = editorSurfaceRef.current;
+    if (!surface) return;
+    restoreSavedSelection();
+
+    const activeBlock = getActiveTopLevelBlock();
+    const activeTag = activeBlock ? activeBlock.tagName.toLowerCase() : "";
+    const activeRawText = activeBlock ? (activeBlock.textContent || "").trim() : "";
+
+    if (tagValue === "formula") {
+      const pre = document.createElement("pre");
+      pre.setAttribute("data-block-type", "formula");
+      pre.setAttribute("data-title", "Rumus Perhitungan");
+
+      if (activeBlock && activeTag !== "pre") {
+        // Konversi baris/blok saat ini menjadi Kotak Rumus (gunakan template jika baris masih kosong)
+        pre.textContent =
+          activeRawText ||
+          "[Nama Rasio] = ([Variabel Pembilang] / [Variabel Penyebut]) × 100%\nKeterangan: [Jelaskan variabel atau satuan rumus di sini]";
+        activeBlock.replaceWith(pre);
+      } else {
+        pre.textContent =
+          "[Nama Rasio] = ([Variabel Pembilang] / [Variabel Penyebut]) × 100%\nKeterangan: [Jelaskan variabel atau satuan rumus di sini]";
+        insertBlockNodeAfterCurrentBlock(pre);
+      }
+      setBlockFormatTag("formula");
+      selectAndFocusElement(pre);
+      recordEditorHistory();
+      markDirty();
+      return;
+    }
+
+    if (tagValue === "callout") {
+      const bq = document.createElement("blockquote");
+      bq.setAttribute("data-block-type", "callout");
+      bq.setAttribute("data-variant", "concept");
+      bq.setAttribute("data-title", "Catatan Penting");
+
+      if (activeBlock && activeTag !== "blockquote") {
+        const cleanBody = activeRawText.replace(/^Catatan Penting:\s*/i, "");
+        bq.innerHTML = `<strong>Catatan Penting:</strong> ${escapeHtml(
+          cleanBody || "[Tulis isi catatan penting di sini]"
+        )}`;
+        activeBlock.replaceWith(bq);
+      } else {
+        bq.innerHTML =
+          "<strong>Catatan Penting:</strong> [Tulis isi catatan penting di sini]";
+        insertBlockNodeAfterCurrentBlock(bq);
+      }
+      setBlockFormatTag("callout");
+      selectAndFocusElement(bq);
+      recordEditorHistory();
+      markDirty();
+      return;
+    }
+
+    // Mengubah dari Kotak Rumus (<pre>), Kotak Catatan (<blockquote>), atau blok lain ke Teks Normal (<p>) / Heading (<h1>/<h2>/<h3>)
+    if (
+      activeBlock &&
+      (activeTag === "pre" ||
+        activeTag === "blockquote" ||
+        activeTag === "p" ||
+        activeTag === "h1" ||
+        activeTag === "h2" ||
+        activeTag === "h3" ||
+        activeTag === "div")
+    ) {
+      const targetTag = ["p", "h1", "h2", "h3"].includes(tagValue) ? tagValue : "p";
+      const newEl = document.createElement(targetTag);
+
+      if (activeTag === "pre") {
+        // Konversi isi kotak rumus ke paragraf/heading normal (baris baru tetap rapi dengan <br/>)
+        const lines = (activeBlock.textContent || "")
+          .split("\n")
+          .map((l) => escapeHtml(l.trim()))
+          .filter(Boolean);
+        newEl.innerHTML = lines.length > 0 ? lines.join("<br/>") : "<br/>";
+      } else if (activeTag === "blockquote") {
+        const cleaned = (activeBlock.innerHTML || "").replace(
+          /^<strong>[^<]*:?<\/strong>\s*/i,
+          ""
+        );
+        newEl.innerHTML = cleaned.trim() || "<br/>";
+      } else {
+        newEl.innerHTML = activeBlock.innerHTML || "<br/>";
+      }
+
+      activeBlock.replaceWith(newEl);
+      setBlockFormatTag(targetTag);
+      selectAndFocusElement(newEl);
+      recordEditorHistory();
+      markDirty();
+      return;
+    }
+
+    setBlockFormatTag(tagValue);
+    document.execCommand("formatBlock", false, `<${tagValue}>`);
     saveCurrentSelection();
+    recordEditorHistory();
     markDirty();
   };
 
@@ -1004,6 +1255,7 @@ export default function LearningContentStudio({
     restoreSavedSelection();
     document.execCommand("insertHTML", false, htmlSnippet);
     saveCurrentSelection();
+    recordEditorHistory();
     markDirty();
   };
 
@@ -1763,9 +2015,36 @@ export default function LearningContentStudio({
                 1 SINGLE STICKY FORMATTING BAR (Mengontrol dokumen menyatu)
                 ============================================================== */}
             <div className="sticky top-[61px] z-20 px-4 py-2.5 bg-slate-50/95 dark:bg-[#151515]/95 backdrop-blur-md border-b border-slate-200 dark:border-[#262626] rounded-t-2xl flex flex-wrap items-center gap-1.5">
-              {/* Format Teks (Untuk teks yang sedang diblok / kursor aktif) */}
+              {/* Undo & Redo Buttons */}
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={handleUndo}
+                disabled={!canUndo}
+                title="Urungkan (Undo / Ctrl+Z)"
+                aria-label="Urungkan (Undo)"
+                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-200/70 dark:hover:bg-[#242424] text-slate-700 dark:text-slate-200 disabled:opacity-35 disabled:pointer-events-none cursor-pointer"
+              >
+                <Undo2 className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={handleRedo}
+                disabled={!canRedo}
+                title="Ulangi (Redo / Ctrl+Y)"
+                aria-label="Ulangi (Redo)"
+                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-200/70 dark:hover:bg-[#242424] text-slate-700 dark:text-slate-200 disabled:opacity-35 disabled:pointer-events-none cursor-pointer"
+              >
+                <Redo2 className="w-4 h-4" />
+              </button>
+
+              <span className="w-px h-5 bg-slate-200 dark:bg-[#2a2a2a] mx-1" />
+
+              {/* Format Teks & Konversi Tipe Blok (Teks Normal <-> Heading <-> Kotak Catatan <-> Kotak Rumus) */}
               <select
                 value={blockFormatTag}
+                onMouseDown={() => saveCurrentSelection()}
                 onChange={(e) => handleFormatBlockChange(e.target.value)}
                 aria-label="Format Baris"
                 className="h-8 px-2.5 rounded-lg text-xs font-semibold bg-white dark:bg-[#0c0c0c] border border-slate-200 dark:border-[#2a2a2a] text-slate-800 dark:text-slate-100 focus:outline-none cursor-pointer"
@@ -1774,8 +2053,8 @@ export default function LearningContentStudio({
                 <option value="h1">Judul Besar (H1)</option>
                 <option value="h2">Subjudul (H2)</option>
                 <option value="h3">Sub-bagian (H3)</option>
-                <option value="callout">+ Kotak Catatan</option>
-                <option value="formula">+ Kotak Rumus</option>
+                <option value="callout">Kotak Catatan</option>
+                <option value="formula">Kotak Rumus</option>
               </select>
 
               <span className="w-px h-5 bg-slate-200 dark:bg-[#2a2a2a] mx-1" />
@@ -1992,7 +2271,22 @@ export default function LearningContentStudio({
                   suppressContentEditableWarning
                   onInput={() => {
                     saveCurrentSelection();
+                    recordEditorHistory();
                     markDirty();
+                  }}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+                      if (e.shiftKey) {
+                        e.preventDefault();
+                        handleRedo();
+                      } else {
+                        e.preventDefault();
+                        handleUndo();
+                      }
+                    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+                      e.preventDefault();
+                      handleRedo();
+                    }
                   }}
                   onKeyUp={saveCurrentSelection}
                   onMouseUp={saveCurrentSelection}
@@ -2004,8 +2298,8 @@ export default function LearningContentStudio({
                     [&_p]:my-3 [&_p]:leading-[1.8]
                     [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-3 [&_ul]:space-y-1.5
                     [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-3 [&_ol]:space-y-1.5
-                    [&_blockquote]:my-4 [&_blockquote]:p-4 [&_blockquote]:rounded-xl [&_blockquote]:bg-slate-50 [&_blockquote]:dark:bg-[#151515] [&_blockquote]:border [&_blockquote]:border-slate-200 [&_blockquote]:dark:border-[#282828] [&_blockquote]:border-l-4 [&_blockquote]:border-l-[#E5242A]
-                    [&_pre]:my-4 [&_pre]:p-4 [&_pre]:rounded-xl [&_pre]:bg-slate-900 [&_pre]:text-white [&_pre]:font-mono [&_pre]:text-sm [&_pre]:overflow-x-auto
+                    [&_blockquote]:my-4 [&_blockquote]:p-4 [&_blockquote]:rounded-xl [&_blockquote]:bg-slate-50 [&_blockquote]:dark:bg-[#151515] [&_blockquote]:border [&_blockquote]:border-slate-200 [&_blockquote]:dark:border-[#282828] [&_blockquote]:border-l-4 [&_blockquote]:border-l-[#E5242A] [&_blockquote]:text-slate-800 [&_blockquote]:dark:text-slate-200
+                    [&_pre]:my-4 [&_pre]:p-4 [&_pre]:rounded-xl [&_pre]:bg-slate-100/90 [&_pre]:dark:bg-[#141720] [&_pre]:border [&_pre]:border-slate-200 [&_pre]:dark:border-[#262b38] [&_pre]:border-l-4 [&_pre]:border-l-slate-700 [&_pre]:dark:border-l-slate-300 [&_pre]:text-slate-900 [&_pre]:dark:text-slate-100 [&_pre]:font-mono [&_pre]:text-sm [&_pre]:leading-relaxed [&_pre]:whitespace-pre-wrap [&_pre]:overflow-x-auto
                     [&_table]:w-full [&_table]:my-5 [&_table]:border-collapse [&_table]:text-sm
                     [&_th]:bg-slate-100 [&_th]:dark:bg-[#181818] [&_th]:border [&_th]:border-slate-200 [&_th]:dark:border-[#2a2a2a] [&_th]:px-3.5 [&_th]:py-2.5 [&_th]:text-left [&_th]:font-semibold
                     [&_td]:border [&_td]:border-slate-200 [&_td]:dark:border-[#262626] [&_td]:px-3.5 [&_td]:py-2.5
