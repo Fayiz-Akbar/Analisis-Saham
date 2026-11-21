@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { LogOut, Menu, ShieldCheck, UserCheck, UserPlus, X } from "lucide-react";
+import { LogOut, ShieldCheck, UserCheck, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 export default function AppHeader({
@@ -9,7 +9,7 @@ export default function AppHeader({
   darkMode,
   toggleDarkMode,
 }) {
-  const { user, isAuthenticated, isAdmin, logout, openAuthModal } = useAuth();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const [showAuthMenu, setShowAuthMenu] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);
   const authRef = useRef(null);
@@ -48,19 +48,14 @@ export default function AppHeader({
     { id: "ai", label: "AI Assistant" },
   ];
 
-  const roleBadgeLabel = isAdmin
-    ? "Administrator"
-    : user?.investorProfile === "EXPERIENCED"
-      ? "Investor (Expert)"
-      : "Investor (Pemula)";
-
   const handleSelectNav = (tabId) => {
     setActiveTab(tabId);
     setShowMobileNav(false);
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-[#080808]/95 border-b border-slate-200 dark:border-[#272727] backdrop-blur-md transition-colors shadow-xs dark:shadow-none">
+    <>
+      <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-[#080808]/95 border-b border-slate-200 dark:border-[#272727] backdrop-blur-md transition-colors shadow-xs dark:shadow-none">
       <div className="max-w-full lg:max-w-[98%] mx-auto px-3 sm:px-4 lg:px-6 h-14 lg:h-16 flex items-center justify-between gap-2 sm:gap-3">
         {/* ========================================================
             KIRI: Logo Investpedia Resmi (Dukungan Light & Dark Mode)
@@ -79,8 +74,8 @@ export default function AppHeader({
         {/* ========================================================
             TENGAH: Floating Pill Bar Navigasi (Desktop lg+)
             ======================================================== */}
-        <nav className="hidden lg:flex flex-1 justify-center max-w-5xl min-w-0 mx-4">
-          <div className="bg-slate-100 border border-slate-200/90 dark:bg-[#12151e] dark:border-slate-800/90 rounded-full p-1 shadow-xs dark:shadow-md flex items-center gap-1 max-w-full overflow-x-auto scrollbar-none">
+        <nav className="hidden lg:flex flex-1 justify-center max-w-5xl min-w-0 mx-2 xl:mx-4">
+          <div className="bg-slate-100 border border-slate-200/90 dark:bg-[#12151e] dark:border-slate-800/90 rounded-full p-1 shadow-xs dark:shadow-md flex items-center gap-0.5 xl:gap-1 max-w-full overflow-x-auto scrollbar-none">
             {navTabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -88,7 +83,7 @@ export default function AppHeader({
                   key={tab.id}
                   type="button"
                   onClick={() => handleSelectNav(tab.id)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                  className={`px-2.5 xl:px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                     isActive
                       ? "bg-slate-900 text-white shadow-xs dark:bg-white dark:text-slate-950"
                       : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -102,23 +97,23 @@ export default function AppHeader({
         </nav>
 
         {/* ========================================================
-            KANAN: Portal Admin Pill + Search + Auth + Theme + Menu Mobile
+            KANAN: Portal Admin + Search + Theme + Login/Akun + Menu Mobile
             ======================================================== */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
+        <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
           {/* Pintasan Switch Admin <-> Sistem Utama (HANYA TAMPIL KETIKA SUDAH LOGIN SEBAGAI ADMIN) */}
           {isAdmin && (
             <button
               type="button"
               onClick={() => handleSelectNav(activeTab === "admin" ? "dashboard" : "admin")}
-              className={`h-9 px-2.5 sm:px-3 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`hidden sm:flex h-9 px-3 rounded-lg border text-xs font-bold items-center gap-1.5 transition-colors cursor-pointer ${
                 activeTab === "admin"
                   ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-slate-900 dark:border-white"
                   : "bg-slate-100 dark:bg-[#161922] text-slate-700 dark:text-slate-200 border-slate-200 dark:border-[#272727] hover:border-slate-400 dark:hover:border-slate-500"
               }`}
               title={activeTab === "admin" ? "Beralih ke Sistem Utama (Publik)" : "Beralih ke Portal Administrator"}
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-              <span className="hidden sm:inline">
+              <ShieldCheck className="w-3.5 h-3.5 text-current" />
+              <span>
                 {activeTab === "admin" ? "Ke Sistem Utama" : "Portal Admin"}
               </span>
             </button>
@@ -128,12 +123,12 @@ export default function AppHeader({
           <button
             type="button"
             onClick={onOpenSearch}
-            className="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border border-slate-200 dark:border-[#272727] hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center text-slate-700 dark:text-white transition-all cursor-pointer"
+            className="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.07] flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors cursor-pointer"
             title="Cari Saham IDX (Global Search)"
             aria-label="Cari Saham"
           >
             <svg
-              className="w-4 h-4 stroke-slate-700 dark:stroke-white stroke-2 fill-none"
+              className="w-[18px] h-[18px] stroke-current stroke-2 fill-none"
               viewBox="0 0 24 24"
             >
               <circle cx="11" cy="11" r="7" />
@@ -141,161 +136,17 @@ export default function AppHeader({
             </svg>
           </button>
 
-          {/* 2. User Profile / Auth Button */}
-          <div ref={authRef} className="relative">
-            <button
-              type="button"
-              onClick={() => setShowAuthMenu(!showAuthMenu)}
-              className={`h-9 px-2.5 rounded-lg border flex items-center gap-2 transition-all cursor-pointer ${
-                isAuthenticated
-                  ? isAdmin
-                    ? "bg-slate-100 dark:bg-[#161922] border-slate-300 dark:border-[#333333] text-slate-800 dark:text-slate-200"
-                    : "bg-[#062c19] border-[#0e4429] text-[#34d399]"
-                  : "w-9 justify-center bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border-slate-200 dark:border-[#272727] hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-white"
-              }`}
-              title="Profil Pengguna & Autentikasi"
-              aria-label="Akun Pengguna"
-            >
-              <svg
-                className="w-4 h-4 stroke-current stroke-2 fill-none shrink-0"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <circle
-                  cx="12"
-                  cy="7"
-                  r="4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              {isAuthenticated && (
-                <span className="hidden md:inline text-[11px] font-bold tracking-tight max-w-[110px] truncate">
-                  {user?.name?.split(" ")[0]}
-                </span>
-              )}
-            </button>
-
-            {/* Auth Dropdown Popover */}
-            {showAuthMenu && (
-              <div className="absolute right-0 mt-2 w-[min(18rem,calc(100vw-24px))] rounded-xl border border-slate-200 dark:border-[#272727] bg-white dark:bg-[#101010] p-4 z-50 text-xs space-y-3">
-                {isAuthenticated ? (
-                  <>
-                    <div className="border-b border-slate-200 dark:border-[#272727] pb-3 space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-slate-900 dark:text-white text-sm truncate">
-                          {user?.name}
-                        </span>
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider shrink-0 ${
-                            isAdmin
-                              ? "bg-slate-200 dark:bg-[#1e2230] text-slate-800 dark:text-slate-300 border border-slate-300 dark:border-[#2b3247]"
-                              : "bg-[#062c19] text-[#34d399] border border-[#0e4429]"
-                          }`}
-                        >
-                          {roleBadgeLabel}
-                        </span>
-                      </div>
-                      <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 block truncate">
-                        {user?.email}
-                      </span>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      {isAdmin && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setActiveTab(activeTab === "admin" ? "dashboard" : "admin");
-                            setShowAuthMenu(false);
-                          }}
-                          className="w-full text-left px-3 py-2 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-[#161922] dark:hover:bg-[#1f2430] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-[#272727] transition-colors flex items-center justify-between cursor-pointer"
-                        >
-                          <span className="flex items-center gap-2">
-                            <ShieldCheck className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                            {activeTab === "admin" ? "Beralih ke Sistem Utama" : "Buka Portal Administrator"}
-                          </span>
-                          <span>→</span>
-                        </button>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          logout();
-                          setShowAuthMenu(false);
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold bg-[#2a0e12]/40 hover:bg-[#2a0e12] text-rose-500 dark:text-rose-400 border border-rose-200 dark:border-[#4c151c] transition-colors flex items-center gap-2 cursor-pointer"
-                      >
-                        <LogOut className="w-3.5 h-3.5" />
-                        Keluar (Logout Sesi)
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="border-b border-slate-200 dark:border-[#272727] pb-2.5">
-                      <span className="font-bold text-slate-900 dark:text-white text-sm block">
-                        Autentikasi Pengguna
-                      </span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                        Masuk ke akun Investor atau Administrator
-                      </span>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab("login");
-                          setShowAuthMenu(false);
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-lg text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer"
-                      >
-                        <UserCheck className="w-3.5 h-3.5" />
-                        Masuk (Login Akun)
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          openAuthModal("register");
-                          setActiveTab("login");
-                          setShowAuthMenu(false);
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-[#161922] dark:hover:bg-[#1f2430] text-slate-800 dark:text-white border border-slate-200 dark:border-[#272727] transition-colors flex items-center gap-2 cursor-pointer"
-                      >
-                        <UserPlus className="w-3.5 h-3.5" />
-                        Daftar Akun Investor Baru
-                      </button>
-                    </div>
-                  </>
-                )}
-
-                <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 block leading-tight">
-                    Investpedia AI • Analisis Fundamental Pasar Modal IDX
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 3. Dark / Light Mode Toggle Button */}
+          {/* 2. Dark / Light Mode Toggle Button */}
           <button
             type="button"
             onClick={toggleDarkMode}
-            className="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border border-slate-200 dark:border-[#272727] hover:border-slate-300 dark:hover:border-slate-700 flex items-center justify-center text-slate-700 dark:text-white transition-all cursor-pointer"
+            className="w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.07] flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors cursor-pointer"
             title={darkMode ? "Ganti ke Mode Terang" : "Ganti ke Mode Gelap"}
             aria-label="Ganti Tema"
           >
             {darkMode ? (
               <svg
-                className="w-4 h-4 stroke-slate-700 dark:stroke-white stroke-2 fill-none"
+                className="w-[18px] h-[18px] stroke-current stroke-2 fill-none"
                 viewBox="0 0 24 24"
               >
                 <circle cx="12" cy="12" r="5" />
@@ -310,7 +161,7 @@ export default function AppHeader({
               </svg>
             ) : (
               <svg
-                className="w-4 h-4 stroke-slate-700 dark:stroke-white stroke-2 fill-none"
+                className="w-[18px] h-[18px] stroke-current stroke-2 fill-none"
                 viewBox="0 0 24 24"
               >
                 <path
@@ -322,33 +173,158 @@ export default function AppHeader({
             )}
           </button>
 
-          {/* 4. Mobile / Tablet Navigation Menu Button (< lg) */}
+          {/* 3. Desktop Login / User Profile */}
+          {isAuthenticated ? (
+            <div ref={authRef} className="relative hidden sm:block">
+              <button
+                type="button"
+                onClick={() => setShowAuthMenu(!showAuthMenu)}
+                className="h-9 px-3 rounded-lg border border-slate-200 dark:border-[#2a2a2a] bg-white hover:bg-slate-100 dark:bg-[#141414] dark:hover:bg-[#1f1f1f] text-slate-900 dark:text-white flex items-center gap-2 transition-colors cursor-pointer"
+                title="Profil Pengguna & Autentikasi"
+                aria-label="Akun Pengguna"
+                aria-expanded={showAuthMenu}
+              >
+                <svg
+                  className="w-4 h-4 stroke-current stroke-2 fill-none shrink-0"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <circle
+                    cx="12"
+                    cy="7"
+                    r="4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="text-xs font-semibold tracking-tight max-w-[110px] truncate">
+                  {user?.name?.split(" ")[0]}
+                </span>
+              </button>
+
+              {showAuthMenu && (
+                <div className="absolute right-0 mt-2 w-[min(17.5rem,calc(100vw-24px))] rounded-xl border border-slate-200 dark:border-[#272727] bg-white dark:bg-[#111111] shadow-lg dark:shadow-none p-3.5 z-50 text-xs space-y-3">
+                  <div className="border-b border-slate-200 dark:border-[#272727] pb-3 space-y-0.5">
+                    <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">
+                      {user?.name}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                      {user?.email}
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab(activeTab === "admin" ? "dashboard" : "admin");
+                          setShowAuthMenu(false);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-slate-900 dark:text-white transition-colors flex items-center justify-between cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2">
+                          <ShieldCheck className="w-4 h-4 text-current" />
+                          {activeTab === "admin" ? "Beralih ke Sistem Utama" : "Buka Portal Admin"}
+                        </span>
+                        <span>→</span>
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        logout();
+                        setShowAuthMenu(false);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold bg-white hover:bg-slate-100 dark:bg-transparent dark:hover:bg-white/[0.08] text-slate-900 dark:text-white border border-slate-200 dark:border-[#272727] transition-colors flex items-center gap-2 cursor-pointer"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Keluar</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleSelectNav("login")}
+              className="hidden lg:inline-flex h-9 px-4 rounded-lg bg-slate-900 text-white dark:bg-white dark:text-slate-950 text-xs font-semibold items-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer"
+            >
+              <span>Login</span>
+            </button>
+          )}
+
+          {/* 4. Mobile / Tablet Navigation Button (< lg) - Ikon 2 Garis Minimalis */}
           <button
             type="button"
             onClick={() => setShowMobileNav((prev) => !prev)}
             aria-expanded={showMobileNav}
             aria-label="Buka menu navigasi"
-            className="lg:hidden h-9 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#12151e] border border-slate-200 dark:border-[#272727] flex items-center gap-1.5 text-xs font-semibold text-slate-800 dark:text-slate-100 cursor-pointer"
+            title="Menu Navigasi"
+            className="lg:hidden w-9 h-9 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.07] flex items-center justify-center text-slate-700 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white transition-colors cursor-pointer"
           >
-            {showMobileNav ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            <span>Menu</span>
+            {showMobileNav ? (
+              <X className="w-5 h-5" aria-hidden="true" />
+            ) : (
+              <svg
+                className="w-5 h-5 stroke-current fill-none"
+                viewBox="0 0 24 24"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <line x1="4" y1="9" x2="20" y2="9" />
+                <line x1="4" y1="15" x2="20" y2="15" />
+              </svg>
+            )}
           </button>
         </div>
       </div>
+    </header>
 
-      {/* Mobile / Tablet Navigation Drawer Sheet */}
+      {/* Mobile / Tablet Slide-Over Drawer dari Kanan (< lg) */}
       {showMobileNav && (
-        <>
+        <div className="fixed inset-0 z-50 lg:hidden flex justify-end">
+          {/* Backdrop */}
           <div
             onClick={() => setShowMobileNav(false)}
-            className="fixed inset-0 top-14 z-30 bg-black/50 lg:hidden"
+            className="fixed inset-0 bg-black/50 backdrop-blur-[1px]"
             aria-hidden="true"
           />
-          <nav
-            aria-label="Navigasi Utama"
-            className="relative z-40 lg:hidden border-t border-slate-200 dark:border-[#272727] bg-white dark:bg-[#0d0f14] px-3 py-3 shadow-lg"
+
+          {/* Panel Drawer Kanan */}
+          <aside
+            aria-label="Menu Navigasi Mobile"
+            className="relative z-10 w-[min(300px,82vw)] h-dvh bg-white dark:bg-[#0d0f14] border-l border-slate-200 dark:border-[#272727] shadow-2xl flex flex-col"
           >
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {/* Header Drawer */}
+            <div className="h-14 px-4 border-b border-slate-200 dark:border-[#272727] flex items-center justify-between shrink-0">
+              <img
+                src={darkMode ? "/investpedia-full-dark.png" : "/investpedia-full.png"}
+                alt="Investpedia"
+                className="h-6 w-auto object-contain"
+              />
+              <button
+                type="button"
+                onClick={() => setShowMobileNav(false)}
+                aria-label="Tutup menu navigasi"
+                className="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#141720] dark:hover:bg-white/[0.08] border border-slate-200 dark:border-[#272727] flex items-center justify-center text-slate-700 dark:text-slate-200 cursor-pointer"
+              >
+                <X className="w-4 h-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            {/* Daftar Halaman Memanjang ke Bawah (1 Kolom Vertikal) */}
+            <nav
+              aria-label="Navigasi Utama"
+              className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-1"
+            >
               {navTabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
@@ -356,20 +332,70 @@ export default function AppHeader({
                     key={tab.id}
                     type="button"
                     onClick={() => handleSelectNav(tab.id)}
-                    className={`min-h-[44px] px-3 py-2 rounded-xl text-xs font-semibold text-left transition-colors cursor-pointer border ${
+                    className={`w-full min-h-[42px] px-3.5 py-2 rounded-xl text-sm font-semibold text-left transition-colors cursor-pointer flex items-center justify-between ${
                       isActive
-                        ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-950 dark:border-white"
-                        : "bg-slate-50 dark:bg-[#141720] text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.06]"
+                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-950"
+                        : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.06]"
                     }`}
                   >
-                    {tab.label}
+                    <span>{tab.label}</span>
                   </button>
                 );
               })}
+            </nav>
+
+            {/* Footer Drawer: Login / Status Akun */}
+            <div className="p-3.5 border-t border-slate-200 dark:border-[#272727] bg-slate-50/70 dark:bg-black/20 space-y-2 shrink-0">
+              {isAuthenticated ? (
+                <>
+                  <div className="px-1 space-y-0.5">
+                    <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">
+                      {user?.name}
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                      {user?.email}
+                    </p>
+                  </div>
+
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => handleSelectNav(activeTab === "admin" ? "dashboard" : "admin")}
+                      className="w-full h-10 px-3 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-950 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 text-current" aria-hidden="true" />
+                      <span>
+                        {activeTab === "admin" ? "Ke Sistem Utama" : "Buka Portal Admin"}
+                      </span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logout();
+                      setShowMobileNav(false);
+                    }}
+                    className="w-full h-10 px-3 rounded-xl text-xs font-semibold bg-white hover:bg-slate-100 dark:bg-[#141720] dark:hover:bg-white/[0.08] text-slate-900 dark:text-white border border-slate-200 dark:border-[#272727] transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>Keluar</span>
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleSelectNav("login")}
+                  className="w-full h-10 px-4 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:opacity-90 transition-opacity flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <UserCheck className="w-4 h-4" aria-hidden="true" />
+                  <span>Login</span>
+                </button>
+              )}
             </div>
-          </nav>
-        </>
+          </aside>
+        </div>
       )}
-    </header>
+    </>
   );
 }
