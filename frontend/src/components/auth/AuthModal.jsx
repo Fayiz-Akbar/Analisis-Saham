@@ -52,12 +52,16 @@ export default function AuthModal({ onNavigateToAdmin }) {
 
     try {
       setIsSubmitting(true);
+      let loggedUser;
       if (mode === "login") {
-        await login({ email, password });
+        loggedUser = await login({ email, password });
       } else {
-        await register({ name, email, password, investorProfile });
+        loggedUser = await register({ name, email, password, investorProfile });
       }
       closeAuthModal();
+      if (loggedUser?.role === "ADMIN" && onNavigateToAdmin) {
+        onNavigateToAdmin();
+      }
     } catch (err) {
       setErrorMessage(err.message || "Gagal memproses autentikasi.");
       if (Array.isArray(err.details) && err.details.length > 0) {
@@ -280,9 +284,16 @@ export default function AuthModal({ onNavigateToAdmin }) {
           {mode === "login" && (
             <div className="pt-3 border-t border-slate-200 dark:border-[#272727] space-y-2">
               <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 block">
-                Akun Demo Pengujian:
+                Akun Demo Pengujian (Investor & Admin):
               </span>
               <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleQuickFill("admin@investai.id")}
+                  className="px-2.5 py-1 rounded-md text-[11px] font-mono font-medium bg-rose-50 dark:bg-rose-950/40 text-[#E5242A] dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-100 transition-colors cursor-pointer"
+                >
+                  Admin
+                </button>
                 <button
                   type="button"
                   onClick={() => handleQuickFill("fayiz.pemula@example.com")}

@@ -190,19 +190,32 @@ function HalftoneWaveCanvas() {
   );
 }
 
-export default function AdminLoginPage({ onLoginSuccess }) {
-  const { loginAdmin } = useAuth();
+export default function AdminLoginPage({ onLoginSuccess, onBackToDashboard }) {
+  const { login, register, authModalMode, closeAuthModal } = useAuth();
 
+  const [mode, setMode] = useState("login"); // "login" | "register"
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [investorProfile, setInvestorProfile] = useState("BEGINNER");
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (authModalMode === "register" || authModalMode === "login") {
+      setMode(authModalMode);
+    }
+  }, [authModalMode]);
+
   const validateForm = () => {
     const errors = {};
     const trimmedEmail = email.trim();
+
+    if (mode === "register" && name.trim().length < 2) {
+      errors.name = "Nama minimal 2 karakter.";
+    }
 
     if (!trimmedEmail) {
       errors.email = "Email wajib diisi.";
@@ -236,6 +249,14 @@ export default function AdminLoginPage({ onLoginSuccess }) {
     if (errorMessage) setErrorMessage("");
   };
 
+  const handleQuickFill = (demoEmail) => {
+    setMode("login");
+    setEmail(demoEmail);
+    setPassword("Password123!");
+    setFieldErrors({});
+    setErrorMessage("");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
@@ -244,11 +265,26 @@ export default function AdminLoginPage({ onLoginSuccess }) {
 
     try {
       setIsSubmitting(true);
-      const adminUser = await loginAdmin({
-        email: email.trim(),
-        password,
-      });
-      if (onLoginSuccess) onLoginSuccess(adminUser);
+      let loggedUser;
+      if (mode === "register") {
+        loggedUser = await register({
+          name: name.trim(),
+          email: email.trim(),
+          password,
+          investorProfile,
+        });
+      } else {
+        loggedUser = await login({
+          email: email.trim(),
+          password,
+        });
+      }
+      if (closeAuthModal) closeAuthModal();
+      if (onLoginSuccess) {
+        onLoginSuccess(loggedUser);
+      } else if (loggedUser?.role !== "ADMIN" && onBackToDashboard) {
+        onBackToDashboard();
+      }
     } catch (err) {
       if (Array.isArray(err.details) && err.details.length > 0) {
         const mapped = {};
@@ -272,42 +308,61 @@ export default function AdminLoginPage({ onLoginSuccess }) {
     >
       <div className="w-full max-w-5xl lg:min-h-[600px] grid grid-cols-1 lg:grid-cols-2 rounded-2xl overflow-hidden border border-slate-200 dark:border-[#1f1f22] bg-[#09090b]">
         {/* Bagian Kiri: Halftone Wave Visual & Headline */}
-        <div className="relative min-h-[220px] sm:min-h-[260px] lg:min-h-full bg-[#fbf9f9] p-6 sm:p-10 lg:p-11 flex flex-col justify-end overflow-hidden">
+        <div className="relative min-h-[220px] sm:min-h-[260px] lg:min-h-full bg-[#fbf9f9] p-6 sm:p-10 lg:p-11 flex flex-col justify-between overflow-hidden">
           <HalftoneWaveCanvas />
 
-          <div className="relative z-10 max-w-xs sm:max-w-sm">
+          <div className="relative z-10 flex items-center justify-between">
+            {onBackToDashboard && (
+              <button
+                type="button"
+                onClick={onBackToDashboard}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/90 hover:bg-white text-slate-800 border border-slate-200/80 shadow-2xs transition-colors cursor-pointer"
+              >
+                ← Kembali ke Beranda
+              </button>
+            )}
+          </div>
+
+          <div className="relative z-10 max-w-xs sm:max-w-sm space-y-1.5">
             <h1 className="text-2xl sm:text-3xl lg:text-[32px] font-bold tracking-tight text-[#111315] leading-[1.16]">
-              Administrator
+              Investpedia Portal
             </h1>
+            <p className="text-xs sm:text-sm font-medium text-slate-700">
+              Akses terpadu untuk Investor & Administrator.
+            </p>
           </div>
         </div>
 
         {/* Bagian Kanan: Brand Identity & Form Login */}
         <div className="bg-white dark:bg-[#09090b] p-6 sm:p-10 lg:p-12 flex flex-col justify-center border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-[#1f1f22]">
-          <div className="w-full max-w-[360px] mx-auto space-y-6">
+          <div className="w-full max-w-[360px] mx-auto space-y-5">
             <div className="space-y-4">
-              <div className="flex items-center">
-                <img
-                  src="/investpedia-full.png"
-                  alt="Investpedia"
-                  className="h-7 sm:h-8 w-auto object-contain select-none block dark:hidden"
-                />
-                <img
-                  src="/investpedia-full-dark.png"
-                  alt="Investpedia"
-                  className="h-7 sm:h-8 w-auto object-contain select-none hidden dark:block"
-                />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <img
+                    src="/investpedia-full.png"
+                    alt="Investpedia"
+                    className="h-7 sm:h-8 w-auto object-contain select-none block dark:hidden"
+                  />
+                  <img
+                    src="/investpedia-full-dark.png"
+                    alt="Investpedia"
+                    className="h-7 sm:h-8 w-auto object-contain select-none hidden dark:block"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <h2
                   id="admin-login-heading"
                   className="text-2xl sm:text-[28px] font-bold tracking-tight text-slate-900 dark:text-white"
                 >
-                  Selamat Datang
+                  {mode === "register" ? "Buat Akun Baru" : "Selamat Datang"}
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-zinc-400">
-                  Masuk untuk melanjutkan.
+                  {mode === "register"
+                    ? "Daftar untuk mulai belajar & menganalisis saham."
+                    : "Masuk sebagai Investor atau Administrator untuk melanjutkan."}
                 </p>
               </div>
             </div>
@@ -322,7 +377,36 @@ export default function AdminLoginPage({ onLoginSuccess }) {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} noValidate className="space-y-4">
+            <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
+              {mode === "register" && (
+                <div>
+                  <label
+                    htmlFor="user-name"
+                    className="block text-xs font-medium text-slate-700 dark:text-zinc-300 mb-1.5"
+                  >
+                    Nama Lengkap
+                  </label>
+                  <input
+                    id="user-name"
+                    name="name"
+                    type="text"
+                    required
+                    disabled={isSubmitting}
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (fieldErrors.name) setFieldErrors((p) => ({ ...p, name: "" }));
+                    }}
+                    placeholder="Nama Lengkap"
+                    className="w-full h-11 px-4 rounded-xl text-sm bg-slate-100 dark:bg-[#18181b] border border-slate-200 dark:border-[#27272a] text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-slate-900 dark:focus:border-zinc-400 focus-visible:outline-none"
+                  />
+                  {fieldErrors.name && (
+                    <p className="mt-1.5 text-xs text-rose-600 dark:text-[#f87171]">
+                      {fieldErrors.name}
+                    </p>
+                  )}
+                </div>
+              )}
               <div>
                 <label
                   htmlFor="admin-email"
@@ -407,15 +491,95 @@ export default function AdminLoginPage({ onLoginSuccess }) {
                 )}
               </div>
 
+              {mode === "register" && (
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 dark:text-zinc-300 mb-1.5">
+                    Profil Pengalaman Investor
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: "BEGINNER", label: "Pemula" },
+                      { id: "EXPERIENCED", label: "Berpengalaman" },
+                    ].map((opt) => (
+                      <button
+                        type="button"
+                        key={opt.id}
+                        onClick={() => setInvestorProfile(opt.id)}
+                        className={`h-9 px-3 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
+                          investorProfile === opt.id
+                            ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-zinc-950 dark:border-white"
+                            : "bg-slate-100 dark:bg-[#18181b] text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-[#27272a]"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="pt-1.5">
                 <Button
                   type="submit"
                   disabled={isSubmitting}
                   className="w-full h-11 rounded-xl text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-950 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 dark:active:bg-zinc-300 transition-colors cursor-pointer"
                 >
-                  {isSubmitting ? "Memproses..." : "Masuk"}
+                  {isSubmitting
+                    ? "Memproses..."
+                    : mode === "register"
+                      ? "Daftar Akun"
+                      : "Masuk"}
                 </Button>
               </div>
+
+              {/* Switch Login <-> Register */}
+              <div className="pt-1 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode((prev) => (prev === "login" ? "register" : "login"));
+                    setFieldErrors({});
+                    setErrorMessage("");
+                  }}
+                  className="text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white transition-colors cursor-pointer"
+                >
+                  {mode === "register"
+                    ? "Sudah punya akun? Masuk di sini"
+                    : "Belum punya akun investor? Daftar sekarang"}
+                </button>
+              </div>
+
+              {/* Pintasan Akun Demo (Investor & Admin) */}
+              {mode === "login" && (
+                <div className="pt-3 border-t border-slate-200 dark:border-[#27272a] space-y-2">
+                  <span className="text-[11px] font-medium text-slate-400 dark:text-zinc-500 block">
+                    Akun Demo Cepat (Semua User & Admin):
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleQuickFill("admin@investai.id")}
+                      className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-rose-50 dark:bg-rose-950/40 text-[#E5242A] dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-100 transition-colors cursor-pointer"
+                    >
+                      Admin
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickFill("fayiz.pemula@example.com")}
+                      className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-50 dark:bg-[#062c19] text-emerald-700 dark:text-[#34d399] border border-emerald-200 dark:border-[#0e4429] hover:bg-emerald-100 transition-colors cursor-pointer"
+                    >
+                      Investor Pemula
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickFill("fayiz.expert@example.com")}
+                      className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-[#18181b] text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-[#27272a] hover:border-slate-400 transition-colors cursor-pointer"
+                    >
+                      Investor Expert
+                    </button>
+                  </div>
+                </div>
+              )}
             </form>
           </div>
         </div>

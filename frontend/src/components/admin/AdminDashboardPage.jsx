@@ -173,8 +173,12 @@ export default function AdminDashboardPage({
   if (!isAuthenticated || !isAdmin) {
     return (
       <AdminLoginPage
-        onLoginSuccess={() => {
-          showToast("Sesi administrator aktif.", "success");
+        onLoginSuccess={(loggedUser) => {
+          if (loggedUser?.role === "ADMIN") {
+            showToast("Sesi administrator aktif.", "success");
+          } else if (onBackToDashboard) {
+            onBackToDashboard();
+          }
         }}
         onBackToDashboard={onBackToDashboard}
       />

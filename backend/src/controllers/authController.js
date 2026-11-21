@@ -167,11 +167,9 @@ export const login = async (req, res) => {
 };
 
 /**
- * Admin Login Controller (RBAC Gate Portal Administrator)
+ * Admin / Unified Login Controller
  * POST /api/auth/admin/login
- * - 400: format input tidak valid
- * - 401: email / password salah
- * - 403: kredensial benar tetapi akun bukan ADMIN
+ * Mendukung autentikasi untuk semua pengguna (baik Investor maupun Administrator)
  */
 export const adminLogin = async (req, res) => {
   try {
@@ -192,25 +190,17 @@ export const adminLogin = async (req, res) => {
       return sendError(res, 401, "Kredensial tidak valid. Email atau password salah.");
     }
 
-    if (user.role !== "ADMIN") {
-      return sendError(
-        res,
-        403,
-        "Akun ini tidak memiliki hak akses Administrator. Silakan gunakan halaman login Investor."
-      );
-    }
-
-    const expiresIn = getAdminJwtExpiresIn();
+    const expiresIn = user.role === "ADMIN" ? getAdminJwtExpiresIn() : JWT_EXPIRES_IN;
     const token = signToken(user, expiresIn);
 
-    return sendSuccess(res, 200, "Login Administrator berhasil.", {
+    return sendSuccess(res, 200, "Login berhasil.", {
       user: toPublicUser(user),
       token,
       expiresIn,
     });
   } catch (error) {
     console.error("Admin Login Error:", error);
-    return sendError(res, 500, "Terjadi kesalahan internal saat proses login Administrator.");
+    return sendError(res, 500, "Terjadi kesalahan internal saat proses login.");
   }
 };
 
