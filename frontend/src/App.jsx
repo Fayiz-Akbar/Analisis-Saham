@@ -17,6 +17,7 @@ const StockTableView = lazy(() => import("./components/views/StockTableView"));
 const WatchlistView = lazy(() => import("./components/views/WatchlistView"));
 const PlaceholderView = lazy(() => import("./components/views/PlaceholderView"));
 const AdminDashboardPage = lazy(() => import("./components/admin/AdminDashboardPage"));
+const AdminLoginPage = lazy(() => import("./components/admin/AdminLoginPage"));
 const UserLearningPage = lazy(() => import("./components/learning/UserLearningPage"));
 
 const THEME_STORAGE_KEY = "investpedia_theme";
@@ -36,6 +37,7 @@ const TAB_TO_PATH = {
   learning: "/learning",
   ai: "/ai",
   admin: "/admin",
+  login: "/login",
 };
 
 const getInitialDarkMode = () => {
@@ -83,6 +85,9 @@ const parseRouteFromLocation = () => {
 
   if (lowerPath === "/admin" || lowerPath.startsWith("/admin/")) {
     return { ...fallback, tab: "admin" };
+  }
+  if (lowerPath === "/login") {
+    return { ...fallback, tab: "login" };
   }
   if (lowerPath === "/screener" || lowerPath === "/kategori") {
     const sector = params.get("sector") || "ALL";
@@ -461,7 +466,26 @@ export default function App() {
           darkMode ? "dark bg-[#080808] text-[#F5F5F5]" : "bg-white text-slate-900"
         } transition-colors duration-200 flex flex-col`}
       >
-        {activeTab === "admin" ? (
+        {activeTab === "login" ? (
+          <Suspense
+            fallback={
+              <div className="min-h-screen bg-[#F4F6FA] dark:bg-[#080808] flex items-center justify-center text-xs text-slate-500">
+                Memuat Halaman Login...
+              </div>
+            }
+          >
+            <AdminLoginPage
+              onLoginSuccess={(loggedUser) => {
+                if (loggedUser?.role === "ADMIN") {
+                  setActiveTab("admin");
+                } else {
+                  setActiveTab("dashboard");
+                }
+              }}
+              onBackToDashboard={() => setActiveTab("dashboard")}
+            />
+          </Suspense>
+        ) : activeTab === "admin" ? (
           <Suspense
             fallback={
               <div className="min-h-screen bg-[#F4F6FA] dark:bg-[#080808] flex items-center justify-center text-xs text-slate-500">
@@ -611,8 +635,8 @@ export default function App() {
           </>
         )}
 
-        {/* Modal Login & Registrasi Investor */}
-        <AuthModal />
+        {/* Modal Login & Registrasi Terpadu (Investor & Admin) */}
+        <AuthModal onNavigateToAdmin={() => setActiveTab("admin")} />
 
         {/* TradingView Style Search Modal */}
         <SearchModal
