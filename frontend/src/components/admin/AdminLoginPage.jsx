@@ -271,38 +271,45 @@ export default function AdminLoginPage({ onLoginSuccess }) {
       className="min-h-screen w-full flex items-center justify-center py-6 sm:py-10 px-3 sm:px-6 bg-slate-50 dark:bg-[#080808]"
     >
       <div className="w-full max-w-5xl lg:min-h-[600px] grid grid-cols-1 lg:grid-cols-2 rounded-2xl overflow-hidden border border-slate-200 dark:border-[#1f1f22] bg-[#09090b]">
-        {/* Bagian Kiri: Halftone Wave Visual & Brand Identity (React Bits Auth 2 Style) */}
-        <div className="relative min-h-[220px] sm:min-h-[260px] lg:min-h-full bg-[#fbf9f9] p-6 sm:p-10 lg:p-11 flex flex-col justify-between overflow-hidden">
+        {/* Bagian Kiri: Halftone Wave Visual & Headline */}
+        <div className="relative min-h-[220px] sm:min-h-[260px] lg:min-h-full bg-[#fbf9f9] p-6 sm:p-10 lg:p-11 flex flex-col justify-end overflow-hidden">
           <HalftoneWaveCanvas />
 
-          <div className="relative z-10 flex items-center">
-            <img
-              src="/investpedia-full.png"
-              alt="Investpedia"
-              className="h-7 sm:h-8 w-auto object-contain select-none"
-            />
-          </div>
-
-          <div className="relative z-10 mt-10 lg:mt-0 max-w-xs sm:max-w-sm">
+          <div className="relative z-10 max-w-xs sm:max-w-sm">
             <h1 className="text-2xl sm:text-3xl lg:text-[32px] font-bold tracking-tight text-[#111315] leading-[1.16]">
               Administrator
             </h1>
           </div>
         </div>
 
-        {/* Bagian Kanan: Form Login */}
+        {/* Bagian Kanan: Brand Identity & Form Login */}
         <div className="bg-white dark:bg-[#09090b] p-6 sm:p-10 lg:p-12 flex flex-col justify-center border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-[#1f1f22]">
           <div className="w-full max-w-[360px] mx-auto space-y-6">
-            <div className="space-y-1.5">
-              <h2
-                id="admin-login-heading"
-                className="text-2xl sm:text-[28px] font-bold tracking-tight text-slate-900 dark:text-white"
-              >
-                Selamat Datang
-              </h2>
-              <p className="text-sm text-slate-500 dark:text-zinc-400">
-                Masuk untuk melanjutkan.
-              </p>
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <img
+                  src="/investpedia-full.png"
+                  alt="Investpedia"
+                  className="h-7 sm:h-8 w-auto object-contain select-none block dark:hidden"
+                />
+                <img
+                  src="/investpedia-full-dark.png"
+                  alt="Investpedia"
+                  className="h-7 sm:h-8 w-auto object-contain select-none hidden dark:block"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <h2
+                  id="admin-login-heading"
+                  className="text-2xl sm:text-[28px] font-bold tracking-tight text-slate-900 dark:text-white"
+                >
+                  Selamat Datang
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-zinc-400">
+                  Masuk untuk melanjutkan.
+                </p>
+              </div>
             </div>
 
             {errorMessage && (
