@@ -10,7 +10,7 @@ Seluruh akun di bawah ini dapat digunakan untuk masuk melalui **Halaman Login Te
 
 | No | Peran (Role) | Nama Pengguna | Email | Password | Profil Investor (`investorProfile`) | Hak Akses & Tujuan Redirect |
 | :-: | :--- | :--- | :--- | :--- | :--- | :--- |
-| **1** | **`ADMIN`** | Administrator Kurikulum InvestAI | `admin@email.com` | `admin123` | `EXPERIENCED` | Akses penuh ke **Portal Administrator** (`/admin`: Dashboard CMS, Materi Pembelajaran, Struktur Kurikulum, Bank Soal Kuis, Media, Pengaturan) sekaligus dapat beralih ke **Sistem Utama Investor** (`/`). |
+| **1** | **`ADMIN`** | Administrator Kurikulum InvestAI | `admin@email.com` | `password` | `EXPERIENCED` | Akses penuh ke **Portal Administrator** (`/admin`: Dashboard CMS, Materi Pembelajaran, Struktur Kurikulum, Bank Soal Kuis, Media, Pengaturan) sekaligus dapat beralih ke **Sistem Utama Investor** (`/`). |
 | **2** | **`INVESTOR`** | Fayiz Akbar (Pemula) | `fayiz.pemula@example.com` | `Password123!` | `BEGINNER` | Akses ke **Sistem Utama Investor** (`/`, `/learning`, `/ai`, `/watchlist`, `/screener`) dengan preferensi penjelasan fundamental & AI Tutor tingkat **Pemula**. Memiliki watchlist awal saham `BBCA`. |
 | **3** | **`INVESTOR`** | Fayiz Akbar (Berpengalaman) | `fayiz.expert@example.com` | `Password123!` | `EXPERIENCED` | Akses ke **Sistem Utama Investor** (`/`, `/learning`, `/ai`, `/watchlist`, `/screener`) dengan preferensi analisis rasio keuangan & AI Tutor tingkat **Berpengalaman (Expert)**. |
 
