@@ -10,7 +10,8 @@ import { Idx80TickerTapeBar } from "./components/ui/stock-market-tracker-chart";
 // Search Components (TradingView Style)
 import SearchModal from "./components/search/SearchModal";
 
-// Feature / View Components (Dashboard dimuat langsung, view sekunder di-lazy load untuk performa bundle)
+// Feature / View Components (Landing & Dashboard dimuat langsung, view sekunder di-lazy load untuk performa bundle)
+import LandingPage from "./components/landing/LandingPage";
 import DashboardView from "./components/dashboard/DashboardView";
 const StockDetailCard = lazy(() => import("./components/stock-detail/StockDetailCard"));
 const StockTableView = lazy(() => import("./components/views/StockTableView"));
@@ -25,7 +26,8 @@ const VALID_RANGES = new Set(["1d", "1mo", "3mo", "1y", "5y", "max"]);
 const VALID_DETAIL_TABS = new Set(["all", "pillars", "statements", "glossary", "news"]);
 
 const TAB_TO_PATH = {
-  dashboard: "/",
+  landing: "/",
+  dashboard: "/dashboard",
   market: "/market",
   screener: "/screener",
   "category-table": "/kategori",
@@ -54,7 +56,7 @@ const getInitialDarkMode = () => {
 
 const parseRouteFromLocation = () => {
   const fallback = {
-    tab: "dashboard",
+    tab: "landing",
     symbol: "BBCA",
     range: "1y",
     detailSubTab: "all",
@@ -83,6 +85,9 @@ const parseRouteFromLocation = () => {
     };
   }
 
+  if (lowerPath === "/dashboard") {
+    return { ...fallback, tab: "dashboard" };
+  }
   if (lowerPath === "/admin" || lowerPath.startsWith("/admin/")) {
     return { ...fallback, tab: "admin" };
   }
@@ -241,6 +246,9 @@ export default function App() {
         tab: nextTab,
         sector: nextTab === "screener" ? "ALL" : prev.sector,
       }));
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }
     },
     [commitRoute]
   );
@@ -270,7 +278,8 @@ export default function App() {
       learning: "Learning | Investpedia",
       ai: "AI Assistant | Investpedia",
       admin: "Portal Admin | Investpedia",
-      dashboard: "Investpedia",
+      dashboard: "Dashboard Pasar | Investpedia",
+      landing: "Investpedia — Analisis Fundamental & Edukasi Saham IDX",
     };
     document.title = titleMap[activeTab] || "Investpedia";
   }, [activeTab, selectedSymbol, tableSector]);
@@ -466,7 +475,15 @@ export default function App() {
           darkMode ? "dark bg-[#080808] text-[#F5F5F5]" : "bg-white text-slate-900"
         } transition-colors duration-200 flex flex-col`}
       >
-        {activeTab === "login" ? (
+        {activeTab === "landing" ? (
+          <LandingPage
+            onNavigateTab={setActiveTab}
+            onSelectStock={handleSelectFromAnywhere}
+            onOpenSearch={() => setShowSearchModal(true)}
+            darkMode={darkMode}
+            toggleDarkMode={toggleDarkMode}
+          />
+        ) : activeTab === "login" ? (
           <Suspense
             fallback={
               <div className="min-h-screen bg-[#F4F6FA] dark:bg-[#080808] flex items-center justify-center text-xs text-slate-500">
@@ -482,7 +499,7 @@ export default function App() {
                   setActiveTab("dashboard");
                 }
               }}
-              onBackToDashboard={() => setActiveTab("dashboard")}
+              onBackToDashboard={() => setActiveTab("landing")}
             />
           </Suspense>
         ) : activeTab === "admin" ? (

@@ -61,8 +61,9 @@ export default function AppHeader({
             KIRI: Logo Investpedia Resmi (Dukungan Light & Dark Mode)
             ======================================================== */}
         <div
-          onClick={() => handleSelectNav("dashboard")}
+          onClick={() => handleSelectNav("landing")}
           className="flex items-center cursor-pointer select-none flex-shrink-0"
+          title="Kembali ke Landing Page Investpedia"
         >
           <img
             src={darkMode ? "/investpedia-full-dark.png" : "/investpedia-full.png"}
