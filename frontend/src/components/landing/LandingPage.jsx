@@ -3,21 +3,30 @@ import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
   ArrowUpRight,
-  BarChart3,
   BookOpen,
   Bot,
   Briefcase,
   Calculator,
-  Filter,
   GitCompareArrows,
   Globe2,
   LineChart,
   Search,
-  Star,
   X,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import StockChartBackdrop from "./StockChartBackdrop";
+import {
+  DashboardArt,
+  FundamentalArt,
+  ScreenerArt,
+  WatchlistArt,
+} from "./FeatureLineArt";
+import {
+  LearnWorkflowArt,
+  SearchScreenWorkflowArt,
+  AnalyzeWorkflowArt,
+  SimulateWorkflowArt,
+} from "./WorkflowArtwork";
 
 // Data cadangan IDX80 riil apabila server backend belum aktif saat membuka landing page
 const FALLBACK_STOCKS = [
@@ -100,87 +109,67 @@ const SECTOR_FILTERS = [
 const CORE_MODULES = [
   {
     id: "dashboard",
-    tag: "Aktif",
     title: "Dashboard Pasar IDX80",
     summary:
-      "Ringkasan 80 konstituen terlikuid BEI, top movers harian, folder sektor, dan agregator berita pasar dalam satu tampilan.",
-    highlights: ["80 emiten IDX80 real-time", "Top Gainers & Losers", "Katalog sektor BEI"],
-    icon: BarChart3,
+      "Ringkasan 80 konstituen terlikuid BEI, top movers harian, folder sektor, dan berita pasar dalam satu tampilan.",
+    Artwork: DashboardArt,
     cta: "Buka Dashboard",
   },
   {
     id: "stock-detail",
-    symbol: "BBCA",
-    tag: "Aktif",
     title: "Analisis Fundamental & Chart",
     summary:
-      "Bedah emiten secara utuh: candlestick interaktif TradingView, profil bisnis, 4 pilar fundamental, laporan keuangan historis, hingga glosarium indikator.",
-    highlights: ["4 Pilar Fundamental", "Laporan Keuangan & Rasio", "Profil & Berita Emiten"],
-    icon: LineChart,
-    cta: "Lihat Contoh BBCA",
+      "Bedah emiten secara utuh mulai dari chart interaktif, profil bisnis, empat pilar fundamental, hingga laporan keuangan historis.",
+    Artwork: FundamentalArt,
+    cta: "Buka Analisis",
   },
   {
     id: "screener",
-    tag: "Aktif",
     title: "Stock Screener Fundamental",
     summary:
-      "Saring peluang investasi menggunakan filter PER, PBV, ROE, ROA, Net Margin, DER, Revenue, Net Income, EPS, dan preset kombinasi cepat.",
-    highlights: ["Preset Valuasi & Profitabilitas", "Filter kustom fleksibel", "Seleksi banding multi-saham"],
-    icon: Filter,
+      "Saring peluang saham memakai filter PER, PBV, ROE, ROA, Net Margin, DER, Revenue, EPS, dan preset cepat.",
+    Artwork: ScreenerArt,
     cta: "Buka Screener",
   },
   {
     id: "watchlist",
-    tag: "Aktif",
     title: "Watchlist Terpantau",
     summary:
-      "Simpan emiten pilihan ke daftar pantauan pribadi untuk melacak pergerakan harga, sparkline mingguan, dan akses cepat ke halaman analisis.",
-    highlights: ["Sparkline performa 5 hari", "Sinkronisasi akun investor", "Akses 1 klik ke detail saham"],
-    icon: Star,
+      "Simpan emiten pilihan ke daftar pantauan pribadi untuk melacak pergerakan mingguan dan akses cepat ke analisis.",
+    Artwork: WatchlistArt,
     cta: "Buka Watchlist",
   },
 ];
 
-const ECOSYSTEM_MODULES = [
-  {
-    id: "komparasi",
-    status: "Roadmap",
-    title: "Stock Comparison",
-    description:
-      "Bandingkan 2 hingga 4 saham kompetitor dalam satu industri secara berdampingan untuk melihat keunggulan valuasi dan margin.",
-    icon: GitCompareArrows,
-  },
-  {
-    id: "market",
-    status: "Roadmap",
-    title: "Market & Sentiment",
-    description:
-      "Pantauan indeks IHSG, dinamika komoditas, bursa global, dan ringkasan sentimen berita pasar modal Indonesia.",
-    icon: Globe2,
-  },
-  {
-    id: "portofolio",
-    status: "Roadmap",
-    title: "Portfolio & Investment Health",
-    description:
-      "Pencatatan transaksi berbasis lot BEI, weighted average price, kalkulasi P/L, dan audit risiko konsentrasi sektor.",
-    icon: Briefcase,
-  },
-  {
-    id: "simulasi",
-    status: "Roadmap",
-    title: "Simulasi DCA Berbasis Lot",
-    description:
-      "Uji strategi investasi rutin (Dollar Cost Averaging) memakai data historis aktual dan aturan kelipatan 100 lembar saham.",
-    icon: Calculator,
-  },
-];
-
 const WORKFLOW_STEPS = [
-  { step: "01", title: "Learn", desc: "Pelajari dasar pasar modal dan arti rasio lewat kurikulum serta kuis." },
-  { step: "02", title: "Search & Screen", desc: "Temukan emiten BEI lewat pencarian cepat atau filter fundamental." },
-  { step: "03", title: "Analyze", desc: "Evaluasi chart, profil bisnis, laporan keuangan, dan 4 pilar fundamental." },
-  { step: "04", title: "Compare & Simulate", desc: "Bandingkan kompetitor, pantau watchlist, dan uji rencana investasi rutin." },
+  {
+    step: "01",
+    title: "Learn",
+    desc: "Pelajari dasar pasar modal dan arti rasio lewat kurikulum serta kuis.",
+    icon: BookOpen,
+    Artwork: LearnWorkflowArt,
+  },
+  {
+    step: "02",
+    title: "Search & Screen",
+    desc: "Temukan emiten BEI lewat pencarian cepat atau filter fundamental.",
+    icon: Search,
+    Artwork: SearchScreenWorkflowArt,
+  },
+  {
+    step: "03",
+    title: "Analyze",
+    desc: "Evaluasi chart, profil bisnis, laporan keuangan, dan 4 pilar fundamental.",
+    icon: LineChart,
+    Artwork: AnalyzeWorkflowArt,
+  },
+  {
+    step: "04",
+    title: "Compare & Simulate",
+    desc: "Bandingkan kompetitor, pantau watchlist, dan uji rencana investasi rutin.",
+    icon: GitCompareArrows,
+    Artwork: SimulateWorkflowArt,
+  },
 ];
 
 function formatRupiah(value) {
@@ -933,37 +922,85 @@ export default function LandingPage({
               })}
             </div>
 
-            {/* Kanan (5 kolom): Sorotan AI Context-Grounded + Daftar Emiten Tambahan */}
+            {/* Kanan (5 kolom): Penggerak Teratas Sektor + Daftar Emiten Tambahan */}
             <div className="lg:col-span-5 flex flex-col gap-4">
-              {/* Highlight Card (menggantikan slot banner pada referensi dengan nilai produk riil) */}
-              <div className="rounded-2xl bg-slate-950 text-white dark:bg-white dark:text-slate-950 p-5 sm:p-6 flex flex-col justify-between gap-5">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.12em] opacity-75">
-                      Context-Grounded AI
-                    </span>
-                    <Bot className="w-4 h-4 opacity-80" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-semibold leading-snug">
-                    Asisten Analisis & Tutor Saham Berbasis Data Aktual
-                  </h3>
-                  <p className="text-xs sm:text-sm opacity-80 leading-relaxed">
-                    Tanyakan arti PER, ROE, hingga ringkasan laporan keuangan emiten tanpa jawaban spekulatif atau rekomendasi beli-jual otomatis.
-                  </p>
-                </div>
+              {(() => {
+                const pool = filteredMarkets.length > 0 ? filteredMarkets : stocks;
+                const sortedByGain = [...pool].sort(
+                  (a, b) => Number(b.changePercent) - Number(a.changePercent)
+                );
+                const topGainer = sortedByGain[0];
+                const gainersCount = pool.filter((s) => Number(s.changePercent) >= 0).length;
+                const losersCount = Math.max(0, pool.length - gainersCount);
 
-                <div className="flex items-center justify-between pt-3 border-t border-white/15 dark:border-slate-950/15">
-                  <span className="text-xs font-medium opacity-80">Terintegrasi di menu Learning & AI</span>
-                  <button
-                    type="button"
-                    onClick={() => onNavigateTab("ai")}
-                    className="h-8 px-3.5 rounded-lg bg-white text-slate-950 dark:bg-slate-950 dark:text-white text-xs font-semibold inline-flex items-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer"
-                  >
-                    <span>Coba AI</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
+                return (
+                  <div className="rounded-2xl bg-white dark:bg-[#111319] border border-black/[0.06] dark:border-white/[0.08] p-5 sm:p-6 flex flex-col justify-between gap-5 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.14)]">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                          Penggerak Teratas
+                        </span>
+                        <span className="text-xs font-medium tabular-nums text-slate-500 dark:text-slate-400">
+                          {gainersCount} naik / {losersCount} turun
+                        </span>
+                      </div>
+
+                      {topGainer && (
+                        <button
+                          type="button"
+                          onClick={() => onSelectStock(topGainer.symbol)}
+                          className="w-full text-left rounded-xl bg-[#F5F5F7] dark:bg-white/[0.04] hover:bg-slate-200/70 dark:hover:bg-white/[0.08] p-3.5 transition-colors flex items-center justify-between gap-3 cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <StockLogo
+                              symbol={topGainer.symbol}
+                              logoUrl={topGainer.logoUrl}
+                              size="sm"
+                            />
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-slate-950 dark:text-white">
+                                {topGainer.symbol}
+                              </p>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                {topGainer.companyName}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-sm font-bold tabular-nums text-slate-950 dark:text-white">
+                              {formatRupiah(topGainer.price)}
+                            </p>
+                            <p
+                              className={`text-[11px] font-semibold tabular-nums ${
+                                Number(topGainer.changePercent) >= 0
+                                  ? "text-emerald-600 dark:text-emerald-400"
+                                  : "text-rose-600 dark:text-rose-400"
+                              }`}
+                            >
+                              {Number(topGainer.changePercent) >= 0 ? "↑" : "↓"}{" "}
+                              {formatPercent(topGainer.changePercent)}
+                            </p>
+                          </div>
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-white/[0.06]">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        Cari emiten BEI lainnya
+                      </span>
+                      <button
+                        type="button"
+                        onClick={onOpenSearch}
+                        className="h-8 px-3.5 rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950 text-xs font-semibold inline-flex items-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer"
+                      >
+                        <Search className="w-3.5 h-3.5" />
+                        <span>Cari Saham</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* List Emiten Ringkas */}
               <div className="rounded-2xl bg-white dark:bg-[#111319] border border-black/[0.06] dark:border-white/[0.08] divide-y divide-slate-100 dark:divide-white/[0.06] overflow-hidden flex-1">
@@ -1025,11 +1062,11 @@ export default function LandingPage({
       </section>
 
       {/* ========================================================
-          SECTION 3: MODUL RISET UTAMA YANG SUDAH AKTIF DI WEB
+          SECTION 3: MODUL RISET UTAMA (EDITORIAL 4 KOLOM + LINE ART)
           ======================================================== */}
       <section id="fitur-utama" className="py-16 sm:py-24 bg-white dark:bg-[#0c0e13] border-t border-slate-200/80 dark:border-white/[0.08]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div {...fadeUp} className="max-w-2xl space-y-3 mb-12">
+          <motion.div {...fadeUp} className="max-w-2xl mx-auto text-center space-y-3 mb-14 sm:mb-16">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
               Ruang Kerja Analisis
             </p>
@@ -1041,58 +1078,33 @@ export default function LandingPage({
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
             {CORE_MODULES.map((mod) => {
-              const Icon = mod.icon;
+              const Artwork = mod.Artwork;
               return (
-                <div
+                <button
                   key={mod.id}
-                  className="rounded-2xl bg-[#F5F5F7] dark:bg-[#12151d] border border-black/[0.06] dark:border-white/[0.08] p-6 sm:p-7 flex flex-col justify-between gap-6"
+                  type="button"
+                  onClick={() => onNavigateTab(mod.id)}
+                  className="group text-center flex flex-col items-center cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-white rounded-2xl p-2"
                 >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#1a1e29] border border-black/[0.06] dark:border-white/10 flex items-center justify-center text-slate-900 dark:text-white">
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-white dark:bg-white/10 text-slate-700 dark:text-slate-200 border border-black/[0.06] dark:border-white/10">
-                        {mod.tag}
-                      </span>
-                    </div>
-
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-semibold text-slate-950 dark:text-white">
-                        {mod.title}
-                      </h3>
-                      <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                        {mod.summary}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      {mod.highlights.map((item) => (
-                        <span
-                          key={item}
-                          className="px-2.5 py-1 rounded-lg text-xs font-medium bg-white dark:bg-[#181c26] text-slate-700 dark:text-slate-300 border border-black/[0.05] dark:border-white/[0.08]"
-                        >
-                          {item}
-                        </span>
-                      ))}
-                    </div>
+                  <div className="h-24 flex items-center justify-center mb-5 transition-transform duration-300 group-hover:-translate-y-1">
+                    <Artwork />
                   </div>
 
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        mod.symbol ? onSelectStock(mod.symbol) : onNavigateTab(mod.id)
-                      }
-                      className="text-sm font-semibold text-slate-950 dark:text-white inline-flex items-center gap-1.5 hover:gap-2.5 transition-all cursor-pointer"
-                    >
-                      <span>{mod.cta}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
+                  <h3 className="text-lg sm:text-xl font-medium tracking-[-0.02em] leading-snug text-slate-950 dark:text-white">
+                    {mod.title}
+                  </h3>
+
+                  <p className="mt-3 text-xs sm:text-[13px] leading-relaxed text-slate-500 dark:text-slate-400 max-w-[270px]">
+                    {mod.summary}
+                  </p>
+
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-white/90 group-hover:opacity-75 transition-opacity">
+                    <span>{mod.cta}</span>
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </button>
               );
             })}
           </div>
@@ -1100,71 +1112,104 @@ export default function LandingPage({
       </section>
 
       {/* ========================================================
-          SECTION 4: EDUKASI INVESTASI & AI TUTOR (DUA PROFIL INVESTOR)
+          SECTION 4: EDUKASI INVESTASI & AI TUTOR (KIRI TEKS + KANAN 3D)
           ======================================================== */}
       <section id="edukasi-ai" className="py-16 sm:py-24 border-t border-slate-200/80 dark:border-white/[0.08]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-            <motion.div {...fadeUp} className="lg:col-span-5 space-y-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-                Untuk Pemula & Investor Aktif
-              </p>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-[-0.025em] text-slate-950 dark:text-white">
-                Belajar Konsep, Langsung Praktik di Data Nyata.
-              </h2>
-              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
-                Investpedia memadukan kurikulum literasi pasar modal dengan asisten AI berbasis grounding finansial sehingga setiap penjelasan merujuk pada angka aktual.
-              </p>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* Kiri: Penjelasan Ringkas, Tombol Aksi & 2 Profil Investor */}
+            <motion.div {...fadeUp} className="lg:col-span-7 space-y-6">
+              <div className="space-y-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                  Untuk Pemula & Investor Aktif
+                </p>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-[-0.025em] text-slate-950 dark:text-white leading-tight">
+                  Belajar Konsep, Langsung Praktik di Data Nyata.
+                </h2>
+                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
+                  Investpedia memadukan kurikulum literasi pasar modal dengan asisten AI berbasis grounding finansial sehingga setiap penjelasan merujuk pada angka aktual.
+                </p>
 
-              <div className="flex flex-wrap gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => onNavigateTab("learning")}
-                  className="h-10 px-4 rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950 text-xs font-semibold inline-flex items-center gap-2 hover:opacity-90 transition-opacity cursor-pointer"
-                >
-                  <BookOpen className="w-4 h-4" />
-                  <span>Buka Modul Learning</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onNavigateTab("ai")}
-                  className="h-10 px-4 rounded-lg bg-white dark:bg-[#14161c] border border-slate-200 dark:border-white/15 text-slate-900 dark:text-white text-xs font-semibold inline-flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-[#1d2028] transition-colors cursor-pointer"
-                >
-                  <Bot className="w-4 h-4" />
-                  <span>Buka AI Assistant</span>
-                </button>
+                <div className="flex flex-wrap gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => onNavigateTab("learning")}
+                    className="h-10 px-4 rounded-lg bg-slate-950 text-white dark:bg-white dark:text-slate-950 text-xs font-semibold inline-flex items-center gap-2 hover:opacity-90 transition-opacity cursor-pointer"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span>Buka Modul Learning</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onNavigateTab("ai")}
+                    className="h-10 px-4 rounded-lg bg-white dark:bg-[#14161c] border border-slate-200 dark:border-white/15 text-slate-900 dark:text-white text-xs font-semibold inline-flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-[#1d2028] transition-colors cursor-pointer"
+                  >
+                    <Bot className="w-4 h-4" />
+                    <span>Buka AI Assistant</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div className="rounded-2xl bg-white dark:bg-[#111319] border border-black/[0.06] dark:border-white/[0.08] p-5 space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                    Investor Pemula
+                  </p>
+                  <h3 className="text-base font-semibold text-slate-950 dark:text-white leading-snug">
+                    Kurikulum & AI Tutor
+                  </h3>
+                  <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Pelajari rasio PER, PBV, ROE, dan DER bertahap lewat modul, kuis, dan glosarium.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-white dark:bg-[#111319] border border-black/[0.06] dark:border-white/[0.08] p-5 space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                    Investor Berpengalaman
+                  </p>
+                  <h3 className="text-base font-semibold text-slate-950 dark:text-white leading-snug">
+                    Riset Cepat & AI Assistant
+                  </h3>
+                  <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Saring saham IDX80, rangkum laporan keuangan dan berita, lalu audit risiko portofolio.
+                  </p>
+                </div>
               </div>
             </motion.div>
 
-            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="rounded-2xl bg-white dark:bg-[#111319] border border-black/[0.06] dark:border-white/[0.08] p-6 space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-                  Investor Pemula
-                </p>
-                <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
-                  Kurikulum Terstruktur & AI Investment Tutor
-                </h3>
-                <ul className="space-y-2.5 text-sm text-slate-600 dark:text-slate-300">
-                  <li>Pahami istilah PER, PBV, ROE, DER lewat modul bertahap dan kuis pemahaman.</li>
-                  <li>Glosarium indikator langsung di halaman detail saham tanpa perlu berpindah tab.</li>
-                  <li>Penjelasan konsep investasi yang ramah pemula dengan dukungan AI Tutor.</li>
-                </ul>
-              </div>
+            {/* Kanan: Maskot 3D Investpedia Transparan */}
+            <motion.div
+              {...fadeUp}
+              className="lg:col-span-5 flex items-center justify-center"
+            >
+              <div className="relative w-full max-w-[360px] flex flex-col items-center justify-center py-2">
+                {/* Pencahayaan studio halus di belakang maskot */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -inset-4 rounded-full blur-3xl opacity-80"
+                  style={{
+                    background: darkMode
+                      ? "radial-gradient(56% 56% at 50% 48%, rgba(255,255,255,0.08) 0%, rgba(8,8,8,0) 75%)"
+                      : "radial-gradient(56% 56% at 50% 48%, rgba(15,23,42,0.08) 0%, rgba(245,245,247,0) 75%)",
+                  }}
+                />
 
-              <div className="rounded-2xl bg-white dark:bg-[#111319] border border-black/[0.06] dark:border-white/[0.08] p-6 space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
-                  Investor Berpengalaman
-                </p>
-                <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
-                  Efisiensi Riset & AI Financial Assistant
-                </h3>
-                <ul className="space-y-2.5 text-sm text-slate-600 dark:text-slate-300">
-                  <li>Screening cepat seluruh konstituen IDX80 berdasarkan kriteria valuasi dan kesehatan keuangan.</li>
-                  <li>Sintesis data fundamental, profil perusahaan, dan berita emiten dalam satu alur.</li>
-                  <li>Pemetaan komparasi antar-emiten dan evaluasi risiko portofolio secara terukur.</li>
-                </ul>
+                <motion.img
+                  src="/investpedia-mascot-3d.png"
+                  alt="Maskot 3D Investpedia memegang panah tren naik pasar saham"
+                  loading="lazy"
+                  animate={prefersReducedMotion ? undefined : { y: [0, -7, 0] }}
+                  transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
+                  className="relative z-10 w-[78%] sm:w-[82%] h-auto object-contain select-none pointer-events-none drop-shadow-[0_22px_28px_rgba(15,23,42,0.18)] dark:drop-shadow-[0_24px_34px_rgba(0,0,0,0.65)]"
+                />
+
+                {/* Bayangan lantai halus di bawah sepatu maskot */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none -mt-3 w-44 h-6 rounded-full blur-xl bg-slate-900/20 dark:bg-white/[0.08]"
+                />
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -1174,75 +1219,523 @@ export default function LandingPage({
           ======================================================== */}
       <section id="ekosistem" className="py-16 sm:py-24 bg-white dark:bg-[#0c0e13] border-t border-slate-200/80 dark:border-white/[0.08]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-          {/* Modul Pengembangan Lanjutan di Navigasi Utama */}
-          <div>
-            <motion.div {...fadeUp} className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-                  Cakupan Platform Lengkap
-                </p>
-                <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.025em] text-slate-950 dark:text-white">
-                  Modul Pendukung Keputusan Investasi.
-                </h2>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md">
+          {/* Bento Showcase: Cakupan Platform Lengkap (Terinspirasi Referensi) */}
+          <div className="space-y-8 sm:space-y-10">
+            <motion.div {...fadeUp} className="max-w-2xl mx-auto text-center space-y-3">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-[0.14em] bg-[#F4F5F8] dark:bg-white/[0.07] text-slate-600 dark:text-slate-300 border border-black/[0.06] dark:border-white/[0.08]">
+                Cakupan Platform Lengkap
+              </span>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-[-0.025em] text-slate-950 dark:text-white">
+                Modul Pendukung Keputusan Investasi.
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                 Seluruh modul di bawah sudah terdaftar dalam arsitektur navigasi Investpedia dan dirilis bertahap.
               </p>
             </motion.div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {ECOSYSTEM_MODULES.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => onNavigateTab(item.id)}
-                    className="text-left rounded-2xl bg-[#F5F5F7] dark:bg-[#12151d] border border-black/[0.06] dark:border-white/[0.08] p-5 hover:border-slate-300 dark:hover:border-white/20 transition-colors cursor-pointer flex flex-col justify-between gap-5"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Icon className="w-5 h-5 text-slate-800 dark:text-slate-200" />
-                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide bg-white dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-black/[0.05] dark:border-white/10">
-                          {item.status}
+            <div className="space-y-5">
+              {/* Baris 1: Kartu Lebar Penuh — Stock Comparison dengan Mockup HP Realistis */}
+              <motion.div
+                {...fadeUp}
+                onClick={() => onNavigateTab("komparasi")}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onNavigateTab("komparasi");
+                  }
+                }}
+                className="group rounded-3xl bg-[#F4F5F8] dark:bg-[#11141c] border border-black/[0.06] dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20 transition-colors overflow-hidden cursor-pointer grid grid-cols-1 lg:grid-cols-12 items-center"
+              >
+                {/* Mockup Smartphone Realistis di Kiri */}
+                <div className="lg:col-span-5 pt-8 px-6 sm:px-10 lg:pt-9 lg:pl-12 lg:pr-4 flex justify-center lg:justify-start self-end">
+                  <div className="relative w-full max-w-[276px]">
+                    {/* Tombol fisik samping HP */}
+                    <span
+                      aria-hidden="true"
+                      className="absolute -left-[3px] top-16 w-[3px] h-7 rounded-l bg-slate-700 dark:bg-slate-600"
+                    />
+                    <span
+                      aria-hidden="true"
+                      className="absolute -left-[3px] top-26 w-[3px] h-10 rounded-l bg-slate-700 dark:bg-slate-600"
+                    />
+                    <span
+                      aria-hidden="true"
+                      className="absolute -right-[3px] top-24 w-[3px] h-12 rounded-r bg-slate-700 dark:bg-slate-600"
+                    />
+
+                    {/* Bezel & Body HP */}
+                    <div className="rounded-t-[38px] p-[8px] pb-0 bg-gradient-to-b from-slate-700 via-slate-900 to-black shadow-[0_24px_60px_-16px_rgba(15,23,42,0.45)] ring-1 ring-white/20">
+                      {/* Layar Dalam HP */}
+                      <div className="rounded-t-[30px] bg-white dark:bg-[#0c0f16] pt-2.5 px-4 pb-5 overflow-hidden">
+                        {/* Status Bar + Dynamic Island */}
+                        <div className="flex items-center justify-between text-[9px] font-semibold text-slate-900 dark:text-white mb-3.5 px-1">
+                          <span className="tabular-nums">9:41</span>
+                          <div className="w-[72px] h-[18px] rounded-full bg-black" />
+                          <div className="flex items-center gap-1 text-slate-900 dark:text-white">
+                            <span className="w-3 h-2 rounded-[2px] border border-current flex items-center p-[1px]">
+                              <span className="w-full h-full bg-current rounded-[1px]" />
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Header Mini Aplikasi */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <p className="text-[9px] text-slate-400">Investpedia</p>
+                            <p className="text-xs font-bold text-slate-950 dark:text-white">
+                              Peer Comparison
+                            </p>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-md text-[9px] font-semibold bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200">
+                            2–4 Saham
+                          </span>
+                        </div>
+
+                        {/* Kartu Rasio Utama di Dalam Layar HP */}
+                        <div className="rounded-2xl bg-gradient-to-br from-[#11141c] to-[#1f2430] text-white p-3.5 space-y-2.5 shadow-sm">
+                          <div className="flex items-center justify-between text-[10px]">
+                            <span className="text-slate-400">PER (TTM)</span>
+                            <span className="font-mono font-semibold text-white">
+                              11.4x <span className="text-slate-500">vs</span> 14.8x
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px]">
+                            <span className="text-slate-400">ROE</span>
+                            <span className="font-mono font-semibold text-emerald-400">
+                              18.2% <span className="text-slate-500">vs</span>{" "}
+                              <span className="text-white">14.1%</span>
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px]">
+                            <span className="text-slate-400">DER</span>
+                            <span className="font-mono font-semibold text-white">
+                              0.6x <span className="text-slate-500">vs</span>{" "}
+                              <span className="text-rose-400">1.4x</span>
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Bar Aksi Cepat di Bawah Layar HP */}
+                        <div className="grid grid-cols-4 gap-1.5 mt-3">
+                          {["Valuasi", "Margin", "Utang", "Laba"].map((tab) => (
+                            <div
+                              key={tab}
+                              className="rounded-lg bg-slate-100 dark:bg-white/[0.06] py-1.5 text-[9px] font-semibold text-slate-700 dark:text-slate-300 text-center"
+                            >
+                              {tab}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Penjelasan Stock Comparison di Kanan */}
+                <div className="lg:col-span-7 p-6 sm:p-10 lg:pr-12 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-950 text-white dark:bg-white dark:text-slate-950 flex items-center justify-center shrink-0">
+                      <GitCompareArrows className="w-5 h-5" />
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-white dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-black/[0.06] dark:border-white/10">
+                      Roadmap
+                    </span>
+                  </div>
+
+                  <h3 className="text-2xl sm:text-[26px] font-semibold tracking-tight text-slate-950 dark:text-white leading-snug">
+                    Stock Comparison
+                  </h3>
+                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl">
+                    Bandingkan 2 hingga 4 saham kompetitor dalam satu industri secara berdampingan untuk melihat keunggulan valuasi dan margin.
+                  </p>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-white pt-1">
+                    <span>Lihat halaman</span>
+                    <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </span>
+                </div>
+              </motion.div>
+
+              {/* Baris 2: Split Ringkas 2 Kolom — Market & Sentiment (Terang) + Portfolio & Investment Health (Hitam) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Kiri: Market & Sentiment */}
+                <motion.div
+                  {...fadeUp}
+                  onClick={() => onNavigateTab("market")}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onNavigateTab("market");
+                    }
+                  }}
+                  className="group rounded-3xl bg-[#F4F5F8] dark:bg-[#11141c] border border-black/[0.06] dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20 transition-colors p-7 sm:p-8 flex flex-col justify-between gap-7 cursor-pointer"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-950 text-white dark:bg-white dark:text-slate-950 flex items-center justify-center shrink-0">
+                        <Globe2 className="w-5 h-5" />
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-white dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-black/[0.06] dark:border-white/10">
+                        Roadmap
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-950 dark:text-white leading-snug">
+                      Market & Sentiment
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                      Pantauan indeks IHSG, dinamika komoditas, bursa global, dan ringkasan sentimen berita pasar modal Indonesia.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-black/[0.06] dark:border-white/[0.08]">
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
+                      <span className="px-2.5 py-1 rounded-md bg-white dark:bg-white/[0.06] border border-black/[0.05] dark:border-white/10 text-slate-700 dark:text-slate-200">
+                        IHSG <span className="text-emerald-600 dark:text-emerald-400">+0.64%</span>
+                      </span>
+                      <span className="px-2.5 py-1 rounded-md bg-white dark:bg-white/[0.06] border border-black/[0.05] dark:border-white/10 text-slate-700 dark:text-slate-200">
+                        Komoditas <span className="text-rose-600 dark:text-rose-400">-0.32%</span>
+                      </span>
+                    </div>
+                    <ArrowUpRight className="w-4 h-4 text-slate-800 dark:text-white transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 shrink-0" />
+                  </div>
+                </motion.div>
+
+                {/* Kanan: Portfolio & Investment Health */}
+                <motion.div
+                  {...fadeUp}
+                  onClick={() => onNavigateTab("portofolio")}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onNavigateTab("portofolio");
+                    }
+                  }}
+                  className="group relative overflow-hidden rounded-3xl bg-[#111318] dark:bg-[#171A23] text-white border border-slate-800/80 dark:border-white/[0.1] hover:border-slate-600 dark:hover:border-white/25 transition-colors p-7 sm:p-8 flex flex-col justify-between gap-6 cursor-pointer"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="w-10 h-10 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center shrink-0">
+                        <Briefcase className="w-5 h-5" />
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider bg-white/10 text-slate-200 border border-white/15">
+                        Roadmap
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-white leading-snug">
+                      Portfolio & Investment Health
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-md">
+                      Pencatatan transaksi berbasis lot BEI, weighted average price, kalkulasi P/L, dan audit risiko konsentrasi sektor.
+                    </p>
+                  </div>
+
+                  <div className="flex items-end justify-between gap-4">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white">
+                      <span>Lihat halaman</span>
+                      <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    </span>
+
+                    <div className="rounded-2xl bg-white text-slate-950 px-4 py-3 shadow-xl shrink-0">
+                      <p className="text-[10px] font-medium text-slate-500">
+                        Alokasi Lot & Risiko
+                      </p>
+                      <p className="text-base font-bold tabular-nums tracking-tight text-slate-950 mt-0.5">
+                        100 Lembar / Lot
+                      </p>
+                      <div className="mt-1.5 h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
+                        <div className="h-full w-3/4 rounded-full bg-slate-900" />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Baris 3: Dua Kartu Visual Widget (Mengikuti Referensi Foto Kedua) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Kiri: 3 Kartu Metrik Bertumpuk — Simulasi DCA Berbasis Lot */}
+                <motion.div
+                  {...fadeUp}
+                  onClick={() => onNavigateTab("simulasi")}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onNavigateTab("simulasi");
+                    }
+                  }}
+                  className="group rounded-3xl bg-[#F4F5F8] dark:bg-[#11141c] border border-black/[0.06] dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20 transition-colors overflow-hidden flex flex-col justify-between cursor-pointer"
+                >
+                  {/* Panggung 3 Baris Kartu Melayang */}
+                  <div className="bg-white/80 dark:bg-[#0c0f16] border-b border-black/[0.05] dark:border-white/[0.06] py-8 px-5 sm:px-8 flex flex-col items-center justify-center gap-3 min-h-[245px]">
+                    {/* Baris 1 (kecil) */}
+                    <div className="w-full max-w-[270px] rounded-2xl bg-white dark:bg-[#151822] border border-black/[0.06] dark:border-white/[0.08] shadow-[0_8px_24px_-14px_rgba(15,23,42,0.16)] px-3.5 py-2.5 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-white/[0.08] text-slate-900 dark:text-white flex items-center justify-center shrink-0">
+                          <Calculator className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                            Akumulasi 12 Bulan
+                          </p>
+                          <p className="text-sm font-bold tabular-nums text-slate-950 dark:text-white">
+                            120 Lot
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-semibold tabular-nums text-emerald-600 dark:text-emerald-400 shrink-0">
+                        ↑ +14.2%
+                      </span>
+                    </div>
+
+                    {/* Baris 2 (tengah lebih lebar & menonjol) */}
+                    <div className="w-full max-w-[310px] rounded-2xl bg-white dark:bg-[#181c28] border border-black/[0.08] dark:border-white/[0.14] shadow-[0_14px_32px_-14px_rgba(15,23,42,0.22)] px-4 py-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-xl bg-slate-950 text-white dark:bg-white dark:text-slate-950 flex items-center justify-center shrink-0">
+                          <LineChart className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                            Strategi DCA Rutin
+                          </p>
+                          <p className="text-base font-bold tabular-nums text-slate-950 dark:text-white">
+                            240 Lot
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-semibold tabular-nums text-emerald-600 dark:text-emerald-400 shrink-0">
+                        ↑ +21.8%
+                      </span>
+                    </div>
+
+                    {/* Baris 3 (kecil dengan aksen tipis merah) */}
+                    <div className="w-full max-w-[270px] rounded-2xl bg-white dark:bg-[#151822] border border-black/[0.06] dark:border-white/[0.08] shadow-[0_8px_24px_-14px_rgba(15,23,42,0.16)] px-3.5 py-2.5 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-white/[0.08] text-slate-900 dark:text-white flex items-center justify-center shrink-0">
+                          <Briefcase className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                            Uji Fase Koreksi
+                          </p>
+                          <p className="text-sm font-bold tabular-nums text-slate-950 dark:text-white">
+                            80 Lot
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-semibold tabular-nums text-rose-600 dark:text-rose-400 shrink-0">
+                        ↓ -4.6%
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-6 sm:p-7 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-lg sm:text-xl font-semibold tracking-tight text-slate-950 dark:text-white">
+                        Simulasi DCA Berbasis Lot
+                      </h3>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-white dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-black/[0.06] dark:border-white/10">
+                        Roadmap
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                      Uji strategi investasi rutin (Dollar Cost Averaging) memakai data historis aktual dan aturan kelipatan 100 lembar saham.
+                    </p>
+                  </div>
+                </motion.div>
+
+                {/* Kanan: Cincin Metrik Pusat + 6 Tile Melayang — Indikator Fundamental Terpadu */}
+                <motion.div
+                  {...fadeUp}
+                  onClick={() => onNavigateTab("screener")}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onNavigateTab("screener");
+                    }
+                  }}
+                  className="group rounded-3xl bg-[#F4F5F8] dark:bg-[#11141c] border border-black/[0.06] dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20 transition-colors overflow-hidden flex flex-col justify-between cursor-pointer"
+                >
+                  {/* Panggung Ring Metrik + 6 Tile Rasio Melayang */}
+                  <div className="relative bg-white/80 dark:bg-[#0c0f16] border-b border-black/[0.05] dark:border-white/[0.06] py-8 px-5 sm:px-8 flex items-center justify-center min-h-[245px] overflow-hidden">
+                    {/* 3 Tile Kiri */}
+                    <div className="flex flex-col gap-3.5 mr-4 sm:mr-7">
+                      <div className="-rotate-6 translate-x-2 w-12 h-12 rounded-2xl bg-white dark:bg-[#161923] border border-black/[0.07] dark:border-white/[0.1] shadow-md flex items-center justify-center text-[11px] font-mono font-bold text-slate-900 dark:text-white">
+                        PER
+                      </div>
+                      <div className="rotate-6 -translate-x-1 w-12 h-12 rounded-2xl bg-white dark:bg-[#161923] border border-black/[0.07] dark:border-white/[0.1] shadow-md flex items-center justify-center text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                        ROE
+                      </div>
+                      <div className="-rotate-6 translate-x-2 w-12 h-12 rounded-2xl bg-white dark:bg-[#161923] border border-black/[0.07] dark:border-white/[0.1] shadow-md flex items-center justify-center text-[11px] font-mono font-bold text-rose-600 dark:text-rose-400">
+                        DER
+                      </div>
+                    </div>
+
+                    {/* Ring Pusat Monokrom */}
+                    <div className="relative w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center shrink-0">
+                      <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
+                        <circle
+                          cx="60"
+                          cy="60"
+                          r="48"
+                          fill="none"
+                          className="stroke-slate-200 dark:stroke-white/10"
+                          strokeWidth="10"
+                        />
+                        <circle
+                          cx="60"
+                          cy="60"
+                          r="48"
+                          fill="none"
+                          className="stroke-slate-950 dark:stroke-white"
+                          strokeWidth="10"
+                          strokeLinecap="round"
+                          strokeDasharray="242 302"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                        <span className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white tabular-nums">
+                          4 Pilar
+                        </span>
+                        <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                          Audit Emiten
                         </span>
                       </div>
-                      <h3 className="text-base font-semibold text-slate-950 dark:text-white">
-                        {item.title}
-                      </h3>
-                      <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-                        {item.description}
-                      </p>
                     </div>
-                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 inline-flex items-center gap-1">
-                      <span>Lihat halaman</span>
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </span>
-                  </button>
-                );
-              })}
+
+                    {/* 3 Tile Kanan */}
+                    <div className="flex flex-col gap-3.5 ml-4 sm:ml-7">
+                      <div className="rotate-6 -translate-x-2 w-12 h-12 rounded-2xl bg-white dark:bg-[#161923] border border-black/[0.07] dark:border-white/[0.1] shadow-md flex items-center justify-center text-[11px] font-mono font-bold text-slate-900 dark:text-white">
+                        PBV
+                      </div>
+                      <div className="-rotate-6 translate-x-1 w-12 h-12 rounded-2xl bg-white dark:bg-[#161923] border border-black/[0.07] dark:border-white/[0.1] shadow-md flex items-center justify-center text-[11px] font-mono font-bold text-slate-900 dark:text-white">
+                        EPS
+                      </div>
+                      <div className="rotate-6 -translate-x-2 w-12 h-12 rounded-2xl bg-white dark:bg-[#161923] border border-black/[0.07] dark:border-white/[0.1] shadow-md flex items-center justify-center text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                        DIV
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 sm:p-7 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-lg sm:text-xl font-semibold tracking-tight text-slate-950 dark:text-white">
+                        Pemantauan Rasio Menyeluruh
+                      </h3>
+                      <ArrowUpRight className="w-4 h-4 text-slate-700 dark:text-slate-200 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 shrink-0" />
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                      Satukan rasio valuasi, profitabilitas, struktur utang, dan dividen dalam satu tampilan yang mudah dibandingkan.
+                    </p>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Tombol Pill Tengah di Bawah Grid */}
+            <div className="flex justify-center pt-2">
+              <button
+                type="button"
+                onClick={() => onNavigateTab("dashboard")}
+                className="group h-11 pl-5 pr-1.5 rounded-full bg-white dark:bg-[#141720] border border-slate-200 dark:border-white/15 shadow-xs hover:border-slate-300 dark:hover:border-white/30 inline-flex items-center gap-3 text-xs font-semibold text-slate-900 dark:text-white transition-all cursor-pointer"
+              >
+                <span>Buka Dashboard Pasar</span>
+                <span className="w-8 h-8 rounded-full bg-slate-950 text-white dark:bg-white dark:text-slate-950 flex items-center justify-center transition-transform group-hover:scale-105">
+                  <ArrowUpRight className="w-4 h-4" />
+                </span>
+              </button>
             </div>
           </div>
 
-          {/* Alur Kerja Riset (PRD Section 5) */}
-          <div className="pt-12 border-t border-slate-200/80 dark:border-white/[0.08]">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400 mb-6">
-              Alur Riset Terstruktur
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {WORKFLOW_STEPS.map((w) => (
-                <div key={w.step} className="space-y-2">
-                  <p className="text-xs font-mono font-semibold text-slate-400 dark:text-slate-500">
-                    {w.step}
-                  </p>
-                  <h3 className="text-base font-semibold text-slate-950 dark:text-white">
-                    {w.title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                    {w.desc}
-                  </p>
-                </div>
-              ))}
+          {/* Alur Kerja Riset Terstruktur (Editorial Cards Terinspirasi Referensi) */}
+          <div className="pt-14 border-t border-slate-200/80 dark:border-white/[0.08]">
+            <motion.div
+              {...fadeUp}
+              className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start mb-10 sm:mb-12"
+            >
+              <div className="lg:col-span-5 space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                  Alur Riset Terstruktur
+                </p>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-[-0.025em] leading-[1.1] text-slate-950 dark:text-white">
+                  Cara Kerja
+                  <br />
+                  Ekosistem Kami
+                </h2>
+              </div>
+
+              <div className="lg:col-span-7 space-y-2.5 max-w-2xl">
+                <p className="text-base sm:text-lg font-medium text-slate-950 dark:text-white leading-snug">
+                  Alur riset berurutan untuk membantu Anda belajar, menyaring peluang, dan mengevaluasi emiten BEI secara objektif.
+                </p>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Mulai dari memahami rasio keuangan lewat modul terstruktur, menyaring saham unggulan, membedah laporan keuangan, hingga membandingkan kompetitor dalam satu ruang kerja terpadu.
+                </p>
+              </div>
+            </motion.div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+              {WORKFLOW_STEPS.map((w, idx) => {
+                const StepIcon = w.icon;
+                const Artwork = w.Artwork;
+                return (
+                  <motion.div
+                    key={w.step}
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.15 }}
+                    transition={{
+                      duration: 0.4,
+                      delay: prefersReducedMotion ? 0 : idx * 0.06,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    className="relative overflow-hidden rounded-2xl bg-[#F6F7F9] dark:bg-[#10131b] border border-black/[0.06] dark:border-white/[0.08] min-h-[360px] sm:min-h-[395px] p-6 flex flex-col justify-between"
+                  >
+                    {/* Atmospheric studio wash netral monokrom di sudut bawah kanan */}
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-0"
+                      style={{
+                        background: darkMode
+                          ? "radial-gradient(90% 70% at 85% 98%, rgba(148, 163, 184, 0.14) 0%, rgba(148, 163, 184, 0.04) 45%, rgba(16, 19, 27, 0) 78%)"
+                          : "radial-gradient(90% 70% at 85% 98%, rgba(100, 116, 139, 0.15) 0%, rgba(15, 23, 42, 0.03) 45%, rgba(246, 247, 249, 0) 78%)",
+                      }}
+                    />
+
+                    {/* Ilustrasi Karakter di Tengah Atas */}
+                    <div className="relative z-10 flex-1 flex items-center justify-center py-2">
+                      <Artwork />
+                    </div>
+
+                    {/* Footer Kartu di Kiri Bawah */}
+                    <div className="relative z-10 space-y-2.5 pt-2">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/95 dark:bg-white/[0.07] border border-black/[0.06] dark:border-white/[0.1] shadow-xs w-fit">
+                        <StepIcon className="w-3.5 h-3.5 text-slate-700 dark:text-slate-200" />
+                        <span className="text-[11px] font-mono font-semibold text-slate-700 dark:text-slate-200">
+                          {w.step}
+                        </span>
+                      </div>
+
+                      <h3 className="text-lg sm:text-xl font-semibold tracking-tight text-slate-950 dark:text-white">
+                        {w.title}
+                      </h3>
+
+                      <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                        {w.desc}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </div>
