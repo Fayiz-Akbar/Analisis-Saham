@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import StockChartBackdrop from "./StockChartBackdrop";
 
 // Data cadangan IDX80 riil apabila server backend belum aktif saat membuka landing page
 const FALLBACK_STOCKS = [
@@ -279,6 +280,7 @@ export default function LandingPage({
   const [stocks, setStocks] = useState(FALLBACK_STOCKS);
   const [activeSector, setActiveSector] = useState("ALL");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [ctaPointer, setCtaPointer] = useState({ x: 0, y: 0, active: false });
 
   // Ambil harga saham riil IDX80 dari backend agar kartu menampilkan emiten & harga aktual
   useEffect(() => {
@@ -771,19 +773,16 @@ export default function LandingPage({
                       const isUp = Number(stock.changePercent) >= 0;
                       const slot = heroCardSlots[idx] || heroCardSlots[0];
                       return (
-                        <motion.button
+                        <motion.div
                           key={stock.symbol}
-                          type="button"
-                          onClick={() => onSelectStock(stock.symbol)}
                           initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
-                          whileHover={prefersReducedMotion ? undefined : { y: -8, scale: 1.03 }}
                           transition={{
                             duration: 0.45,
                             delay: prefersReducedMotion ? 0 : idx * 0.05,
                             ease: [0.22, 1, 0.36, 1],
                           }}
-                          className={`absolute ${slot.pos} ${slot.depth} text-left rounded-[20px] sm:rounded-[26px] p-3.5 sm:p-5 cursor-pointer transition-shadow focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-white ${
+                          className={`absolute ${slot.pos} ${slot.depth} pointer-events-none select-none text-left rounded-[20px] sm:rounded-[26px] p-3.5 sm:p-5 ${
                             slot.elevated
                               ? "bg-gradient-to-br from-white via-white to-[#F4F5F7] dark:from-[#1c1f29] dark:via-[#161922] dark:to-[#11131b] border border-white/90 dark:border-white/[0.14] shadow-[0_32px_64px_-16px_rgba(15,23,42,0.24),0_12px_24px_-10px_rgba(15,23,42,0.12)] dark:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.85)]"
                               : "bg-gradient-to-br from-white/95 to-[#F1F2F5]/95 dark:from-[#161922]/95 dark:to-[#10121a]/95 border border-white/75 dark:border-white/[0.08] shadow-[0_20px_42px_-18px_rgba(15,23,42,0.16)] dark:shadow-[0_20px_42px_-18px_rgba(0,0,0,0.65)]"
@@ -825,7 +824,7 @@ export default function LandingPage({
                               </span>
                             </p>
                           </div>
-                        </motion.button>
+                        </motion.div>
                       );
                     })}
                 </div>
@@ -1250,16 +1249,42 @@ export default function LandingPage({
       </section>
 
       {/* ========================================================
-          SECTION 6: CLOSING CTA & FOOTER
+          SECTION 6: CLOSING CTA FULL-BLEED MENYATU DI ATAS FOOTER
           ======================================================== */}
-      <section className="py-16 sm:py-20 border-t border-slate-200/80 dark:border-white/[0.08]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl bg-slate-950 text-white dark:bg-white dark:text-slate-950 p-8 sm:p-12 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+      <div className="w-full bg-[#0B0F17] text-white border-t border-slate-200/80 dark:border-white/[0.08]">
+        <section
+          onPointerMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            setCtaPointer({
+              x: e.clientX - rect.left,
+              y: e.clientY - rect.top,
+              active: true,
+            });
+          }}
+          onPointerLeave={() =>
+            setCtaPointer((prev) => ({ ...prev, active: false }))
+          }
+          className="relative w-full overflow-hidden"
+        >
+          {/* Latar Candlestick, Area Chart & Crosshair Interaktif Saham selebar layar */}
+          <StockChartBackdrop
+            stocks={stocks}
+            pointer={ctaPointer}
+            reducedMotion={prefersReducedMotion}
+          />
+
+          {/* Gradient scrim kiri agar tipografi tetap kontras tanpa meredupkan chart */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#0B0F17]/78 via-[#0B0F17]/42 to-[#0B0F17]/10"
+          />
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div className="space-y-3 max-w-xl">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-[-0.025em]">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-[-0.025em] text-white">
                 Siap Membedah Emiten Pilihan Anda?
               </h2>
-              <p className="text-sm sm:text-base opacity-80 leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
                 Akses dashboard pasar IDX80, saring saham potensial lewat screener fundamental, atau mulai belajar membaca laporan keuangan sekarang.
               </p>
             </div>
@@ -1267,7 +1292,7 @@ export default function LandingPage({
               <button
                 type="button"
                 onClick={() => onNavigateTab("dashboard")}
-                className="h-12 px-6 rounded-full bg-white text-slate-950 dark:bg-slate-950 dark:text-white text-sm font-semibold inline-flex items-center gap-2 hover:opacity-90 transition-opacity cursor-pointer"
+                className="h-12 px-6 rounded-full bg-white text-slate-950 text-sm font-semibold inline-flex items-center gap-2 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <span>Buka Dashboard</span>
                 <ArrowRight className="w-4 h-4" />
@@ -1275,51 +1300,51 @@ export default function LandingPage({
               <button
                 type="button"
                 onClick={() => onNavigateTab("login")}
-                className="h-12 px-5 rounded-full border border-white/25 dark:border-slate-950/25 text-sm font-semibold hover:bg-white/10 dark:hover:bg-slate-950/10 transition-colors cursor-pointer"
+                className="h-12 px-5 rounded-full bg-white/[0.06] backdrop-blur-sm border border-white/20 text-white text-sm font-semibold hover:bg-white/[0.12] transition-colors cursor-pointer"
               >
                 {isAuthenticated ? "Kelola Akun" : "Masuk / Daftar"}
               </button>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <footer className="border-t border-slate-200/80 dark:border-white/[0.08] py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-lg">
-            <img
-              src={darkMode ? "/investpedia-full-dark.png" : "/investpedia-full.png"}
-              alt="Investpedia"
-              className="h-6 w-auto object-contain"
-            />
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              Investpedia adalah platform edukasi dan analisis fundamental saham Bursa Efek Indonesia (IDX). Sistem ini bukan broker, tidak mengeksekusi transaksi, dan tidak memberikan rekomendasi beli/jual otomatis.
-            </p>
-          </div>
+        <footer className="border-t border-white/[0.08] py-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-lg">
+              <img
+                src="/investpedia-full-dark.png"
+                alt="Investpedia"
+                className="h-6 w-auto object-contain"
+              />
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Investpedia adalah platform edukasi dan analisis fundamental saham Bursa Efek Indonesia (IDX). Sistem ini bukan broker, tidak mengeksekusi transaksi, dan tidak memberikan rekomendasi beli/jual otomatis.
+              </p>
+            </div>
 
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-medium text-slate-600 dark:text-slate-400">
-            {[
-              { id: "dashboard", label: "Dashboard" },
-              { id: "screener", label: "Stock Screener" },
-              { id: "watchlist", label: "Watchlist" },
-              { id: "learning", label: "Learning" },
-              { id: "ai", label: "AI Assistant" },
-              { id: "komparasi", label: "Comparison" },
-              { id: "portofolio", label: "Portfolio" },
-              { id: "simulasi", label: "Simulasi" },
-            ].map((link) => (
-              <button
-                key={link.id}
-                type="button"
-                onClick={() => onNavigateTab(link.id)}
-                className="hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer"
-              >
-                {link.label}
-              </button>
-            ))}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-medium text-slate-400">
+              {[
+                { id: "dashboard", label: "Dashboard" },
+                { id: "screener", label: "Stock Screener" },
+                { id: "watchlist", label: "Watchlist" },
+                { id: "learning", label: "Learning" },
+                { id: "ai", label: "AI Assistant" },
+                { id: "komparasi", label: "Comparison" },
+                { id: "portofolio", label: "Portfolio" },
+                { id: "simulasi", label: "Simulasi" },
+              ].map((link) => (
+                <button
+                  key={link.id}
+                  type="button"
+                  onClick={() => onNavigateTab(link.id)}
+                  className="hover:text-white transition-colors cursor-pointer"
+                >
+                  {link.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   );
 }
