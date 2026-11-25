@@ -1195,8 +1195,8 @@ export default function LandingPage({
                 />
 
                 <motion.img
-                  src="/investpedia-mascot-3d.png"
-                  alt="Maskot 3D Investpedia memegang panah tren naik pasar saham"
+                  src="/investpedia-mascot-3d.png?v=2"
+                  alt="Maskot 3D Investpedia berbaju merah Investpedia memegang panah tren naik pasar saham"
                   loading="lazy"
                   animate={prefersReducedMotion ? undefined : { y: [0, -7, 0] }}
                   transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
@@ -1248,9 +1248,9 @@ export default function LandingPage({
                 }}
                 className="group rounded-3xl bg-[#F4F5F8] dark:bg-[#11141c] border border-black/[0.06] dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/20 transition-colors overflow-hidden cursor-pointer grid grid-cols-1 lg:grid-cols-12 items-center"
               >
-                {/* Mockup Smartphone Realistis di Kiri */}
-                <div className="lg:col-span-5 pt-8 px-6 sm:px-10 lg:pt-9 lg:pl-12 lg:pr-4 flex justify-center lg:justify-start self-end">
-                  <div className="relative w-full max-w-[276px]">
+                {/* Mockup Smartphone Realistis dengan Tampilan Web Mobile Investpedia */}
+                <div className="lg:col-span-5 pt-8 px-5 sm:px-8 lg:pt-9 lg:pl-10 lg:pr-4 flex justify-center lg:justify-start self-end">
+                  <div className="relative w-full max-w-[292px]">
                     {/* Tombol fisik samping HP */}
                     <span
                       aria-hidden="true"
@@ -1267,68 +1267,204 @@ export default function LandingPage({
 
                     {/* Bezel & Body HP */}
                     <div className="rounded-t-[38px] p-[8px] pb-0 bg-gradient-to-b from-slate-700 via-slate-900 to-black shadow-[0_24px_60px_-16px_rgba(15,23,42,0.45)] ring-1 ring-white/20">
-                      {/* Layar Dalam HP */}
-                      <div className="rounded-t-[30px] bg-white dark:bg-[#0c0f16] pt-2.5 px-4 pb-5 overflow-hidden">
-                        {/* Status Bar + Dynamic Island */}
-                        <div className="flex items-center justify-between text-[9px] font-semibold text-slate-900 dark:text-white mb-3.5 px-1">
-                          <span className="tabular-nums">9:41</span>
-                          <div className="w-[72px] h-[18px] rounded-full bg-black" />
-                          <div className="flex items-center gap-1 text-slate-900 dark:text-white">
-                            <span className="w-3 h-2 rounded-[2px] border border-current flex items-center p-[1px]">
-                              <span className="w-full h-full bg-current rounded-[1px]" />
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Header Mini Aplikasi */}
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <p className="text-[9px] text-slate-400">Investpedia</p>
-                            <p className="text-xs font-bold text-slate-950 dark:text-white">
-                              Peer Comparison
-                            </p>
-                          </div>
-                          <span className="px-2 py-0.5 rounded-md text-[9px] font-semibold bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200">
-                            2–4 Saham
-                          </span>
-                        </div>
-
-                        {/* Kartu Rasio Utama di Dalam Layar HP */}
-                        <div className="rounded-2xl bg-gradient-to-br from-[#11141c] to-[#1f2430] text-white p-3.5 space-y-2.5 shadow-sm">
-                          <div className="flex items-center justify-between text-[10px]">
-                            <span className="text-slate-400">PER (TTM)</span>
-                            <span className="font-mono font-semibold text-white">
-                              11.4x <span className="text-slate-500">vs</span> 14.8x
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between text-[10px]">
-                            <span className="text-slate-400">ROE</span>
-                            <span className="font-mono font-semibold text-emerald-400">
-                              18.2% <span className="text-slate-500">vs</span>{" "}
-                              <span className="text-white">14.1%</span>
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between text-[10px]">
-                            <span className="text-slate-400">DER</span>
-                            <span className="font-mono font-semibold text-white">
-                              0.6x <span className="text-slate-500">vs</span>{" "}
-                              <span className="text-rose-400">1.4x</span>
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Bar Aksi Cepat di Bawah Layar HP */}
-                        <div className="grid grid-cols-4 gap-1.5 mt-3">
-                          {["Valuasi", "Margin", "Utang", "Laba"].map((tab) => (
-                            <div
-                              key={tab}
-                              className="rounded-lg bg-slate-100 dark:bg-white/[0.06] py-1.5 text-[9px] font-semibold text-slate-700 dark:text-slate-300 text-center"
-                            >
-                              {tab}
+                      {/* Layar Dalam HP: Pratinjau Asli Web Mobile Investpedia */}
+                      {(() => {
+                        const featured = stocks[0] || FALLBACK_STOCKS[0];
+                        const featUp = Number(featured.changePercent) >= 0;
+                        const tapeSlice = stocks.slice(0, 3);
+                        return (
+                          <div className="rounded-t-[30px] bg-white dark:bg-[#080808] overflow-hidden">
+                            {/* Status Bar + Dynamic Island */}
+                            <div className="flex items-center justify-between text-[9px] font-semibold text-slate-900 dark:text-white pt-2.5 pb-1.5 px-4">
+                              <span className="tabular-nums">9:41</span>
+                              <div className="w-[70px] h-[17px] rounded-full bg-black" />
+                              <div className="flex items-center gap-1 text-slate-900 dark:text-white">
+                                <span className="w-3.5 h-2 rounded-[2px] border border-current flex items-center p-[1px]">
+                                  <span className="w-full h-full bg-current rounded-[1px]" />
+                                </span>
+                              </div>
                             </div>
-                          ))}
-                        </div>
-                      </div>
+
+                            {/* Mini Navbar Asli Investpedia Mobile */}
+                            <div className="px-3.5 py-2 border-b border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between">
+                              <img
+                                src={darkMode ? "/investpedia-full-dark.png" : "/investpedia-full.png"}
+                                alt="Investpedia Mobile"
+                                className="h-3.5 w-auto object-contain"
+                              />
+                              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                                <Search className="w-2.5 h-2.5" />
+                                <svg
+                                  className="w-3 h-3 stroke-current fill-none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth="2.4"
+                                  strokeLinecap="round"
+                                  aria-hidden="true"
+                                >
+                                  <line x1="4" y1="9" x2="20" y2="9" />
+                                  <line x1="4" y1="15" x2="20" y2="15" />
+                                </svg>
+                              </div>
+                            </div>
+
+                            {/* Mini IDX80 Ticker Tape Strip */}
+                            <div className="px-3 py-1 bg-slate-100/90 dark:bg-[#10131a] border-b border-slate-200/80 dark:border-white/[0.06] flex items-center gap-2 overflow-hidden whitespace-nowrap text-[8px] font-mono">
+                              <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0">
+                                IDX80
+                              </span>
+                              {tapeSlice.map((t) => {
+                                const tUp = Number(t.changePercent) >= 0;
+                                return (
+                                  <span key={t.symbol} className="inline-flex items-center gap-1 shrink-0">
+                                    <span className="font-bold text-slate-900 dark:text-white">
+                                      {t.symbol}
+                                    </span>
+                                    <span
+                                      className={
+                                        tUp
+                                          ? "text-emerald-600 dark:text-emerald-400"
+                                          : "text-rose-600 dark:text-rose-400"
+                                      }
+                                    >
+                                      {formatPercent(t.changePercent)}
+                                    </span>
+                                  </span>
+                                );
+                              })}
+                            </div>
+
+                            {/* Konten Halaman Detail Saham Versi Mobile */}
+                            <div className="p-3.5 pb-4 space-y-2.5">
+                              {/* Header Emiten */}
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 dark:border-white/10 p-1 flex items-center justify-center shrink-0 overflow-hidden">
+                                    <img
+                                      src={
+                                        featured.logoUrl ||
+                                        `https://assets.stockbit.com/logos/companies/${featured.symbol}.png`
+                                      }
+                                      alt={featured.symbol}
+                                      className="w-full h-full object-contain"
+                                    />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-[11px] font-bold text-slate-950 dark:text-white leading-none">
+                                        {featured.symbol}
+                                      </span>
+                                      <span className="px-1 py-0.5 rounded text-[7px] font-semibold bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-300 leading-none">
+                                        IDX
+                                      </span>
+                                    </div>
+                                    <p className="text-[8px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                      {featured.companyName}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <p className="text-[11px] font-bold tabular-nums text-slate-950 dark:text-white leading-none">
+                                    {formatRupiah(featured.price)}
+                                  </p>
+                                  <p
+                                    className={`text-[8px] font-semibold tabular-nums mt-0.5 ${
+                                      featUp
+                                        ? "text-emerald-600 dark:text-emerald-400"
+                                        : "text-rose-600 dark:text-rose-400"
+                                    }`}
+                                  >
+                                    {featUp ? "↑" : "↓"} {formatPercent(featured.changePercent)}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Mini Chart Area + Volume ala TradingView Investpedia */}
+                              <div className="rounded-xl bg-[#0B0F17] border border-slate-800/80 dark:border-white/[0.08] p-2.5 overflow-hidden">
+                                <div className="flex items-center justify-between text-[7px] font-mono text-slate-400 mb-1.5">
+                                  <div className="flex items-center gap-1.5">
+                                    <span>1D</span>
+                                    <span>1M</span>
+                                    <span className="px-1 py-0.5 rounded bg-white text-slate-950 font-bold">
+                                      1Y
+                                    </span>
+                                    <span>5Y</span>
+                                  </div>
+                                  <span className="text-emerald-400 font-semibold">
+                                    {formatPriceNumber(featured.price)}
+                                  </span>
+                                </div>
+
+                                <svg
+                                  viewBox="0 0 220 74"
+                                  className="w-full h-[64px] block"
+                                  aria-hidden="true"
+                                >
+                                  <defs>
+                                    <linearGradient id="phone-tv-area" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
+                                      <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                                    </linearGradient>
+                                  </defs>
+                                  {/* Grid tipis */}
+                                  <line x1="0" y1="18" x2="220" y2="18" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+                                  <line x1="0" y1="38" x2="220" y2="38" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+                                  <line x1="0" y1="58" x2="220" y2="58" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+
+                                  {/* Area & garis tren */}
+                                  <path
+                                    d="M0 54 L18 50 L36 52 L54 44 L72 47 L92 36 L110 39 L128 28 L146 31 L166 20 L184 24 L202 14 L220 11 L220 74 L0 74 Z"
+                                    fill="url(#phone-tv-area)"
+                                  />
+                                  <path
+                                    d="M0 54 L18 50 L36 52 L54 44 L72 47 L92 36 L110 39 L128 28 L146 31 L166 20 L184 24 L202 14 L220 11"
+                                    fill="none"
+                                    stroke="#34d399"
+                                    strokeWidth="1.8"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+
+                                  {/* Bar volume bawah */}
+                                  <rect x="6" y="64" width="6" height="10" fill="rgba(52,211,153,0.35)" />
+                                  <rect x="24" y="67" width="6" height="7" fill="rgba(251,113,133,0.35)" />
+                                  <rect x="42" y="62" width="6" height="12" fill="rgba(52,211,153,0.4)" />
+                                  <rect x="60" y="66" width="6" height="8" fill="rgba(251,113,133,0.35)" />
+                                  <rect x="78" y="60" width="6" height="14" fill="rgba(52,211,153,0.42)" />
+                                  <rect x="96" y="65" width="6" height="9" fill="rgba(52,211,153,0.32)" />
+                                  <rect x="114" y="59" width="6" height="15" fill="rgba(52,211,153,0.45)" />
+                                  <rect x="132" y="66" width="6" height="8" fill="rgba(251,113,133,0.35)" />
+                                  <rect x="150" y="61" width="6" height="13" fill="rgba(52,211,153,0.4)" />
+                                  <rect x="168" y="64" width="6" height="10" fill="rgba(251,113,133,0.35)" />
+                                  <rect x="186" y="58" width="6" height="16" fill="rgba(52,211,153,0.48)" />
+                                  <rect x="204" y="62" width="6" height="12" fill="rgba(52,211,153,0.42)" />
+                                </svg>
+                              </div>
+
+                              {/* Baris Metrik Fundamental Mini di Bawah Chart */}
+                              <div className="grid grid-cols-3 gap-1.5">
+                                <div className="rounded-lg bg-slate-100 dark:bg-[#12151e] border border-slate-200/70 dark:border-white/[0.06] px-2 py-1.5">
+                                  <p className="text-[7px] text-slate-500 dark:text-slate-400">PER</p>
+                                  <p className="text-[10px] font-mono font-bold text-slate-950 dark:text-white">
+                                    11.4x
+                                  </p>
+                                </div>
+                                <div className="rounded-lg bg-slate-100 dark:bg-[#12151e] border border-slate-200/70 dark:border-white/[0.06] px-2 py-1.5">
+                                  <p className="text-[7px] text-slate-500 dark:text-slate-400">ROE</p>
+                                  <p className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                    18.2%
+                                  </p>
+                                </div>
+                                <div className="rounded-lg bg-slate-100 dark:bg-[#12151e] border border-slate-200/70 dark:border-white/[0.06] px-2 py-1.5">
+                                  <p className="text-[7px] text-slate-500 dark:text-slate-400">DER</p>
+                                  <p className="text-[10px] font-mono font-bold text-slate-950 dark:text-white">
+                                    0.6x
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
