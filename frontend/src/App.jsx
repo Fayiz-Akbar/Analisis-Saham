@@ -19,7 +19,26 @@ const WatchlistView = lazy(() => import("./components/views/WatchlistView"));
 const PlaceholderView = lazy(() => import("./components/views/PlaceholderView"));
 const AdminDashboardPage = lazy(() => import("./components/admin/AdminDashboardPage"));
 const AdminLoginPage = lazy(() => import("./components/admin/AdminLoginPage"));
-const UserLearningPage = lazy(() => import("./components/learning/UserLearningPage"));
+const PortfolioComingSoonPage = lazy(() =>
+  import("./components/education-simulation/EducationSimulationPages").then((m) => ({
+    default: m.PortfolioComingSoonPage,
+  }))
+);
+const SimulationComingSoonPage = lazy(() =>
+  import("./components/education-simulation/EducationSimulationPages").then((m) => ({
+    default: m.SimulationComingSoonPage,
+  }))
+);
+const LearningComingSoonPage = lazy(() =>
+  import("./components/education-simulation/EducationSimulationPages").then((m) => ({
+    default: m.LearningComingSoonPage,
+  }))
+);
+const AiAssistantComingSoonPage = lazy(() =>
+  import("./components/education-simulation/EducationSimulationPages").then((m) => ({
+    default: m.AiAssistantComingSoonPage,
+  }))
+);
 
 const THEME_STORAGE_KEY = "investpedia_theme";
 const VALID_RANGES = new Set(["1d", "1mo", "3mo", "1y", "5y", "max"]);
@@ -113,10 +132,23 @@ const parseRouteFromLocation = () => {
       .slice(0, 4);
     return { ...fallback, tab: "komparasi", compareSymbols };
   }
-  if (lowerPath === "/portofolio") return { ...fallback, tab: "portofolio" };
-  if (lowerPath === "/simulasi") return { ...fallback, tab: "simulasi" };
-  if (lowerPath === "/learning") return { ...fallback, tab: "learning" };
-  if (lowerPath === "/ai") return { ...fallback, tab: "ai" };
+  if (
+    lowerPath === "/portofolio" ||
+    lowerPath === "/portfolio" ||
+    lowerPath.startsWith("/portfolio/") ||
+    lowerPath === "/investment-health"
+  ) {
+    return { ...fallback, tab: "portofolio" };
+  }
+  if (lowerPath === "/simulasi" || lowerPath === "/dca") {
+    return { ...fallback, tab: "simulasi" };
+  }
+  if (lowerPath === "/learning" || lowerPath === "/learn" || lowerPath.startsWith("/learn/")) {
+    return { ...fallback, tab: "learning" };
+  }
+  if (lowerPath === "/ai" || lowerPath.startsWith("/ai/")) {
+    return { ...fallback, tab: "ai" };
+  }
 
   return fallback;
 };
@@ -627,25 +659,36 @@ export default function App() {
                   />
                 )}
 
+                {/* ========================================================
+                    SUB-SISTEM EDUKASI & SIMULASI (Coming Soon Pages)
+                    ======================================================== */}
                 {activeTab === "portofolio" && (
-                  <PlaceholderView
-                    title="Portfolio"
-                    description="Pelacak portofolio berbasis lot bursa, kalkulasi weighted average price, dan audit risiko akan diimplementasikan pada sprint mendatang."
+                  <PortfolioComingSoonPage
+                    onNavigateTab={setActiveTab}
                     onBackToDashboard={() => setActiveTab("dashboard")}
                   />
                 )}
 
                 {(activeTab === "simulasi" || activeTab === "dca") && (
-                  <PlaceholderView
-                    title="Simulasi"
-                    description="Modul simulasi investasi pasar modal (termasuk DCA Simulator mode lot realistis) akan diimplementasikan pada sprint mendatang."
+                  <SimulationComingSoonPage
+                    onNavigateTab={setActiveTab}
                     onBackToDashboard={() => setActiveTab("dashboard")}
                   />
                 )}
 
-                {activeTab === "learning" && <UserLearningPage defaultOpenAi={false} />}
+                {activeTab === "learning" && (
+                  <LearningComingSoonPage
+                    onNavigateTab={setActiveTab}
+                    onBackToDashboard={() => setActiveTab("dashboard")}
+                  />
+                )}
 
-                {activeTab === "ai" && <UserLearningPage defaultOpenAi={true} />}
+                {activeTab === "ai" && (
+                  <AiAssistantComingSoonPage
+                    onNavigateTab={setActiveTab}
+                    onBackToDashboard={() => setActiveTab("dashboard")}
+                  />
+                )}
                 </Suspense>
               </RouteErrorBoundary>
             </main>
